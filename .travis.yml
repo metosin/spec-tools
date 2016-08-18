@@ -1,0 +1,23 @@
+sudo: false
+language: clojure
+lein: lein2
+script: ./scripts/test.sh $TEST
+env:
+  matrix:
+  - TEST=clj
+  - TEST=cljs
+matrix:
+  exclude:
+    - env: TEST=cljs
+      jdk: openjdk6
+    - env: TEST=cljs
+      jdk: openjdk7
+jdk:
+  - openjdk6
+  - openjdk7
+  - oraclejdk8
+node_js:
+  - "0.10"
+cache:
+  directories:
+  - "$HOME/.m2"
