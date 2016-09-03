@@ -14,6 +14,7 @@
 
   :profiles {:dev {:plugins [[jonase/eastwood "0.2.3"]]
                    :dependencies [[criterium "0.4.4"]
-                                  [org.clojure/clojurescript "1.9.216"]]}}
+                                  [org.clojure/test.check "0.9.0"]
+                                  [org.clojure/clojurescript "1.9.227"]]}}
   :aliases {"all" ["with-profile" "dev"]
             "test-clj" ["all" "do" ["test"] ["check"]]})
