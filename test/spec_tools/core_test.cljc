@@ -16,7 +16,7 @@
     (testing "nothing is conformed"
       (is (= ::s/invalid (st/conform ::age "12")))
       (is (= ::s/invalid (st/conform ::over-a-million "1234567")))
-      (is (= ::s/invalid (st/conform ::lat "23,1234")))
+      (is (= ::s/invalid (st/conform ::lat "23.1234")))
       (is (= ::s/invalid (st/conform ::language "clojure")))
       (is (= ::s/invalid (st/conform ::truth "false")))
       (is (= ::s/invalid (st/conform ::uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e")))

@@ -1,5 +1,5 @@
 (ns spec-tools.core
-  (:refer-clojure :exlude [integer? int? double? keyword? boolean? uuid? inst?])
+  (:refer-clojure :exclude [integer? int? double? keyword? boolean? uuid? inst?])
   (:require [clojure.spec :as s]
     #?@(:cljs [goog.date.UtcDateTime]))
   #?(:clj
@@ -8,7 +8,7 @@
 (def ^:dynamic *conform-mode* nil)
 
 (defn- double-like? [x]
-  (#?(:clj  double?
+  (#?(:clj  clojure.core/double?
       :cljs number?) x))
 
 (defn string->int [x]
@@ -68,16 +68,16 @@
         ::s/invalid))))
 
 (def +conformation+
-  {:string [string? {integer? string->int
-                     int? string->long
+  {:string [string? {clojure.core/integer? string->int
+                     clojure.core/int? string->long
                      double-like? string->double
-                     keyword? string->keyword
-                     boolean? string->boolean
-                     uuid? string->uuid
-                     inst? string->inst}]
-   :json [string? {keyword? string->keyword
-                   uuid? string->uuid
-                   inst? string->inst}]})
+                     clojure.core/keyword? string->keyword
+                     clojure.core/boolean? string->boolean
+                     clojure.core/uuid? string->uuid
+                     clojure.core/inst? string->inst}]
+   :json [string? {clojure.core/keyword? string->keyword
+                   clojure.core/uuid? string->uuid
+                   clojure.core/inst? string->inst}]})
 
 (defn dynamic-conformer [pred]
   (with-meta
