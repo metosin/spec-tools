@@ -70,7 +70,7 @@
 
 (defn conform-test []
 
-  (suite "conform")
+  (suite "no-op conform")
 
   ; 1315ns
   (title "spec: integer?")
@@ -101,6 +101,29 @@
     (cc/quick-bench
       (call))))
 
+(defn conform-test2 []
+
+  (suite "conforming list of keywords")
+
+  (let [sizes-spec (spec/cat :sizes (spec/* #{:L :M :S}))
+        sizes-schema [(schema/enum :L :M :S)]]
+
+    ; 16900ns
+    (title "spec: conform keyword enum")
+    (let [call #(spec/unform sizes-spec (spec/conform sizes-spec [:L :M]))]
+      (assert (= (call) [:L :M]))
+      (cc/quick-bench
+        (call)))
+
+    ; 325ns
+    (title "schema: conform keyword enum")
+    (let [coercer (coerce/coercer sizes-schema (constantly nil))
+          call #(coercer [:L :M])]
+      (assert (= (call) [:L :M]))
+      (cc/quick-bench
+        (call)))))
+
 (comment
   (valid-test)
-  (conform-test))
+  (conform-test)
+  (conform-test2))
