@@ -48,3 +48,16 @@
                (conform ::uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e")))
         (is (= #inst "2006-01-02T15:04:05.999999-07:00"
                (conform ::birthdate "2006-01-02T15:04:05.999999-07:00")))))))
+
+(deftest unform-test
+  (let [unform-conform #(s/unform %1 (st/conform :string %1 %2))]
+    (testing "conformed values can be unformed"
+      (is (= 12 (unform-conform ::age "12")))
+      (is (= 1234567 (unform-conform ::age "1234567")))
+      (is (= 23.1234 (unform-conform ::lat "23.1234")))
+      (is (= false (unform-conform ::truth "false")))
+      (is (= :clojure (unform-conform ::language "clojure")))
+      (is (= #uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e"
+             (unform-conform ::uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e")))
+      (is (= #inst "2006-01-02T15:04:05.999999-07:00"
+             (unform-conform ::birthdate "2006-01-02T15:04:05.999999-07:00"))))))

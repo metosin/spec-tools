@@ -91,7 +91,8 @@
                 (conformer x)
                 ::s/invalid)
               ::s/invalid)
-            ::s/invalid))))
+            ::s/invalid)))
+      identity)
     {::pred pred}))
 
 (defn conform
