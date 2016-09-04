@@ -12,39 +12,40 @@
 (s/def ::uuid st/x-uuid?)
 (s/def ::birthdate st/x-inst?)
 
-(defmacro invalid? [value]
-  `(= st/+error-code+ ~value))
-
 (deftest spec-tools-conform-test
-  (testing "normally"
-    (is (invalid? (st/conform ::age "12")))
-    (is (invalid? (st/conform ::over-a-million "1234567")))
-    (is (invalid? (st/conform ::lat "23,1234")))
-    (is (invalid? (st/conform ::language "clojure")))
-    (is (invalid? (st/conform ::truth "false")))
-    (is (invalid? (st/conform ::uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e")))
-    (is (invalid? (st/conform ::birthdate "2006-01-02T15:04:05.999999-07:00"))))
+  (testing "in default mode"
+    (testing "nothing is conformed"
+      (is (= ::s/invalid (st/conform ::age "12")))
+      (is (= ::s/invalid (st/conform ::over-a-million "1234567")))
+      (is (= ::s/invalid (st/conform ::lat "23,1234")))
+      (is (= ::s/invalid (st/conform ::language "clojure")))
+      (is (= ::s/invalid (st/conform ::truth "false")))
+      (is (= ::s/invalid (st/conform ::uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e")))
+      (is (= ::s/invalid (st/conform ::birthdate "2006-01-02T15:04:05.999999-07:00")))))
 
-  (testing ":string mode"
+  (testing "in :string mode"
     (let [conform (partial st/conform :string)]
-      (is (= 12 (conform ::age "12")))
-      (is (= 1234567 (conform ::over-a-million "1234567")))
-      (is (= 23.1234 (conform ::lat "23.1234")))
-      (is (= false (conform ::truth "false")))
-      (is (= :clojure (conform ::language "clojure")))
-      (is (= #uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e"
-             (conform ::uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e")))
-      (is (= #inst "2006-01-02T15:04:05.999999-07:00"
-             (conform ::birthdate "2006-01-02T15:04:05.999999-07:00")))))
+      (testing "everything gets conformed"
+        (is (= 12 (conform ::age "12")))
+        (is (= 1234567 (conform ::over-a-million "1234567")))
+        (is (= 23.1234 (conform ::lat "23.1234")))
+        (is (= false (conform ::truth "false")))
+        (is (= :clojure (conform ::language "clojure")))
+        (is (= #uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e"
+               (conform ::uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e")))
+        (is (= #inst "2006-01-02T15:04:05.999999-07:00"
+               (conform ::birthdate "2006-01-02T15:04:05.999999-07:00"))))))
 
   (testing ":json mode"
     (let [conform (partial st/conform :json)]
-      (is (invalid? (conform ::age "12")))
-      (is (invalid? (conform ::over-a-million "1234567")))
-      (is (invalid? (conform ::lat "23.1234")))
-      (is (invalid? (conform ::truth "false")))
-      (is (= :clojure (conform ::language "clojure")))
-      (is (= #uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e"
-             (conform ::uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e")))
-      (is (= #inst "2006-01-02T15:04:05.999999-07:00"
-             (conform ::birthdate "2006-01-02T15:04:05.999999-07:00"))))))
+      (testing "some are not conformed"
+        (is (= ::s/invalid (conform ::age "12")))
+        (is (= ::s/invalid (conform ::over-a-million "1234567")))
+        (is (= ::s/invalid (conform ::lat "23.1234")))
+        (is (= ::s/invalid (conform ::truth "false"))))
+      (testing "some are conformed"
+        (is (= :clojure (conform ::language "clojure")))
+        (is (= #uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e"
+               (conform ::uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e")))
+        (is (= #inst "2006-01-02T15:04:05.999999-07:00"
+               (conform ::birthdate "2006-01-02T15:04:05.999999-07:00")))))))
