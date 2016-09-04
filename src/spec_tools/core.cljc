@@ -76,7 +76,10 @@
                      keyword? string->keyword
                      boolean? string->boolean
                      uuid? string->uuid
-                     inst? string->inst}]})
+                     inst? string->inst}]
+   :json [string? {keyword? string->keyword
+                   uuid? string->uuid
+                   inst? string->inst}]})
 
 (defn dynamic-conformer [pred]
   (with-meta
