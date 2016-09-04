@@ -70,10 +70,19 @@
             +error-code+))))
     {::pred pred}))
 
+(defn conform
+  ([spec value]
+   (s/conform spec value))
+  ([mode spec value]
+   (binding [*conform-mode* mode]
+     (s/conform spec value))))
+
+;;
+;; types
+;;
+
 (def x-integer? (dynamic-conformer integer?))
 (def x-int? (dynamic-conformer int?))
 (def x-double? (dynamic-conformer double-like?))
 (def x-keyword? (dynamic-conformer keyword?))
 (def x-boolean? (dynamic-conformer boolean?))
-
-integer?
