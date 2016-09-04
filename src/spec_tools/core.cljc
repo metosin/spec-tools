@@ -1,5 +1,6 @@
 (ns spec-tools.core
-  (:require [clojure.spec :as s])
+  (:require [clojure.spec :as s]
+    #?@(:cljs [goog.date.UtcDateTime]))
   #?(:clj
      (:import [java.util Date UUID])))
 
@@ -50,11 +51,20 @@
       (= "false" x) false
       :else +error-code+)))
 
-(defn string->uuid [^String x]
+(defn string->uuid [x]
   (if (string? x)
     (try
       #?(:clj  (UUID/fromString x)
          :cljs (uuid x))
+      (catch #?(:clj  Exception
+                :cljs js/Error) _
+        +error-code+))))
+
+(defn string->inst [x]
+  (if (string? x)
+    (try
+      #?(:clj  (.toDate (org.joda.time.DateTime/parse x))
+         :cljs (js/Date. (.getTime (goog.date.UtcDateTime.fromIsoString x))))
       (catch #?(:clj  Exception
                 :cljs js/Error) _
         +error-code+))))
@@ -65,7 +75,8 @@
                      double-like? string->double
                      keyword? string->keyword
                      boolean? string->boolean
-                     uuid? string->uuid}]})
+                     uuid? string->uuid
+                     inst? string->inst}]})
 
 (defn dynamic-conformer [pred]
   (with-meta
@@ -99,3 +110,4 @@
 (def x-keyword? (dynamic-conformer keyword?))
 (def x-boolean? (dynamic-conformer boolean?))
 (def x-uuid? (dynamic-conformer uuid?))
+(def x-inst? (dynamic-conformer inst?))
