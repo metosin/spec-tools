@@ -1,5 +1,7 @@
 (ns spec-tools.core
-  (:require [clojure.spec :as s]))
+  (:require [clojure.spec :as s])
+  #?(:clj
+     (:import [java.util Date UUID])))
 
 (def ^:dynamic *conform-mode* nil)
 
@@ -48,12 +50,22 @@
       (= "false" x) false
       :else +error-code+)))
 
+(defn string->uuid [^String x]
+  (if (string? x)
+    (try
+      #?(:clj  (UUID/fromString x)
+         :cljs (uuid x))
+      (catch #?(:clj  Exception
+                :cljs js/Error) _
+        +error-code+))))
+
 (def +conformation+
   {:string [string? {integer? string->int
                      int? string->long
                      double-like? string->double
                      keyword? string->keyword
-                     boolean? string->boolean}]})
+                     boolean? string->boolean
+                     uuid? string->uuid}]})
 
 (defn dynamic-conformer [pred]
   (with-meta
@@ -86,3 +98,4 @@
 (def x-double? (dynamic-conformer double-like?))
 (def x-keyword? (dynamic-conformer keyword?))
 (def x-boolean? (dynamic-conformer boolean?))
+(def x-uuid? (dynamic-conformer uuid?))

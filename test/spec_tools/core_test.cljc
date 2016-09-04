@@ -1,43 +1,34 @@
 (ns spec-tools.core-test
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require [clojure.test :refer [deftest testing is are]]
             [clojure.spec :as s]
-            [spec-tools.core :as st]))
+            [spec-tools.core :as st]
+            [clojure.spec :as s]))
 
 (s/def ::age (s/and st/x-integer? #(> % 10)))
 (s/def ::over-a-million (s/and st/x-int? #(> % 1000000)))
 (s/def ::lat st/x-double?)
 (s/def ::language (s/and st/x-keyword? #{:clojure :clojurescript}))
 (s/def ::truth st/x-boolean?)
+(s/def ::uuid st/x-uuid?)
 
 (defmacro invalid? [value]
   `(= st/+error-code+ ~value))
 
-(deftest spec-confrom-test
-  (testing "normal"
-    (is (invalid? (s/conform ::age "12")))
-    (is (invalid? (s/conform ::over-a-million "1234567")))
-    (is (invalid? (s/conform ::lat "23,1234")))
-    (is (invalid? (s/conform ::language "clojure")))
-    (is (invalid? (s/conform ::truth "false"))))
-  (testing "with *conform-mode*"
-    (binding [st/*conform-mode* :string]
-      (is (= (s/conform ::age "12") 12))
-      (is (= (s/conform ::over-a-million "1234567") 1234567))
-      (is (= (s/conform ::lat "23.1234") 23.1234))
-      (is (= (s/conform ::truth "false") false))
-      (is (= (s/conform ::language "clojure") :clojure)))))
-
 (deftest spec-tools-conform-test
-  (testing "no-opts"
+  (testing "normally"
     (is (invalid? (st/conform ::age "12")))
     (is (invalid? (st/conform ::over-a-million "1234567")))
     (is (invalid? (st/conform ::lat "23,1234")))
     (is (invalid? (st/conform ::language "clojure")))
-    (is (invalid? (st/conform ::truth "false"))))
+    (is (invalid? (st/conform ::truth "false")))
+    (is (invalid? (st/conform ::uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e"))))
+
   (testing "string-mode"
     (let [conform (partial st/conform :string)]
-      (is (= (conform ::age "12") 12))
-      (is (= (conform ::over-a-million "1234567") 1234567))
-      (is (= (conform ::lat "23.1234") 23.1234))
-      (is (= (conform ::truth "false") false))
-      (is (= (conform ::language "clojure") :clojure)))))
+      (is (= 12 (conform ::age "12")))
+      (is (= 1234567 (conform ::over-a-million "1234567")))
+      (is (= 23.1234 (conform ::lat "23.1234")))
+      (is (= false (conform ::truth "false")))
+      (is (= :clojure (conform ::language "clojure")))
+      (is (= #uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e"
+             (conform ::uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e"))))))
