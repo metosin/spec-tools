@@ -3,8 +3,8 @@
 
 (def ^:dynamic *conform-mode* nil)
 
-(def +error-code+ #?(:clj :clojure.spec/invalid
-                    :cljs :cljs.spec/invalid))
+(def +error-code+ #?(:clj  :clojure.spec/invalid
+                     :cljs :cljs.spec/invalid))
 
 (defn- double-like? [x]
   (#?(:clj  double?
@@ -13,27 +13,27 @@
 (defn string->int [x]
   (if (string? x)
     (try
-      #?(:clj (Integer/parseInt x)
+      #?(:clj  (Integer/parseInt x)
          :cljs (js/parseInt x 10))
-      (catch #?(:clj Exception
+      (catch #?(:clj  Exception
                 :cljs js/Error) _
         +error-code+))))
 
 (defn string->long [x]
   (if (string? x)
     (try
-      #?(:clj (Long/parseLong x)
+      #?(:clj  (Long/parseLong x)
          :cljs (js/parseInt x 10))
-      (catch #?(:clj Exception
+      (catch #?(:clj  Exception
                 :cljs js/Error) _
         +error-code+))))
 
 (defn string->double [x]
   (if (string? x)
     (try
-      #?(:clj (Double/parseDouble x)
+      #?(:clj  (Double/parseDouble x)
          :cljs (js/parseFloat x))
-      (catch #?(:clj Exception
+      (catch #?(:clj  Exception
                 :cljs js/Error) _
         +error-code+))))
 
@@ -50,10 +50,10 @@
 
 (def +conformation+
   {:string [string? {integer? string->int
-                      int? string->long
-                      double-like? string->double
-                      keyword? string->keyword
-                      boolean? string->boolean}]})
+                     int? string->long
+                     double-like? string->double
+                     keyword? string->keyword
+                     boolean? string->boolean}]})
 
 (defn dynamic-conformer [pred]
   (with-meta
