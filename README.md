@@ -1,6 +1,6 @@
 # spec-tools [![Build Status](https://travis-ci.org/metosin/spec-tools.svg?branch=master)](https://travis-ci.org/metosin/spec-tools) [![Dependencies Status](https://jarkeeper.com/metosin/spec-tools/status.svg)](https://jarkeeper.com/metosin/spec-tools)
 
-Tools for working with the [clojure.spec](http://clojure.org/about/spec). Bit like [Schema-tools](https://github.com/metosin/schema-tools).
+Clojure(Script) tools for [clojure.spec](http://clojure.org/about/spec). Bit like [Schema-tools](https://github.com/metosin/schema-tools).
 
 Status: **Experimental**.
 
@@ -24,8 +24,11 @@ With Spec, the conformers are attached to spec instances instead of types. To su
 conformation modes, one needs to create separate specs for different modes.
 
 Spec-tools defines a set of "type" predicates which have a dynamic conformer attached. Dynamic conformers
-can be used in multiple modes: `:string`, `:json` or default. `spec-tools-core` holds a set of predicates that have
-the dynamic conformer attached: `integer?`, `int?`, `double?`, `keyword?`, `boolean?`, `uuid?` and `inst?`.
+can be used in multiple modes: `:string`, `:json` or default. In `spec-tools.core` there is a set of predicates
+that have the dynamic conformer (supporting unforming) attached:
+
+* `integer?`, `int?`, `double?`, `keyword?`, `boolean?`, `uuid?` and `inst?`.
+
 
 **TODO** all core-predicates should be supported and the whole thing should be more polymorphic.
 
@@ -69,10 +72,10 @@ the dynamic conformer attached: `integer?`, `int?`, `double?`, `keyword?`, `bool
 ;  :birthdate #inst"1968-01-02T22:04:05.999-00:00"}
 ```
 
-### Api-docs
+### External docs
 
 Like with dynamic conforming, generating different representations (e.g. JSON Schema) of the spec needs
-type-based rules, not instance-based. More info here:
+type-based rules. More info here:
 
 * https://github.com/metosin/ring-swagger/issues/95
 
