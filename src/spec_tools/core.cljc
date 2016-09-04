@@ -49,7 +49,7 @@
       :else +error-code+)))
 
 (def +conformation+
-  {::string [string? {integer? string->int
+  {:string [string? {integer? string->int
                       int? string->long
                       double-like? string->double
                       keyword? string->keyword

@@ -3,7 +3,8 @@
             [schema.core :as schema]
             [schema.coerce :as coerce]
             [spec-tools.core :as st]
-            [criterium.core :as cc]))
+            [criterium.core :as cc]
+            [clojure.spec :as s]))
 
 ;;
 ;; start repl with `lein perf repl`
@@ -103,23 +104,38 @@
 
 (defn conform-test2 []
 
-  (suite "conforming list of keywords")
+  (suite "conforming set of keywords")
 
-  (let [sizes-spec (spec/cat :sizes (spec/* #{:L :M :S}))
-        sizes-schema [(schema/enum :L :M :S)]]
+  (let [sizes-spec (spec/coll-of (spec/and st/x-keyword? #{:L :M :S}) :into #{})
+        sizes-schema #{(schema/enum :L :M :S)}]
 
-    ; 16900ns
-    (title "spec: conform keyword enum")
-    (let [call #(spec/unform sizes-spec (spec/conform sizes-spec [:L :M]))]
-      (assert (= (call) [:L :M]))
+    ; 4300ns
+    (title "spec: conform keyword enum - no-op")
+    (let [call #(st/conform :string sizes-spec ["L" "M"])]
+      (assert (= (call) #{:L :M}))
       (cc/quick-bench
         (call)))
 
-    ; 325ns
+    ; 3700ns
+    (title "spec: conform keyword enum")
+    (let [call #(st/conform :string sizes-spec #{:L :M})]
+      (assert (= (call) #{:L :M}))
+      (cc/quick-bench
+        (call)))
+
+    ; 890ns
+    (title "schema: conform keyword enum - no-op")
+    (let [coercer (coerce/coercer sizes-schema coerce/string-coercion-matcher)
+          call #(coercer #{:L :M})]
+      (assert (= (call) #{:L :M}))
+      (cc/quick-bench
+        (call)))
+
+    ; 1100ns
     (title "schema: conform keyword enum")
-    (let [coercer (coerce/coercer sizes-schema (constantly nil))
-          call #(coercer [:L :M])]
-      (assert (= (call) [:L :M]))
+    (let [coercer (coerce/coercer sizes-schema coerce/string-coercion-matcher)
+          call #(coercer ["L" "M"])]
+      (assert (= (call) #{:L :M}))
       (cc/quick-bench
         (call)))))
 

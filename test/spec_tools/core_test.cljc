@@ -20,7 +20,7 @@
     (is (invalid? (s/conform ::language "clojure")))
     (is (invalid? (s/conform ::truth "false"))))
   (testing "with *conform-mode*"
-    (binding [st/*conform-mode* ::st/string]
+    (binding [st/*conform-mode* :string]
       (is (= (s/conform ::age "12") 12))
       (is (= (s/conform ::over-a-million "1234567") 1234567))
       (is (= (s/conform ::lat "23.1234") 23.1234))
@@ -35,7 +35,7 @@
     (is (invalid? (st/conform ::language "clojure")))
     (is (invalid? (st/conform ::truth "false"))))
   (testing "string-mode"
-    (let [conform (partial st/conform ::st/string)]
+    (let [conform (partial st/conform :string)]
       (is (= (conform ::age "12") 12))
       (is (= (conform ::over-a-million "1234567") 1234567))
       (is (= (conform ::lat "23.1234") 23.1234))
