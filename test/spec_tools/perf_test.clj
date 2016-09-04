@@ -22,7 +22,7 @@
 ;;
 
 (spec/def ::age (spec/and integer? #(> % 10)))
-(spec/def ::x-age (spec/and st/x-integer? #(> % 10)))
+(spec/def ::x-age (spec/and st/integer? #(> % 10)))
 
 (def age (schema/constrained schema/Int #(> % 10)))
 
@@ -106,7 +106,7 @@
 
   (suite "conforming set of keywords")
 
-  (let [sizes-spec (spec/coll-of (spec/and st/x-keyword? #{:L :M :S}) :into #{})
+  (let [sizes-spec (spec/coll-of (spec/and st/keyword? #{:L :M :S}) :into #{})
         sizes-schema #{(schema/enum :L :M :S)}]
 
     ; 4300ns

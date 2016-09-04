@@ -1,4 +1,5 @@
 (ns spec-tools.core
+  (:refer-clojure :exlude [integer? int? double? keyword? boolean? uuid? inst?])
   (:require [clojure.spec :as s]
     #?@(:cljs [goog.date.UtcDateTime]))
   #?(:clj
@@ -104,10 +105,10 @@
 ;; types
 ;;
 
-(def x-integer? (dynamic-conformer integer?))
-(def x-int? (dynamic-conformer int?))
-(def x-double? (dynamic-conformer double-like?))
-(def x-keyword? (dynamic-conformer keyword?))
-(def x-boolean? (dynamic-conformer boolean?))
-(def x-uuid? (dynamic-conformer uuid?))
-(def x-inst? (dynamic-conformer inst?))
+(def integer? (dynamic-conformer clojure.core/integer?))
+(def int? (dynamic-conformer clojure.core/int?))
+(def double? (dynamic-conformer double-like?))
+(def keyword? (dynamic-conformer clojure.core/keyword?))
+(def boolean? (dynamic-conformer clojure.core/boolean?))
+(def uuid? (dynamic-conformer clojure.core/uuid?))
+(def inst? (dynamic-conformer clojure.core/inst?))

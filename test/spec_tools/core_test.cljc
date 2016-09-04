@@ -1,16 +1,15 @@
 (ns spec-tools.core-test
   (:require [clojure.test :refer [deftest testing is are]]
             [clojure.spec :as s]
-            [spec-tools.core :as st]
-            [clojure.spec :as s]))
+            [spec-tools.core :as st]))
 
-(s/def ::age (s/and st/x-integer? #(> % 10)))
-(s/def ::over-a-million (s/and st/x-int? #(> % 1000000)))
-(s/def ::lat st/x-double?)
-(s/def ::language (s/and st/x-keyword? #{:clojure :clojurescript}))
-(s/def ::truth st/x-boolean?)
-(s/def ::uuid st/x-uuid?)
-(s/def ::birthdate st/x-inst?)
+(s/def ::age (s/and st/integer? #(> % 10)))
+(s/def ::over-a-million (s/and st/int? #(> % 1000000)))
+(s/def ::lat st/double?)
+(s/def ::language (s/and st/keyword? #{:clojure :clojurescript}))
+(s/def ::truth st/boolean?)
+(s/def ::uuid st/uuid?)
+(s/def ::birthdate st/inst?)
 
 (deftest spec-tools-conform-test
   (testing "in default mode"
