@@ -6,9 +6,6 @@
 
 (def ^:dynamic *conform-mode* nil)
 
-(def +error-code+ #?(:clj  :clojure.spec/invalid
-                     :cljs :cljs.spec/invalid))
-
 (defn- double-like? [x]
   (#?(:clj  double?
       :cljs number?) x))
@@ -20,7 +17,7 @@
          :cljs (js/parseInt x 10))
       (catch #?(:clj  Exception
                 :cljs js/Error) _
-        +error-code+))))
+        ::s/invalid))))
 
 (defn string->long [x]
   (if (string? x)
@@ -29,7 +26,7 @@
          :cljs (js/parseInt x 10))
       (catch #?(:clj  Exception
                 :cljs js/Error) _
-        +error-code+))))
+        ::s/invalid))))
 
 (defn string->double [x]
   (if (string? x)
@@ -38,7 +35,7 @@
          :cljs (js/parseFloat x))
       (catch #?(:clj  Exception
                 :cljs js/Error) _
-        +error-code+))))
+        ::s/invalid))))
 
 (defn string->keyword [x]
   (if (string? x)
@@ -49,7 +46,7 @@
     (cond
       (= "true" x) true
       (= "false" x) false
-      :else +error-code+)))
+      :else ::s/invalid)))
 
 (defn string->uuid [x]
   (if (string? x)
@@ -58,7 +55,7 @@
          :cljs (uuid x))
       (catch #?(:clj  Exception
                 :cljs js/Error) _
-        +error-code+))))
+        ::s/invalid))))
 
 (defn string->inst [x]
   (if (string? x)
@@ -67,7 +64,7 @@
          :cljs (js/Date. (.getTime (goog.date.UtcDateTime.fromIsoString x))))
       (catch #?(:clj  Exception
                 :cljs js/Error) _
-        +error-code+))))
+        ::s/invalid))))
 
 (def +conformation+
   {:string [string? {integer? string->int
@@ -91,9 +88,9 @@
             (if (accept? x)
               (if-let [conformer (get conformers pred)]
                 (conformer x)
-                +error-code+)
-              +error-code+)
-            +error-code+))))
+                ::s/invalid)
+              ::s/invalid)
+            ::s/invalid))))
     {::pred pred}))
 
 (defn conform
