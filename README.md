@@ -28,15 +28,13 @@ conformation modes, one needs to create separate specs for different modes.
 #### Solution
 
 Spec-tools solves this by defining a set of dynamic type predicates. They can conform values based on a 
-dynamic `mode`-parameter, bound by the `spec-tools/conform`. Based on the mode, a set of type transformers
-are used at runtime to do the actual conformation.
+dynamic `*conformations*`-parameter, bound in the `spec-tools/conform`. Conformations is a map of
+`predicate => conformer`. By default, the following conformations and type predicates are supported:
 
-By default, the following modes and type predicates are supported:
-
-* modes: `:string`, `:json` and `nil` (default).
+* conformations: `string-conformations`, `json-conformations` and `nil` (no conforming).
 * type predicates: `integer?`, `int?`, `double?`, `keyword?`, `boolean?`, `uuid?` and `inst?`.
 
-System is extensible: new type predicates, modes and type tranformations are easy to add.
+Both new conformations and type predicates can be easily added in the client side.
 
 **TODO**: all core predicates should be supported out-of-the-box.
 
@@ -53,15 +51,18 @@ System is extensible: new type predicates, modes and type tranformations are eas
 ; => ::s/invalid
 
 ;; setting the mode with 3-arity
-(st/conform ::age "20" :json)
+(st/conform ::age "20" st/json-conformations)
 ; => ::s/invalid
 
-(st/conform ::age "20" :string)
+(st/conform ::age "20" st/string-conformations)
 ; => 20
 
 (s/def ::birthday st/inst?)
 
-(st/conform ::birthdate "1912-01-02T15:04:05.999999-07:00" :string)
+(st/conform 
+  ::birthdate 
+  "1912-01-02T15:04:05.999999-07:00" 
+  st/string-conformations)
 ; => #inst"1912-01-02T22:04:05.999-00:00"
 ```
 
@@ -69,20 +70,27 @@ System is extensible: new type predicates, modes and type tranformations are eas
 
 ```clj
 (s/def ::name string?)
-(s/def ::languages (s/coll-of (s/and st/keyword? #{:clj :cljs}) :into #{}))
-(s/def ::user (s/keys :req-un [::name ::languages ::age]
-                      :opt-un [::birthdate]))
-                      
+
+(s/def ::languages 
+  (s/coll-of 
+    (s/and st/keyword? #{:clj :cljs}) 
+    :into #{}))
+
+(s/def ::user 
+  (s/keys 
+    :req-un [::name ::languages ::age]
+    :opt-un [::birthdate]))
+
 (def data
   {:name "Ilona"
    :age "48"
    :languages ["clj" "cljs"]
    :birthdate "1968-01-02T15:04:05.999999-07:00"})
 
-(st/conform ::user data nil)
-; ::s/invalid
+(st/conform ::user data st/json-conformations)
+; ::s/invalid (doesn't coerce numbers)
 
-(st/conform ::user data :json)
+(st/conform ::user data st/string-conformations)
 ; {:name "Ilona"
 ;  :age 48
 ;  :languages #{:clj :cljs}
@@ -92,27 +100,21 @@ System is extensible: new type predicates, modes and type tranformations are eas
 #### Extending
 
 ```clj
-(def my-conform
-  "no :json -mode, extra mode :custom"
-  (let [conformations (-> st/+default+conformations+
-                          (dissoc :json)
-                          (assoc-in
-                            [:custom keyword?]
-                            (comp
-                              keyword
-                              str/reverse
-                              str/upper-case)))]
-    (fn [spec value mode]
-      (st/conform spec value mode conformations))))
+(def my-conformations
+  (-> st/string-conformations
+      (assoc
+        keyword?
+        (comp
+          keyword
+          str/reverse
+          str/upper-case))))
 
-(my-conform st/keyword? "kikka" :string)
-; => :kikka
 
-(my-conform st/keyword? "kikka" :custom)
-; => :AKKIK
+(st/conform st/keyword? "kikka" st/string-conformations)
+; :kikka
 
-(my-conform st/keyword? "kikka" :json)
-; => ::s/invalid
+(st/conform st/keyword? "kikka" my-conformations)
+; :AKKIK
 ```
 
 ### External docs

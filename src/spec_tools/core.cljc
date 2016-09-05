@@ -9,7 +9,7 @@
   (#?(:clj  clojure.core/double?
       :cljs number?) x))
 
-(defn string->int [x]
+(defn -string->int [x]
   (if (string? x)
     (try
       #?(:clj  (Integer/parseInt x)
@@ -18,7 +18,7 @@
                 :cljs js/Error) _
         ::s/invalid))))
 
-(defn string->long [x]
+(defn -string->long [x]
   (if (string? x)
     (try
       #?(:clj  (Long/parseLong x)
@@ -27,7 +27,7 @@
                 :cljs js/Error) _
         ::s/invalid))))
 
-(defn string->double [x]
+(defn -string->double [x]
   (if (string? x)
     (try
       #?(:clj  (Double/parseDouble x)
@@ -36,18 +36,18 @@
                 :cljs js/Error) _
         ::s/invalid))))
 
-(defn string->keyword [x]
+(defn -string->keyword [x]
   (if (string? x)
     (keyword x)))
 
-(defn string->boolean [x]
+(defn -string->boolean [x]
   (if (string? x)
     (cond
       (= "true" x) true
       (= "false" x) false
       :else ::s/invalid)))
 
-(defn string->uuid [x]
+(defn -string->uuid [x]
   (if (string? x)
     (try
       #?(:clj  (UUID/fromString x)
@@ -56,7 +56,7 @@
                 :cljs js/Error) _
         ::s/invalid))))
 
-(defn string->inst [x]
+(defn -string->inst [x]
   (if (string? x)
     (try
       #?(:clj  (.toDate (org.joda.time.DateTime/parse x))
@@ -65,20 +65,25 @@
                 :cljs js/Error) _
         ::s/invalid))))
 
-(def +default+conformations+
-  {:string {clojure.core/integer? string->int
-            clojure.core/int? string->long
-            double-like? string->double
-            clojure.core/keyword? string->keyword
-            clojure.core/boolean? string->boolean
-            clojure.core/uuid? string->uuid
-            clojure.core/inst? string->inst}
-   :json {clojure.core/keyword? string->keyword
-          clojure.core/uuid? string->uuid
-          clojure.core/inst? string->inst}})
+;;
+;; Public API
+;;
 
-(def ^:dynamic ^:private *mode* nil)
-(def ^:dynamic ^:private *conformations* +default+conformations+)
+(def string-conformations
+  {clojure.core/integer? -string->int
+   clojure.core/int? -string->long
+   double-like? -string->double
+   clojure.core/keyword? -string->keyword
+   clojure.core/boolean? -string->boolean
+   clojure.core/uuid? -string->uuid
+   clojure.core/inst? -string->inst})
+
+(def json-conformations
+  {clojure.core/keyword? -string->keyword
+   clojure.core/uuid? -string->uuid
+   clojure.core/inst? -string->inst})
+
+(def ^:dynamic ^:private *conformations* nil)
 
 (defn dynamic-conformer [pred]
   (s/conformer
@@ -86,7 +91,7 @@
       (if (pred x)
         x
         (if (string? x)
-          (if-let [conformer (get (get *conformations* *mode*) pred)]
+          (if-let [conformer (get *conformations* pred)]
             (conformer x)
             ::s/invalid)
           ::s/invalid)))
@@ -95,11 +100,8 @@
 (defn conform
   ([spec value]
    (s/conform spec value))
-  ([spec value mode]
-   (binding [*mode* mode]
-     (s/conform spec value)))
-  ([spec value mode conformations]
-   (binding [*conformations* conformations, *mode* mode]
+  ([spec value conformers]
+   (binding [*conformations* conformers]
      (s/conform spec value))))
 
 ;;
