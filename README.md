@@ -72,14 +72,17 @@ System is extensible: new type predicates, modes and type tranformations are eas
 (s/def ::languages (s/coll-of (s/and st/keyword? #{:clj :cljs}) :into #{}))
 (s/def ::user (s/keys :req-un [::name ::languages ::age]
                       :opt-un [::birthdate]))
-
-(st/conform 
-  ::user 
+                      
+(def data
   {:name "Ilona"
-   :age 48
+   :age "48"
    :languages ["clj" "cljs"]
-   :birthdate "1968-01-02T15:04:05.999999-07:00"}
-  :json)
+   :birthdate "1968-01-02T15:04:05.999999-07:00"})
+
+(st/conform ::user data nil)
+; ::s/invalid
+
+(st/conform ::user data :json)
 ; {:name "Ilona"
 ;  :age 48
 ;  :languages #{:clj :cljs}
