@@ -111,14 +111,14 @@
 
     ; 4300ns
     (title "spec: conform keyword enum - no-op")
-    (let [call #(st/conform :string sizes-spec ["L" "M"])]
+    (let [call #(st/conform sizes-spec ["L" "M"] :string)]
       (assert (= (call) #{:L :M}))
       (cc/quick-bench
         (call)))
 
     ; 3700ns
     (title "spec: conform keyword enum")
-    (let [call #(st/conform :string sizes-spec #{:L :M})]
+    (let [call #(st/conform sizes-spec #{:L :M} :string)]
       (assert (= (call) #{:L :M}))
       (cc/quick-bench
         (call)))

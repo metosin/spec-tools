@@ -5,8 +5,6 @@
   #?(:clj
      (:import [java.util Date UUID])))
 
-(def ^:dynamic *conform-mode* nil)
-
 (defn- double-like? [x]
   (#?(:clj  clojure.core/double?
       :cljs number?) x))
@@ -67,39 +65,41 @@
                 :cljs js/Error) _
         ::s/invalid))))
 
-(def +conformation+
-  {:string [string? {clojure.core/integer? string->int
-                     clojure.core/int? string->long
-                     double-like? string->double
-                     clojure.core/keyword? string->keyword
-                     clojure.core/boolean? string->boolean
-                     clojure.core/uuid? string->uuid
-                     clojure.core/inst? string->inst}]
-   :json [string? {clojure.core/keyword? string->keyword
-                   clojure.core/uuid? string->uuid
-                   clojure.core/inst? string->inst}]})
+(def +default+conformations+
+  {:string {clojure.core/integer? string->int
+            clojure.core/int? string->long
+            double-like? string->double
+            clojure.core/keyword? string->keyword
+            clojure.core/boolean? string->boolean
+            clojure.core/uuid? string->uuid
+            clojure.core/inst? string->inst}
+   :json {clojure.core/keyword? string->keyword
+          clojure.core/uuid? string->uuid
+          clojure.core/inst? string->inst}})
+
+(def ^:dynamic ^:private *mode* nil)
+(def ^:dynamic ^:private *conformations* +default+conformations+)
 
 (defn dynamic-conformer [pred]
-  (with-meta
-    (s/conformer
-      (fn [x]
-        (if (pred x)
-          x
-          (if-let [[accept? conformers] (+conformation+ *conform-mode*)]
-            (if (accept? x)
-              (if-let [conformer (get conformers pred)]
-                (conformer x)
-                ::s/invalid)
-              ::s/invalid)
-            ::s/invalid)))
-      identity)
-    {::pred pred}))
+  (s/conformer
+    (fn [x]
+      (if (pred x)
+        x
+        (if (string? x)
+          (if-let [conformer (get (get *conformations* *mode*) pred)]
+            (conformer x)
+            ::s/invalid)
+          ::s/invalid)))
+    identity))
 
 (defn conform
   ([spec value]
    (s/conform spec value))
-  ([mode spec value]
-   (binding [*conform-mode* mode]
+  ([spec value mode]
+   (binding [*mode* mode]
+     (s/conform spec value)))
+  ([spec value mode conformations]
+   (binding [*conformations* conformations, *mode* mode]
      (s/conform spec value))))
 
 ;;
