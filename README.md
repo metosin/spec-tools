@@ -12,25 +12,33 @@ Status: **Experimental**.
 
 ### Dynamic conforming
 
-In Schema, coercions are built for different types: we can create matchers that know how to transform data 
-of one type to another. We can choose at runtime which matchers we use with the coercion. This is needed
-to handle different wire-formats with the ring/http:
+#### Problem 
 
-* With `:query`/`:header`/`:path` -parameters, we can only have Strings -> we have to derive all types from those
-* With `JSON`, Numbers and Booleans should not be coerced, everything else should
-* With `EDN`/`Transit`, nothing should be coerced (all types are presentable)
+In Schema, there are matchers which know how to coerce a value from one schema to another. One can choose
+at runtime which matchers will be used with the coercion. This is awesome for ring/http, where you need
+different coercion rules for different parameter sets:
+
+* with `:query`, `:header` & `:path` -parameters, there are only strings -> all non-strings need to be coerced
+* with [JSON](http://json.org/), numbers and booleans should not be coerced, everything else should
+* with [EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format), nothing should be coerced as all types are presentable
 
 With Spec, the conformers are attached to spec instances instead of types. To support multiple
 conformation modes, one needs to create separate specs for different modes.
 
-Spec-tools defines a set of "type" predicates which have a dynamic conformer attached. Dynamic conformers
-can be used in multiple modes: `:string`, `:json` or default. In `spec-tools.core` there is a set of predicates
-that have the dynamic conformer (supporting unforming) attached:
+#### Solution
 
-* `integer?`, `int?`, `double?`, `keyword?`, `boolean?`, `uuid?` and `inst?`.
+Spec-tools solves this by defining a set of dynamic type predicates. They can conform values based on a 
+dynamic `mode`-parameter, bound by the `spec-tools/conform`. Based on the mode, a set of type transformers
+are used at runtime to do the actual conformation.
 
+By default, the following modes and type predicates are supported:
 
-**TODO** all core-predicates should be supported and the whole thing should be more polymorphic.
+* modes: `:string`, `:json` and `nil` (default).
+* type predicates: `integer?`, `int?`, `double?`, `keyword?`, `boolean?`, `uuid?` and `inst?`.
+
+System is extensible: new type predicates, modes and type tranformations are easy to add.
+
+**TODO** all core predicates should be supported out-of-the-box.
 
 #### Examples
 
@@ -39,22 +47,25 @@ that have the dynamic conformer (supporting unforming) attached:
 (require '[spec-tools.core :as st])
 
 (s/def ::age (s/and st/integer? #(> % 18)))
-(s/def ::birthday st/inst?)
 
+;; default conform with 2-arity
 (st/conform ::age "20")
 ; => ::s/invalid
 
-(st/conform :json ::age "20")
+;; setting the mode with 3-arity
+(st/conform ::age "20" :json)
 ; => ::s/invalid
 
-(st/conform :string ::age "20")
+(st/conform ::age "20" :string)
 ; => 20
 
-(st/conform :string ::birthdate "1912-01-02T15:04:05.999999-07:00")
+(s/def ::birthday st/inst?)
+
+(st/conform ::birthdate "1912-01-02T15:04:05.999999-07:00" :string)
 ; => #inst"1912-01-02T22:04:05.999-00:00"
 ```
 
-#### Something more complex
+#### More complex example
 
 ```clj
 (s/def ::name string?)
@@ -62,14 +73,43 @@ that have the dynamic conformer (supporting unforming) attached:
 (s/def ::user (s/keys :req-un [::name ::languages ::age]
                       :opt-un [::birthdate]))
 
-(st/conform :json ::user {:name "Tiina"
-                          :age 48
-                          :languages ["clj" "cljs"]
-                          :birthdate "1968-01-02T15:04:05.999999-07:00"})
+(st/conform 
+  ::user 
+  {:name "Ilona"
+   :age 48
+   :languages ["clj" "cljs"]
+   :birthdate "1968-01-02T15:04:05.999999-07:00"}
+  :json)
 ; {:name "Ilona"
 ;  :age 48
 ;  :languages #{:clj :cljs}
 ;  :birthdate #inst"1968-01-02T22:04:05.999-00:00"}
+```
+
+#### Extending
+
+```clj
+(def my-conform
+  "no :json -mode, extra mode :custom"
+  (let [conformations (-> st/+default+conformations+
+                          (dissoc :json)
+                          (assoc-in
+                            [:custom keyword?]
+                            (comp
+                              keyword
+                              str/reverse
+                              str/upper-case)))]
+    (fn [spec value mode]
+      (st/conform spec value mode conformations))))
+
+(my-conform st/keyword? "kikka" :string)
+; => :kikka
+
+(my-conform st/keyword? "kikka" :custom)
+; => :AKKIK
+
+(my-conform st/keyword? "kikka" :json)
+; => ::s/invalid
 ```
 
 ### External docs
