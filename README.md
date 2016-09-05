@@ -38,7 +38,7 @@ By default, the following modes and type predicates are supported:
 
 System is extensible: new type predicates, modes and type tranformations are easy to add.
 
-**TODO** all core predicates should be supported out-of-the-box.
+**TODO**: all core predicates should be supported out-of-the-box.
 
 #### Examples
 
@@ -117,8 +117,8 @@ System is extensible: new type predicates, modes and type tranformations are eas
 
 ### External docs
 
-Like with dynamic conforming, generating different representations (e.g. JSON Schema) of the spec needs
-type-based rules. More info here:
+**TODO**: Like with dynamic conforming, generating different representations (e.g. JSON Schema) of
+the spec needs type-based rules. More info here:
 
 * https://github.com/metosin/ring-swagger/issues/95
 
