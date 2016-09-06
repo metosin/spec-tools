@@ -80,8 +80,11 @@ Both new conformations and type predicates can be easily added in the client sid
    :languages ["clj" "cljs"]
    :birthdate "1968-01-02T15:04:05.999999-07:00"})
 
+(st/conform ::user data)
+; ::s/invalid (no type conforming)
+
 (st/conform ::user data st/json-conformations)
-; ::s/invalid (doesn't coerce numbers)
+; ::s/invalid (doesn't conform numbers)
 
 (st/conform ::user data st/string-conformations)
 ; {:name "Ilona"
@@ -102,6 +105,8 @@ Both new conformations and type predicates can be easily added in the client sid
           str/reverse
           str/upper-case))))
 
+(st/conform st/keyword? "kikka")
+; ::s/invalid
 
 (st/conform st/keyword? "kikka" st/string-conformations)
 ; :kikka

@@ -75,21 +75,3 @@
       (is (= :kikka (st/conform st/keyword? "kikka" st/string-conformations))))
     (testing "my-conformers"
       (is (= :AKKIK (st/conform st/keyword? "kikka" my-conformations))))))
-
-
-(def my-conformations
-  (-> st/string-conformations
-      (assoc
-        keyword?
-        (comp
-          keyword
-          str/reverse
-          str/upper-case))))
-
-
-(st/conform st/keyword? "kikka" st/string-conformations)
-; :kikka
-
-(st/conform st/keyword? "kikka" my-conformations)
-; :AKKIK
-
