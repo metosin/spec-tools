@@ -50,26 +50,19 @@ Both new conformations and type predicates can be easily added in the client sid
 (st/conform ::age "20")
 ; => ::s/invalid
 
-;; setting the mode with 3-arity
+;; setting the conformations with 3-arity
 (st/conform ::age "20" st/json-conformations)
 ; => ::s/invalid
 
 (st/conform ::age "20" st/string-conformations)
 ; => 20
-
-(s/def ::birthday st/inst?)
-
-(st/conform 
-  ::birthdate 
-  "1912-01-02T15:04:05.999999-07:00" 
-  st/string-conformations)
-; => #inst"1912-01-02T22:04:05.999-00:00"
 ```
 
 #### More complex example
 
 ```clj
 (s/def ::name string?)
+(s/def ::birthday st/inst?)
 
 (s/def ::languages 
   (s/coll-of 
@@ -120,7 +113,8 @@ Both new conformations and type predicates can be easily added in the client sid
 ### External docs
 
 **TODO**: Like with dynamic conforming, generating different representations (e.g. JSON Schema) of
-the spec needs type-based rules. More info here:
+the spec needs type-based rules. Would be easy if spec was built on Records/Types, not on `reify`.
+Reified specs need to be manually parsed. More info here:
 
 * https://github.com/metosin/ring-swagger/issues/95
 
