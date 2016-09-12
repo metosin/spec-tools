@@ -93,7 +93,7 @@
         (if (string? x)
           (if-let [conformer (get *conformations* pred)]
             (conformer x)
-            ::s/invalid)
+            '::s/invalid)
           ::s/invalid)))
     identity))
 

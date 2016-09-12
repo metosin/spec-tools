@@ -40,6 +40,7 @@
   (suite "valid?")
 
   ; 1260ns
+  ; 81ns (alpha12)
   (title "spec: integer?")
   (let [call #(spec/valid? ::age 12)]
     (assert (call))
@@ -47,6 +48,7 @@
       (call)))
 
   ; 1480ns
+  ; 77ns (alpha12)
   (title "spec: x-integer?")
   (let [call #(spec/valid? ::x-age 12)]
     (assert (call))
@@ -73,6 +75,7 @@
   (suite "no-op conform")
 
   ; 1315ns
+  ; 100ns (alpha12)
   (title "spec: integer?")
   (let [call #(spec/conform ::age 12)]
     (assert (= (call) 12))
@@ -80,6 +83,7 @@
       (call)))
 
   ; 1430ns
+  ; 95ns (alpha12)
   (title "spec: x-integer?")
   (let [call #(st/conform ::x-age 12)]
     (assert (= (call) 12))
@@ -109,6 +113,7 @@
         sizes-schema #{(schema/enum :L :M :S)}]
 
     ; 4300ns
+    ; 1440ns (alpha12)
     (title "spec: conform keyword enum")
     (let [call #(st/conform sizes-spec ["L" "M"] st/string-conformations)]
       (assert (= (call) #{:L :M}))
@@ -116,6 +121,7 @@
         (call)))
 
     ; 3700ns
+    ; 990ns (alpha12)
     (title "spec: conform keyword enum - no-op")
     (let [call #(st/conform sizes-spec #{:L :M} st/string-conformations)]
       (assert (= (call) #{:L :M}))

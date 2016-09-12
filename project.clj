@@ -5,7 +5,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"
             :distribution :repo
             :comments "same as Clojure"}
-  :dependencies [[org.clojure/clojure "1.9.0-alpha10"]
+  :dependencies [[org.clojure/clojure "1.9.0-alpha12"]
                  [clj-time "0.12.0"]]
   :plugins [[funcool/codeina "0.4.0"]]
 
