@@ -62,7 +62,7 @@ Both new conformations and type predicates can be easily added in the client sid
 
 ```clj
 (s/def ::name string?)
-(s/def ::birthday st/inst?)
+(s/def ::birthdate st/inst?)
 
 (s/def ::languages 
   (s/coll-of 
