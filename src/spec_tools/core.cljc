@@ -1,6 +1,7 @@
 (ns spec-tools.core
-  (:refer-clojure :exclude [integer? int? double? keyword? boolean? uuid? inst?])
-  (:require [clojure.spec :as s]
+  (:refer-clojure :exclude [string? integer? int? double? keyword? boolean? uuid? inst?])
+  (:require
+    [clojure.spec :as s]
     #?@(:cljs [goog.date.UtcDateTime]))
   #?(:clj
      (:import [java.util Date UUID])))
@@ -10,7 +11,7 @@
       :cljs number?) x))
 
 (defn -string->int [x]
-  (if (string? x)
+  (if (clojure.core/string? x)
     (try
       #?(:clj  (Integer/parseInt x)
          :cljs (js/parseInt x 10))
@@ -19,7 +20,7 @@
         ::s/invalid))))
 
 (defn -string->long [x]
-  (if (string? x)
+  (if (clojure.core/string? x)
     (try
       #?(:clj  (Long/parseLong x)
          :cljs (js/parseInt x 10))
@@ -28,7 +29,7 @@
         ::s/invalid))))
 
 (defn -string->double [x]
-  (if (string? x)
+  (if (clojure.core/string? x)
     (try
       #?(:clj  (Double/parseDouble x)
          :cljs (js/parseFloat x))
@@ -37,18 +38,18 @@
         ::s/invalid))))
 
 (defn -string->keyword [x]
-  (if (string? x)
+  (if (clojure.core/string? x)
     (keyword x)))
 
 (defn -string->boolean [x]
-  (if (string? x)
+  (if (clojure.core/string? x)
     (cond
       (= "true" x) true
       (= "false" x) false
       :else ::s/invalid)))
 
 (defn -string->uuid [x]
-  (if (string? x)
+  (if (clojure.core/string? x)
     (try
       #?(:clj  (UUID/fromString x)
          :cljs (uuid x))
@@ -57,7 +58,7 @@
         ::s/invalid))))
 
 (defn -string->inst [x]
-  (if (string? x)
+  (if (clojure.core/string? x)
     (try
       #?(:clj  (.toDate (org.joda.time.DateTime/parse x))
          :cljs (js/Date. (.getTime (goog.date.UtcDateTime.fromIsoString x))))
@@ -90,7 +91,7 @@
     (fn [x]
       (if (pred x)
         x
-        (if (string? x)
+        (if (clojure.core/string? x)
           (if-let [conformer (get *conformations* pred)]
             (conformer x)
             '::s/invalid)
@@ -108,6 +109,7 @@
 ;; types
 ;;
 
+(def string? clojure.core/string?)
 (def integer? (dynamic-conformer clojure.core/integer?))
 (def int? (dynamic-conformer clojure.core/int?))
 (def double? (dynamic-conformer double-like?))
