@@ -3,7 +3,8 @@
             [schema.core :as schema]
             [schema.coerce :as coerce]
             [spec-tools.core :as st]
-            [criterium.core :as cc]))
+            [criterium.core :as cc]
+            [clojure.spec :as s]))
 
 ;;
 ;; start repl with `lein perf repl`
@@ -144,7 +145,103 @@
       (cc/quick-bench
         (call)))))
 
+(s/def ::order-id st/integer?)
+(s/def ::product-id st/integer?)
+(s/def ::product-name st/string?)
+(s/def ::price st/double?)
+(s/def ::quantity st/integer?)
+(s/def ::name st/string?)
+(s/def ::zip st/integer?)
+(s/def ::street string?)
+(s/def ::country (s/and st/keyword? #{:fi :po}))
+(s/def ::receiver (s/keys :req-un [::name ::street ::zip]
+                          :opt-un [::country]))
+(s/def ::orderline (s/keys :req-un [::product-id ::price]
+                           :req.un [::product-name]))
+(s/def ::orderlines (s/coll-of ::orderline))
+(s/def ::order (s/keys :req-un [::order-id ::orderlines ::receiver]))
+(s/def ::order-with-line (s/and ::order #(> (::orderlines 1))))
+
+(s/form
+  (s/cat ::first keyword?
+         :integer-lists (s/+
+                          (s/coll-of
+                            (s/keys :req-un [::order-id
+                                             ::orderlines
+                                             ::receiver])))))
+
+(schema/defschema Order
+  {:order-id Long
+   :orderlines [{:product-id Long
+                 :price Double
+                 (schema/optional-key :product-name) String}]
+   :receiver {:name String
+              :street String
+              :zip Long
+              (schema/optional-key :country) (schema/enum :fi :po)}})
+
+(def sample-order-valid
+  {:order-id 12
+   :orderlines [{:product-id 1
+                 :price 12.3}
+                {:product-id 2
+                 :price 9.99
+                 :product-name "token"}]
+   :receiver {:name "Tommi"
+              :street "Kotikatu 2"
+              :zip 33310
+              :country :fi}})
+
+(def sample-order
+  {:order-id "12"
+   :orderlines [{:product-id "1"
+                 :price "12.3"}
+                {:product-id "2"
+                 :price "9.99"
+                 :product-name "token"}]
+   :receiver {:name "Tommi"
+              :street "Kotikatu 2"
+              :zip "33310"
+              :country "fi"}})
+
+(defn conform-test3 []
+
+  (suite "conforming a nested map")
+
+  ; 4.5µs (alpha12)
+  (title "spec: conform")
+  (let [call #(st/conform ::order sample-order st/string-conformations)]
+    (assert (= (call) sample-order-valid))
+    (cc/quick-bench
+      (call)))
+
+  ; 2.8µs (alpha12)
+  (title "spec: conform - no-op")
+  (let [call #(st/conform ::order sample-order-valid st/string-conformations)]
+    (assert (= (call) sample-order-valid))
+    (cc/quick-bench
+      (call)))
+
+  ; 8µs
+  (title "schema: conform")
+  (let [coercer (coerce/coercer Order coerce/string-coercion-matcher)
+        call #(coercer sample-order)]
+    (assert (= (call) sample-order-valid))
+    (cc/quick-bench
+      (call)))
+
+  ; 114µs <-- woot
+  (title "schema: conform - no-op")
+  (let [coercer (coerce/coercer Order coerce/string-coercion-matcher)
+        call #(coercer sample-order-valid)]
+    (assert (= (call) sample-order-valid))
+    (cc/quick-bench
+      (call))))
+
+(set! *warn-on-reflection* true)
+
 (comment
   (valid-test)
   (conform-test)
-  (conform-test2))
+  (conform-test2)
+  (conform-test3))
