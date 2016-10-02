@@ -41,11 +41,12 @@
 (defmethod parse-spec 'clojure.core/fn [_ _]
   ::unknown)
 
-(defmethod parse-spec :default [x _]
+;; Sample handler for a leaf spec
+(defmethod parse-spec 'clojure.core/integer? [x _]
   x)
 
-(defmethod parse-spec 'clojure.core/integer? [x _]
-  (str "INTEGER" x))
+(defmethod parse-spec :default [x _]
+  x)
 
 ;;
 ;; spike
