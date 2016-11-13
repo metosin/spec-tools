@@ -21,7 +21,8 @@
     (testing "adding info to types"
       (let [info {:description "desc"
                   :example 123}]
-        (is (= info (:info (st/info my-integer? info))))))
+        (is (= info (:info (st/with-info my-integer? info))))
+        (is (= info (st/info (st/with-info my-integer? info))))))
 
     (testing "types are specs"
       (is (true? (s/valid? my-integer? 1)))
@@ -42,7 +43,7 @@
       (is (= ::s/invalid (st/conform ::birthdate "2006-01-02T15:04:05.999999-07:00")))))
 
   (testing "string-conformers"
-    (let [conform #(st/conform %1 %2 st/string-conformations)]
+    (let [conform #(st/conform %1 %2 st/string-conformers)]
       (testing "everything gets conformed"
         (is (= 12 (conform ::age "12")))
         (is (= 1234567 (conform ::over-a-million "1234567")))
@@ -55,7 +56,7 @@
                (conform ::birthdate "2006-01-02T15:04:05.999999-07:00"))))))
 
   (testing "json-conformers"
-    (let [conform #(st/conform %1 %2 st/json-conformations)]
+    (let [conform #(st/conform %1 %2 st/json-conformers)]
       (testing "some are not conformed"
         (is (= ::s/invalid (conform ::age "12")))
         (is (= ::s/invalid (conform ::over-a-million "1234567")))
@@ -69,7 +70,7 @@
                (conform ::birthdate "2006-01-02T15:04:05.999999-07:00")))))))
 
 (deftest unform-test
-  (let [unform-conform #(s/unform %1 (st/conform %1 %2 st/string-conformations))]
+  (let [unform-conform #(s/unform %1 (st/conform %1 %2 st/string-conformers))]
     (testing "conformed values can be unformed"
       (is (= 12 (unform-conform ::age "12")))
       (is (= 1234567 (unform-conform ::age "1234567")))
@@ -82,7 +83,7 @@
              (unform-conform ::birthdate "2006-01-02T15:04:05.999999-07:00"))))))
 
 (deftest extending-test
-  (let [my-conformations (-> st/string-conformations
+  (let [my-conformations (-> st/string-conformers
                              (assoc
                                keyword?
                                (comp
@@ -90,6 +91,6 @@
                                  str/reverse
                                  str/upper-case)))]
     (testing "string-conformers"
-      (is (= :kikka (st/conform st/keyword? "kikka" st/string-conformations))))
+      (is (= :kikka (st/conform st/keyword? "kikka" st/string-conformers))))
     (testing "my-conformers"
       (is (= :AKKIK (st/conform st/keyword? "kikka" my-conformations))))))

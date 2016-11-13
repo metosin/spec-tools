@@ -75,7 +75,7 @@
 ;; Public API
 ;;
 
-(def string-conformations
+(def string-conformers
   {clojure.core/integer? -string->int
    clojure.core/int? -string->long
    double-like? -string->double
@@ -84,23 +84,26 @@
    clojure.core/uuid? -string->uuid
    clojure.core/inst? -string->inst})
 
-(def json-conformations
+(def json-conformers
   {clojure.core/keyword? -string->keyword
    clojure.core/uuid? -string->uuid
    clojure.core/inst? -string->inst})
 
-(def ^:dynamic ^:private *conformations* nil)
+(def ^:dynamic ^:private *conformers* nil)
 
 (defn conform
   ([spec value]
    (s/conform spec value))
   ([spec value conformers]
-   (binding [*conformations* conformers]
+   (binding [*conformers* conformers]
      (s/conform spec value))))
 
 ;;
 ;; Types
 ;;
+
+(defprotocol TypeLike
+  (type-like [this]))
 
 (defrecord Type [form pred gfn info]
   #?@(:clj
@@ -109,11 +112,11 @@
        (specize* [s _] s)])
 
   s/Spec
-  (conform* [_ x]
+  (conform* [this x]
     (if (pred x)
       x
       (if (clojure.core/string? x)
-        (if-let [conformer (get *conformations* pred)]
+        (if-let [conformer (get *conformers* (type-like this))]
           (conformer x)
           '::s/invalid)
         ::s/invalid)))
@@ -128,7 +131,10 @@
   (describe* [_] form)
   IFn
   #?(:clj (invoke [_ x] (pred x))
-     :cljs (-invoke [_ x] (pred x))))
+     :cljs (-invoke [_ x] (pred x)))
+
+  TypeLike
+  (type-like [_] pred))
 
 #?(:clj
    (defmethod print-method Type
@@ -142,8 +148,11 @@
 (defmacro create-type [pred]
   `(->Type '~(#'s/res pred) ~pred nil nil))
 
-(defn info [^Type t info]
+(defn with-info [^Type t info]
   (map->Type (assoc t :info info)))
+
+(defn info [^Type t]
+  (:info t))
 
 ;;
 ;; concrete types
