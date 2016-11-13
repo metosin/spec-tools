@@ -5,15 +5,12 @@ script: ./scripts/test.sh $TEST
 env:
   matrix:
   - TEST=clj
-  - TEST=cljs
+  #- TEST=cljs
 matrix:
   exclude:
     - env: TEST=cljs
-      jdk: openjdk6
-    - env: TEST=cljs
       jdk: openjdk7
 jdk:
-  - openjdk6
   - openjdk7
   - oraclejdk8
 node_js:

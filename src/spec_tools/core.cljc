@@ -2,10 +2,14 @@
   (:refer-clojure :exclude [string? integer? int? double? keyword? boolean? uuid? inst?])
   (:require
     [clojure.spec :as s]
-    [clojure.spec.gen :as gen]
-    #?@(:cljs [goog.date.UtcDateTime]))
-  #?(:clj
-     (:import [java.util Date UUID])))
+    #?(:clj [clojure.spec.gen :as gen])
+    #?@(:cljs [[goog.date.UtcDateTime]
+               [cljs.spec.impl.gen :as gen]]))
+  (:import
+    #?@(:clj
+        [(java.util Date UUID)
+         (clojure.lang AFn IFn Var)
+         (java.io Writer)])))
 
 (defn- double-like? [x]
   (#?(:clj  clojure.core/double?
@@ -87,20 +91,6 @@
 
 (def ^:dynamic ^:private *conformations* nil)
 
-(defn dynamically-conformed [pred]
-  (s/with-gen
-  (s/conformer
-    (fn [x]
-      (if (pred x)
-        x
-        (if (clojure.core/string? x)
-          (if-let [conformer (get *conformations* pred)]
-            (conformer x)
-            '::s/invalid)
-          ::s/invalid)))
-      identity)
-    #(s/gen pred)))
-
 (defn conform
   ([spec value]
    (s/conform spec value))
@@ -109,14 +99,63 @@
      (s/conform spec value))))
 
 ;;
-;; types
+;; Types
+;;
+
+(defrecord Type [form pred gfn info]
+  #?@(:clj
+      [s/Specize
+       (specize* [s] s)
+       (specize* [s _] s)])
+
+  s/Spec
+  (conform* [_ x]
+    (if (pred x)
+      x
+      (if (clojure.core/string? x)
+        (if-let [conformer (get *conformations* pred)]
+          (conformer x)
+          '::s/invalid)
+        ::s/invalid)))
+  (unform* [_ x] x)
+  (explain* [_ path via in x]
+    (when (s/invalid? (if (pred x) x ::s/invalid))
+      [{:path path :pred (s/abbrev form) :val x :via via :in in}]))
+  (gen* [_ _ _ _] (if gfn
+                    (gfn)
+                    (gen/gen-for-pred pred)))
+  (with-gen* [_ gfn] (->Type form pred gfn info))
+  (describe* [_] form)
+  IFn
+  (invoke [_ x]
+    (pred x))
+  (applyTo [this args]
+    (AFn/applyToHelper this args))) []
+
+#?(:clj
+   (defmethod print-method Type
+     [^Type t ^Writer w]
+     (.write w (str "#Type"
+                    (merge
+                      {:pred (:form t)}
+                      (if-let [info (:info t)]
+                        {:info info}))))))
+
+(defmacro create-type [pred]
+  `(->Type '~(#'s/res pred) ~pred nil nil))
+
+(defn info [^Type t info]
+  (map->Type (assoc t :info info)))
+
+;;
+;; concrete types
 ;;
 
 (def string? clojure.core/string?)
-(def integer? (dynamically-conformed clojure.core/integer?))
-(def int? (dynamically-conformed clojure.core/int?))
-(def double? (dynamically-conformed double-like?))
-(def keyword? (dynamically-conformed clojure.core/keyword?))
-(def boolean? (dynamically-conformed clojure.core/boolean?))
-(def uuid? (dynamically-conformed clojure.core/uuid?))
-(def inst? (dynamically-conformed clojure.core/inst?))
+(def integer? (create-type clojure.core/integer?))
+(def int? (create-type clojure.core/int?))
+(def double? (create-type double-like?))
+(def keyword? (create-type clojure.core/keyword?))
+(def boolean? (create-type clojure.core/boolean?))
+(def uuid? (create-type clojure.core/uuid?))
+(def inst? (create-type clojure.core/inst?))

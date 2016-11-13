@@ -12,6 +12,24 @@
 (s/def ::uuid st/uuid?)
 (s/def ::birthdate st/inst?)
 
+(deftest types-test
+  (let [my-integer? (st/create-type integer?)]
+    (testing "types work as predicates"
+      (is (true? (my-integer? 1)))
+      (is (false? (my-integer? "1"))))
+
+    (testing "adding info to types"
+      (let [info {:description "desc"
+                  :example 123}]
+        (is (= info (:info (st/info my-integer? info))))))
+
+    (testing "types are specs"
+      (is (true? (s/valid? my-integer? 1)))
+      (is (false? (s/valid? my-integer? "1")))
+
+      (testing "also gen works"
+        (is (seq? (s/exercise my-integer?)))))))
+
 (deftest spec-tools-conform-test
   (testing "in default mode"
     (testing "nothing is conformed"
@@ -65,12 +83,12 @@
 
 (deftest extending-test
   (let [my-conformations (-> st/string-conformations
-                          (assoc
-                            keyword?
-                            (comp
-                              keyword
-                              str/reverse
-                              str/upper-case)))]
+                             (assoc
+                               keyword?
+                               (comp
+                                 keyword
+                                 str/reverse
+                                 str/upper-case)))]
     (testing "string-conformers"
       (is (= :kikka (st/conform st/keyword? "kikka" st/string-conformations))))
     (testing "my-conformers"
