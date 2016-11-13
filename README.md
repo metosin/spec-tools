@@ -1,8 +1,8 @@
 # spec-tools [![Build Status](https://travis-ci.org/metosin/spec-tools.svg?branch=master)](https://travis-ci.org/metosin/spec-tools) [![Dependencies Status](https://jarkeeper.com/metosin/spec-tools/status.svg)](https://jarkeeper.com/metosin/spec-tools)
 
-Clojure(Script) tools for [clojure.spec](http://clojure.org/about/spec). Bit like [Schema-tools](https://github.com/metosin/schema-tools).
+Clojure(Script) tools for [clojure.spec](http://clojure.org/about/spec). Like [Schema-tools](https://github.com/metosin/schema-tools) but for spec.
 
-Status: **Experimental**.
+Status: **Experimental** (as spec is still a moving target).
 
 ## Latest version
 
@@ -10,33 +10,63 @@ Status: **Experimental**.
 
 ## Features
 
+* [Type records](#type-records)
+* [Dynamic conforming](#dynamic-conforming)
+* [Generating JSON Schema](#generating-json-schema)
+
+### Type Records
+
+Spec is implemented using reified protocols. This makes extending current specs non-trivial. Spec-tools introduces Type (Predicate) Records satisfy the Spec protocols (`clojure.spec.Spec` & `clojure.spec.Specize`) and implement the `clojure.lang.IFn`, so they can act as normal 1-arity functions. Type records are easy to extend and can hold extra information, like description and examples.
+
+```clj
+(require '[clojure.spec :as s])
+(require '[spec-tools.core :as st])
+
+(def my-integer? (st/create-type integer?)
+; => #Type{:pred clojure.core/integer?}
+
+(my-integer? 1)
+; => true
+
+(s/valid? my-integer? 1)
+; => true
+
+(st/with-info my-integer? {:description "It's a int"})
+; => #Type{:pred clojure.core/integer?, :info {:description "It's a int"}}
+
+(st/info (st/with-info my-integer? {:description "It's a int"}))
+; => {:description "It's a int"}
+```
+
+Type records also support [dynamic conforming](#dynamic-conforming), making them great for remote apis.
+
+There are the following Type Records in `spec-tools.core`: `string?`, `integer?`, `int?`, `double?`, `keyword?`, `boolean?`, `uuid?` and `inst?`.
+
+**TODO**: support all common `clojure.core` predicates.
+
 ### Dynamic conforming
 
 #### Problem 
 
-In Schema, there are matchers which know how to coerce a value from one schema to another. One can choose
-at runtime which matchers will be used with the coercion. This is awesome for ring/http, where you need
-different coercion rules for different parameter sets:
+In [Schema](https://github.com/plumatic/schema), matchers tell how to coerce a value from one schema to another. One can choose at runtime which matchers will be used with coercion. This is awesome for ring/http, where you need different coercion rules for different parameter sets:
 
 * with `:query`, `:header` & `:path` -parameters, there are only strings -> all non-strings need to be coerced
 * with [JSON](http://json.org/), numbers and booleans should not be coerced, everything else should
 * with [EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format), nothing should be coerced as all types are presentable
 
-With Spec, the conformers are attached to spec instances instead of types. To support multiple
-conformation modes, one needs to create separate specs for different modes.
+With Spec, the conformers are attached to spec instances instead of types. To support multiple conformation modes, one needs to create separate specs for different modes.
 
 #### Solution
 
-Spec-tools solves this by defining a set of dynamic type predicates. They can conform values based on a 
-dynamic `*conformations*`-parameter, bound in the `spec-tools/conform`. Conformations is a map of
-`predicate => conformer`. By default, the following conformations and type predicates are supported:
+Type Records are attached with dynamic conformers. By default, no conforming is done. Binding a dynamic var `spec-tools.core/*conformers*` with a function of `predicate => conformer` will cause the Type to be conformed with the matching conformer. Both new conformers and types can be added easily on the client side. 
 
-* conformations: `string-conformations`, `json-conformations` and `nil` (no conforming).
-* type predicates: `integer?`, `int?`, `double?`, `keyword?`, `boolean?`, `uuid?` and `inst?`.
+By default, the following conformers exist:
 
-Both new conformations and type predicates can be easily added in the client side.
-
-**TODO**: all core predicates should be supported out-of-the-box.
+| Conformers                          | Description              | 
+| ------------------------------------|--------------------------|
+| `spec-tools.core/string-conformers` | Conforms all types from strings. | 
+| `spec-tools.core/json-conformers`   | JSON Conforming (maps, arrays, numbers and booleans not conformed). | 
+| `nil`                               | No conforming. | 
 
 #### Examples
 
@@ -46,15 +76,24 @@ Both new conformations and type predicates can be easily added in the client sid
 
 (s/def ::age (s/and st/integer? #(> % 18)))
 
-;; default conform with 2-arity
+;; no conforming
+(s/conform ::age "20")
+; => ::s/invalid
+
+;; no conforming (with 2-arity)
 (st/conform ::age "20")
 ; => ::s/invalid
 
-;; setting the conformations with 3-arity
-(st/conform ::age "20" st/json-conformations)
+;; no conforming (with 3-arity)
+(st/conform ::age nil)
 ; => ::s/invalid
 
-(st/conform ::age "20" st/string-conformations)
+;; json-conforming
+(st/conform ::age "20" st/json-conformers)
+; => ::s/invalid
+
+;; string-conforming
+(st/conform ::age "20" st/string-conformers)
 ; => 20
 ```
 
@@ -83,10 +122,10 @@ Both new conformations and type predicates can be easily added in the client sid
 (st/conform ::user data)
 ; ::s/invalid (no type conforming)
 
-(st/conform ::user data st/json-conformations)
+(st/conform ::user data st/json-conformers)
 ; ::s/invalid (doesn't conform numbers)
 
-(st/conform ::user data st/string-conformations)
+(st/conform ::user data st/string-conformers)
 ; {:name "Ilona"
 ;  :age 48
 ;  :languages #{:clj :cljs}
@@ -96,8 +135,8 @@ Both new conformations and type predicates can be easily added in the client sid
 #### Extending
 
 ```clj
-(def my-conformations
-  (-> st/string-conformations
+(def my-conformers
+  (-> st/string-conformers
       (assoc
         keyword?
         (comp
@@ -108,20 +147,20 @@ Both new conformations and type predicates can be easily added in the client sid
 (st/conform st/keyword? "kikka")
 ; ::s/invalid
 
-(st/conform st/keyword? "kikka" st/string-conformations)
+(st/conform st/keyword? "kikka" st/string-conformers)
 ; :kikka
 
-(st/conform st/keyword? "kikka" my-conformations)
+(st/conform st/keyword? "kikka" my-conformers)
 ; :AKKIK
 ```
 
-### External docs
+### Generating JSON Schema
 
-**TODO**: Like with dynamic conforming, generating different representations (e.g. JSON Schema) of
-the spec needs type-based rules. Would be easy if spec was built on Records/Types, not on `reify`.
-Reified specs need to be manually parsed. More info here:
+Targetting to generate JSON Schema from arbitrary specs (not just Type Records).
 
-* https://github.com/metosin/ring-swagger/issues/95
+Related: https://github.com/metosin/ring-swagger/issues/95
+
+See https://github.com/metosin/spec-tools/blob/master/test/spec_tools/json_schema_test.clj
 
 ## License
 
