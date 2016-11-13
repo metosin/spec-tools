@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [string? integer? int? double? keyword? boolean? uuid? inst?])
   (:require
     [clojure.spec :as s]
+    [clojure.spec.gen :as gen]
     #?@(:cljs [goog.date.UtcDateTime]))
   #?(:clj
      (:import [java.util Date UUID])))
@@ -86,7 +87,8 @@
 
 (def ^:dynamic ^:private *conformations* nil)
 
-(defn dynamic-conformer [pred]
+(defn dynamically-conformed [pred]
+  (s/with-gen
   (s/conformer
     (fn [x]
       (if (pred x)
@@ -96,7 +98,8 @@
             (conformer x)
             '::s/invalid)
           ::s/invalid)))
-    identity))
+      identity)
+    #(s/gen pred)))
 
 (defn conform
   ([spec value]
@@ -110,10 +113,10 @@
 ;;
 
 (def string? clojure.core/string?)
-(def integer? (dynamic-conformer clojure.core/integer?))
-(def int? (dynamic-conformer clojure.core/int?))
-(def double? (dynamic-conformer double-like?))
-(def keyword? (dynamic-conformer clojure.core/keyword?))
-(def boolean? (dynamic-conformer clojure.core/boolean?))
-(def uuid? (dynamic-conformer clojure.core/uuid?))
-(def inst? (dynamic-conformer clojure.core/inst?))
+(def integer? (dynamically-conformed clojure.core/integer?))
+(def int? (dynamically-conformed clojure.core/int?))
+(def double? (dynamically-conformed double-like?))
+(def keyword? (dynamically-conformed clojure.core/keyword?))
+(def boolean? (dynamically-conformed clojure.core/boolean?))
+(def uuid? (dynamically-conformed clojure.core/uuid?))
+(def inst? (dynamically-conformed clojure.core/inst?))
