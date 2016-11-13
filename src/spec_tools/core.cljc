@@ -119,7 +119,7 @@
         ::s/invalid)))
   (unform* [_ x] x)
   (explain* [_ path via in x]
-    (when (s/invalid? (if (pred x) x ::s/invalid))
+    (when (= ::s/invalid (if (pred x) x ::s/invalid))
       [{:path path :pred (s/abbrev form) :val x :via via :in in}]))
   (gen* [_ _ _ _] (if gfn
                     (gfn)
@@ -127,10 +127,8 @@
   (with-gen* [_ gfn] (->Type form pred gfn info))
   (describe* [_] form)
   IFn
-  (invoke [_ x]
-    (pred x))
-  (applyTo [this args]
-    (AFn/applyToHelper this args))) []
+  #?(:clj (invoke [_ x] (pred x))
+     :cljs (-invoke [_ x] (pred x))))
 
 #?(:clj
    (defmethod print-method Type
