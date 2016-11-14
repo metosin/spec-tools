@@ -1,18 +1,29 @@
 (ns spec-tools.core
   (:refer-clojure :exclude [type string? integer? int? double? keyword? boolean? uuid? inst?])
+  #?(:cljs (:require-macros [spec-tools.core :refer [type]]))
   (:require
     [clojure.spec :as s]
     #?(:clj
     [clojure.spec.gen :as gen])
     #?@(:cljs [[goog.date.UtcDateTime]
+               [cljs.analyzer.api :refer [resolve]]
                [clojure.test.check.generators]
-               [cljs.spec.impl.gen :as gen]])
-    [clojure.string :as str])
+               [cljs.spec.impl.gen :as gen]]))
   (:import
     #?@(:clj
         [(java.util Date UUID)
          (clojure.lang AFn IFn Var)
          (java.io Writer)])))
+
+(defn- ->sym [x]
+  #?(:clj  (if (var? x)
+             (let [^Var v x]
+               (symbol (str (.name (.ns v)))
+                       (str (.sym v))))
+             x)
+     :cljs (if (map? x)
+             (:name x)
+             x)))
 
 (defn- double-like? [x]
   (#?(:clj  clojure.core/double?
@@ -108,8 +119,7 @@
 (defprotocol TypeLike
   (type-like [this]))
 
-;; clojurescript
-(declare type)
+(declare -type)
 
 (defrecord Type [form pred gfn info]
   #?@(:clj
@@ -133,8 +143,8 @@
   (gen* [_ _ _ _] (if gfn
                     (gfn)
                     (gen/gen-for-pred pred)))
-  (with-gen* [_ gfn] (type form pred gfn info))
-  (describe* [_] `(type ~form))
+  (with-gen* [_ gfn] (-type form pred gfn info))
+  (describe* [_] `(spec-tools.core/type ~form))
   IFn
   #?(:clj  (invoke [_ x] (pred x))
      :cljs (-invoke [_ x] (pred x)))
@@ -151,20 +161,15 @@
                       (if-let [info (:info t)]
                         {:info info}))))))
 
-(defn- predicate-form [pred]
-  (-> #?(:clj  (.getName (class pred))
-         :cljs (.-name pred))
-      (str/replace #".*?\$" "")
-      (str/replace #"_QMARK_" "?")
-      symbol))
-
-(defn type
-  ([pred]
-   (type (predicate-form pred) pred))
+(defn -type
   ([pred-form pred]
-   (type pred-form pred nil nil))
+   (-type pred-form pred nil nil))
   ([pred-form pred gfn info]
    (->Type pred-form pred gfn info)))
+
+(defmacro type [pred]
+  `(-type '~(or (-> pred #?(:clj  resolve
+                            :cljs (resolve &env)) ->sym) pred) ~pred))
 
 (defn with-info [^Type t info]
   (map->Type (assoc t :info info)))

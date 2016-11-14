@@ -28,8 +28,11 @@
       (is (true? (s/valid? my-integer? 1)))
       (is (false? (s/valid? my-integer? "1")))
 
-      (is (= ['spec-tools.core/type 'integer?] (s/form my-integer?)))
-      (is (= ['type 'integer?] (s/describe my-integer?)))
+      ;; FIXME: why this doesn't work with cljs?
+      (testing "cljs resolve doesn't retain ns-info"
+        (is (= ['spec-tools.core/type #?(:clj  'clojure.core/integer?
+                                         :cljs 'integer?)] (s/form my-integer?)))
+        (is (= ['type 'integer?] (s/describe my-integer?))))
 
       (testing "also gen works"
         (is (seq? (s/exercise my-integer?)))))))
