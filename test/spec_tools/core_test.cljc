@@ -29,9 +29,9 @@
       (is (false? (s/valid? my-integer? "1")))
 
       ;; FIXME: why this doesn't work with cljs?
-      (testing "cljs resolve doesn't retain ns-info"
+      (testing "fully qualifed predicate symbol is returned with s/form"
         (is (= ['spec-tools.core/type #?(:clj  'clojure.core/integer?
-                                         :cljs 'integer?)] (s/form my-integer?)))
+                                         :cljs 'cljs.core/integer?)] (s/form my-integer?)))
         (is (= ['type 'integer?] (s/describe my-integer?))))
 
       (testing "also gen works"
