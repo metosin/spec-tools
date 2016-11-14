@@ -5,7 +5,7 @@ script: ./scripts/test.sh $TEST
 env:
   matrix:
   - TEST=clj
-  #- TEST=cljs
+  - TEST=cljs
 matrix:
   exclude:
     - env: TEST=cljs
@@ -14,7 +14,7 @@ jdk:
   - openjdk7
   - oraclejdk8
 node_js:
-  - "0.10"
+  - "6.1"
 cache:
   directories:
   - "$HOME/.m2"

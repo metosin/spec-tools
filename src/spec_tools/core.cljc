@@ -1,10 +1,13 @@
 (ns spec-tools.core
-  (:refer-clojure :exclude [string? integer? int? double? keyword? boolean? uuid? inst?])
+  (:refer-clojure :exclude [type string? integer? int? double? keyword? boolean? uuid? inst?])
   (:require
     [clojure.spec :as s]
-    #?(:clj [clojure.spec.gen :as gen])
+    #?(:clj
+    [clojure.spec.gen :as gen])
     #?@(:cljs [[goog.date.UtcDateTime]
-               [cljs.spec.impl.gen :as gen]]))
+               [clojure.test.check.generators]
+               [cljs.spec.impl.gen :as gen]])
+    [clojure.string :as str])
   (:import
     #?@(:clj
         [(java.util Date UUID)
@@ -105,6 +108,9 @@
 (defprotocol TypeLike
   (type-like [this]))
 
+;; clojurescript
+(declare type)
+
 (defrecord Type [form pred gfn info]
   #?@(:clj
       [s/Specize
@@ -127,10 +133,10 @@
   (gen* [_ _ _ _] (if gfn
                     (gfn)
                     (gen/gen-for-pred pred)))
-  (with-gen* [_ gfn] (->Type form pred gfn info))
-  (describe* [_] form)
+  (with-gen* [_ gfn] (type form pred gfn info))
+  (describe* [_] `(type ~form))
   IFn
-  #?(:clj (invoke [_ x] (pred x))
+  #?(:clj  (invoke [_ x] (pred x))
      :cljs (-invoke [_ x] (pred x)))
 
   TypeLike
@@ -145,8 +151,20 @@
                       (if-let [info (:info t)]
                         {:info info}))))))
 
-(defmacro create-type [pred]
-  `(->Type '~(#'s/res pred) ~pred nil nil))
+(defn- predicate-form [pred]
+  (-> #?(:clj  (.getName (class pred))
+         :cljs (.-name pred))
+      (str/replace #".*?\$" "")
+      (str/replace #"_QMARK_" "?")
+      symbol))
+
+(defn type
+  ([pred]
+   (type (predicate-form pred) pred))
+  ([pred-form pred]
+   (type pred-form pred nil nil))
+  ([pred-form pred gfn info]
+   (->Type pred-form pred gfn info)))
 
 (defn with-info [^Type t info]
   (map->Type (assoc t :info info)))
@@ -158,11 +176,11 @@
 ;; concrete types
 ;;
 
-(def string? clojure.core/string?)
-(def integer? (create-type clojure.core/integer?))
-(def int? (create-type clojure.core/int?))
-(def double? (create-type double-like?))
-(def keyword? (create-type clojure.core/keyword?))
-(def boolean? (create-type clojure.core/boolean?))
-(def uuid? (create-type clojure.core/uuid?))
-(def inst? (create-type clojure.core/inst?))
+(def string? (type clojure.core/integer?))
+(def integer? (type clojure.core/integer?))
+(def int? (type clojure.core/int?))
+(def double? (type double-like?))
+(def keyword? (type clojure.core/keyword?))
+(def boolean? (type clojure.core/boolean?))
+(def uuid? (type clojure.core/uuid?))
+(def inst? (type clojure.core/inst?))

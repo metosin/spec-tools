@@ -13,7 +13,7 @@
 (s/def ::birthdate st/inst?)
 
 (deftest types-test
-  (let [my-integer? (st/create-type integer?)]
+  (let [my-integer? (st/type integer?)]
     (testing "types work as predicates"
       (is (true? (my-integer? 1)))
       (is (false? (my-integer? "1"))))
@@ -27,6 +27,9 @@
     (testing "types are specs"
       (is (true? (s/valid? my-integer? 1)))
       (is (false? (s/valid? my-integer? "1")))
+
+      (is (= ['spec-tools.core/type 'integer?] (s/form my-integer?)))
+      (is (= ['type 'integer?] (s/describe my-integer?)))
 
       (testing "also gen works"
         (is (seq? (s/exercise my-integer?)))))))
