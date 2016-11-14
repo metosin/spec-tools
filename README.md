@@ -68,13 +68,7 @@ Type Records are attached with dynamic conformers. By default, no conforming is 
 
 ;; no conforming
 (s/conform ::age "20")
-; => ::s/invalid
-
-;; no conforming (with 2-arity)
 (st/conform ::age "20")
-; => ::s/invalid
-
-;; no conforming (with 3-arity)
 (st/conform ::age nil)
 ; => ::s/invalid
 
