@@ -119,7 +119,7 @@
 (defprotocol TypeLike
   (type-like [this]))
 
-(declare -type)
+(declare ->Type)
 
 (defrecord Type [form pred gfn info]
   #?@(:clj
@@ -143,7 +143,7 @@
   (gen* [_ _ _ _] (if gfn
                     (gfn)
                     (gen/gen-for-pred pred)))
-  (with-gen* [_ gfn] (-type form pred gfn info))
+  (with-gen* [_ gfn] (->Type form pred gfn info))
   (describe* [_] `(spec-tools.core/type ~form))
   IFn
   #?(:clj  (invoke [_ x] (pred x))
@@ -161,15 +161,8 @@
                       (if-let [info (:info t)]
                         {:info info}))))))
 
-(defn -type
-  ([pred-form pred]
-   (-type pred-form pred nil nil))
-  ([pred-form pred gfn info]
-   (->Type pred-form pred gfn info)))
-
 (defmacro type [pred]
-  `(-type '~(or (-> pred #?(:clj  resolve
-                            :cljs (resolve &env)) ->sym) pred) ~pred))
+  `(->Type '~(or (->> pred #?(:clj resolve, :cljs (resolve &env)) ->sym) pred) ~pred nil nil))
 
 (defn with-info [^Type t info]
   (map->Type (assoc t :info info)))
