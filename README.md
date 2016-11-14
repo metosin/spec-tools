@@ -12,6 +12,7 @@ Status: **Experimental** (as spec is still a moving target).
 
 * [Type records](#type-records)
 * [Dynamic conforming](#dynamic-conforming)
+* [Concise Map Specs](#concise-map-specs)
 * [Generating JSON Schema](#generating-json-schema)
 
 ### Type Records
@@ -22,8 +23,10 @@ Spec is implemented using reified protocols. This makes extending current specs 
 (require '[clojure.spec :as s])
 (require '[spec-tools.core :as st])
 
-(def my-integer? (st/create-type integer?)
-; => #Type{:pred clojure.core/integer?}
+(def my-integer? (st/type integer?))
+
+my-integer?
+; => #Type{:pred integer?}
 
 (my-integer? 1)
 ; => true
@@ -32,7 +35,7 @@ Spec is implemented using reified protocols. This makes extending current specs 
 ; => true
 
 (st/with-info my-integer? {:description "It's a int"})
-; => #Type{:pred clojure.core/integer?, :info {:description "It's a int"}}
+; => #Type{:pred integer?, :info {:description "It's a int"}}
 
 (st/info (st/with-info my-integer? {:description "It's a int"}))
 ; => {:description "It's a int"}
@@ -46,34 +49,21 @@ There are the following Type Records in `spec-tools.core`: `string?`, `integer?`
 
 ### Dynamic conforming
 
-#### Problem 
+[Schema](https://github.com/plumatic/schema) supports runtime defined schema coercions. Spec does not. Runtime conforming of the specs is needed to use specs effectively with less capable wire formats like JSON.
 
-In [Schema](https://github.com/plumatic/schema), matchers tell how to coerce a value from one schema to another. One can choose at runtime which matchers will be used with coercion. This is awesome for ring/http, where you need different coercion rules for different parameter sets:
+Type Records are attached with dynamic conformers. By default, no conforming is done. Binding a dynamic var `spec-tools.core/*conformers*` with a function of `predicate => conformer` will cause the Type to be conformed with the matching conformer.
 
-* with `:query`, `:header` & `:path` -parameters, there are only strings -> all non-strings need to be coerced
-* with [JSON](http://json.org/), numbers and booleans should not be coerced, everything else should
-* with [EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format), nothing should be coerced as all types are presentable
+#### Out-of-the-box conformers
 
-With Spec, the conformers are attached to spec instances instead of types. To support multiple conformation modes, one needs to create separate specs for different modes.
+| Name                                | Description                                                                             | 
+| ------------------------------------|-----------------------------------------------------------------------------------------|
+| `spec-tools.core/string-conformers` | Conforms all types from strings (`:query`, `:header` & `:path` -parameters).            | 
+| `spec-tools.core/json-conformers`   | [JSON](http://json.org/) Conforming (maps, arrays, numbers and booleans not conformed). | 
+| `nil`                               | No conforming (for [EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format). | 
 
-#### Solution
-
-Type Records are attached with dynamic conformers. By default, no conforming is done. Binding a dynamic var `spec-tools.core/*conformers*` with a function of `predicate => conformer` will cause the Type to be conformed with the matching conformer. Both new conformers and types can be added easily on the client side. 
-
-By default, the following conformers exist:
-
-| Conformers                          | Description              | 
-| ------------------------------------|--------------------------|
-| `spec-tools.core/string-conformers` | Conforms all types from strings. | 
-| `spec-tools.core/json-conformers`   | JSON Conforming (maps, arrays, numbers and booleans not conformed). | 
-| `nil`                               | No conforming. | 
-
-#### Examples
+#### Conforming examples
 
 ```clj
-(require '[clojure.spec :as s])
-(require '[spec-tools.core :as st])
-
 (s/def ::age (s/and st/integer? #(> % 18)))
 
 ;; no conforming
@@ -134,6 +124,8 @@ By default, the following conformers exist:
 
 #### Extending
 
+Default conformers are just data, so extending them is easy:
+
 ```clj
 (def my-conformers
   (-> st/string-conformers
@@ -154,13 +146,17 @@ By default, the following conformers exist:
 ; :AKKIK
 ```
 
+### Concise Map Specs
+
+**TODO**
+
 ### Generating JSON Schema
 
 Targetting to generate JSON Schema from arbitrary specs (not just Type Records).
 
 Related: https://github.com/metosin/ring-swagger/issues/95
 
-See https://github.com/metosin/spec-tools/blob/master/test/spec_tools/json_schema_test.clj
+WIP: https://github.com/metosin/spec-tools/blob/master/test/spec_tools/json_schema_test.clj
 
 ## License
 
