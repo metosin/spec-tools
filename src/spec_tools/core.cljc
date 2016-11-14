@@ -144,7 +144,7 @@
                     (gfn)
                     (gen/gen-for-pred pred)))
   (with-gen* [_ gfn] (->Type form pred gfn info))
-  (describe* [_] `(spec-tools.core/type ~form))
+  (describe* [_] `(spec-tools.core/type ~form ~info))
   IFn
   #?(:clj  (invoke [_ x] (pred x))
      :cljs (-invoke [_ x] (pred x)))
@@ -161,8 +161,11 @@
                       (if-let [info (:info t)]
                         {:info info}))))))
 
-(defmacro type [pred]
+(defmacro type
+  ([pred]
   `(->Type '~(or (->> pred #?(:clj resolve, :cljs (resolve &env)) ->sym) pred) ~pred nil nil))
+  ([pred info]
+   `(->Type '~(or (->> pred #?(:clj resolve, :cljs (resolve &env)) ->sym) pred) ~pred nil ~info)))
 
 (defn with-info [^Type t info]
   (map->Type (assoc t :info info)))
