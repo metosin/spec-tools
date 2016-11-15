@@ -36,6 +36,9 @@ my-integer?
 
 (assoc my-integer? :info {:description "It's a int"})
 ; => #Type{:pred clojure.core/integer?, :info {:description "It's a int"}}
+
+(eval (s/form (st/type integer? {:description "It's a int"})))
+; => #Type{:pred clojure.core/integer?, :info {:description "It's a int"}}
 ```
 
 Type records also support [dynamic conforming](#dynamic-conforming), making them great for remote apis.
