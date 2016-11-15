@@ -12,13 +12,6 @@
 (s/def ::uuid st/uuid?)
 (s/def ::birthdate st/inst?)
 
-(deftest spec-test
-  (let [spec (s/and integer? pos?)]
-    (is (= `(s/and integer? pos?)
-           (s/form spec)
-           (s/form (eval (s/form spec)))))))
-
-
 (deftest types-test
   (let [my-integer? (st/type integer?)]
     (testing "types work as predicates"
@@ -35,7 +28,6 @@
       (is (true? (s/valid? my-integer? 1)))
       (is (false? (s/valid? my-integer? "1")))
 
-      ;; FIXME: why this doesn't work with cljs?
       (testing "fully qualifed predicate symbol is returned with s/form"
         (is (= ['spec-tools.core/type #?(:clj  'clojure.core/integer?
                                          :cljs 'cljs.core/integer?)] (s/form my-integer?)))
@@ -45,7 +37,7 @@
         (let [spec (st/type clojure.core/integer? {:description "cool"})]
           (is (= `(st/type integer? {:description "cool"})
                  (s/form spec)
-                 (s/form (eval (s/form spec)))))))
+                 #?(:clj (s/form (eval (s/form spec))))))))
 
       (testing "also gen works"
         (is (seq? (s/exercise my-integer?)))))))

@@ -7,11 +7,10 @@
                             nil? false? true? zero? rational? coll? empty? associative? sequential? ratio? bytes?])
   #?(:cljs (:require-macros [spec-tools.core :refer [type]]))
   (:require
+    [spec-tools.impl :as impl]
     [clojure.spec :as s]
-    #?(:clj
-    [clojure.spec.gen :as gen])
-    #?@(:cljs [[goog.date.UtcDateTime]
-               [cljs.analyzer.api :refer [resolve]]
+    #?@(:clj  [[clojure.spec.gen :as gen]]
+        :cljs [[goog.date.UtcDateTime]
                [clojure.test.check.generators]
                [cljs.spec.impl.gen :as gen]]))
   (:import
@@ -26,13 +25,13 @@
                (symbol (str (.name (.ns v)))
                        (str (.sym v))))
              x)
-     :cljs (if (map? x)
+     :cljs (if (clojure.core/map? x)
              (:name x)
              x)))
 
 (defn- double-like? [x]
   (#?(:clj  clojure.core/double?
-      :cljs number?) x))
+      :cljs clojure.core/number?) x))
 
 (defn -string->int [x]
   (if (clojure.core/string? x)
@@ -170,11 +169,16 @@
                       {:pred (:form t)}
                       (extra-type-map t))))))
 
-(defmacro type
-  ([pred]
-   `(map->Type {:form '~(or (->> pred #?(:clj resolve, :cljs (resolve &env)) ->sym) pred), :pred ~pred}))
-  ([pred info]
-   `(map->Type (merge ~info {:form '~(or (->> pred #?(:clj resolve, :cljs (resolve &env)) ->sym) pred), :pred ~pred}))))
+#?(:clj
+   (defmacro type
+     ([pred]
+      (if (impl/in-cljs? &env)
+        `(map->Type {:form '~(or (->> pred (impl/res &env) ->sym) pred), :pred ~pred})
+        `(map->Type {:form '~(or (->> pred resolve ->sym) pred), :pred ~pred})))
+     ([pred info]
+      (if (impl/in-cljs? &env)
+        `(map->Type (merge ~info {:form '~(or (->> pred (impl/res &env) ->sym) pred), :pred ~pred}))
+        `(map->Type (merge ~info {:form '~(or (->> pred resolve ->sym) pred), :pred ~pred}))))))
 
 (defn with-info [^Type t info]
   (assoc t :info info))
