@@ -26,7 +26,7 @@ Spec is implemented using reified protocols. This makes extending current specs 
 (def my-integer? (st/type integer?))
 
 my-integer?
-; => #Type{:pred integer?}
+; => #Type{:pred clojure.core/integer?}
 
 (my-integer? 1)
 ; => true
@@ -34,11 +34,8 @@ my-integer?
 (s/valid? my-integer? 1)
 ; => true
 
-(st/with-info my-integer? {:description "It's a int"})
-; => #Type{:pred integer?, :info {:description "It's a int"}}
-
-(st/info (st/with-info my-integer? {:description "It's a int"}))
-; => {:description "It's a int"}
+(assoc my-integer? :info {:description "It's a int"})
+; => #Type{:pred clojure.core/integer?, :info {:description "It's a int"}}
 ```
 
 Type records also support [dynamic conforming](#dynamic-conforming), making them great for remote apis.
