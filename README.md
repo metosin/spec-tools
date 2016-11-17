@@ -49,7 +49,18 @@ my-integer?
 
 Type records also support [dynamic conforming](#dynamic-conforming), making them great for runtime system border validation.
 
-There are the following Type Records are currently in `spec-tools.core`: `String`, `Integer`, `Int`, `Double`, `Keyword`, `Boolean`, `Uuid` and `Inst`.
+## Out-of-the-box Type Records
+
+| Type Record      | type hint        | spec predicate  |
+| ------------------------------------|-----------------|
+| `st/String`      | `::st/string`    | `string?`       |
+| `st/Integer`     | `::st/integer`   | `integer?`      |
+| `st/Int`         | `::st/int`       | `int?`          |
+| `st/Double`      | `::st/double`    | `double?`       |
+| `st/Keyword`     | `::st/keyword`   | `keyword?`      |
+| `st/Boolean`     | `::st/boolean`   | `boolean?`      |
+| `st/UUID`        | `::st/uuid`      | `uuid?`         |
+| `st/Inst`        | `::st/inst`      | `inst?`         |
 
 **TODO**: support all common common types & `clojure.core` predicates.
 
