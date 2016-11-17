@@ -52,7 +52,7 @@ Type records also support [dynamic conforming](#dynamic-conforming), making them
 ## Out-of-the-box Type Records
 
 | Type Record      | type hint        | spec predicate  |
-| ------------------------------------|-----------------|
+| -----------------|------------------|-----------------|
 | `st/String`      | `::st/string`    | `string?`       |
 | `st/Integer`     | `::st/integer`   | `integer?`      |
 | `st/Int`         | `::st/int`       | `int?`          |
