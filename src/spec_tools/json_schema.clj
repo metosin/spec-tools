@@ -21,7 +21,7 @@
 (defmethod to-json 'clojure.core/integer? [spec] {:type "integer"})
 
 (defmethod to-json 'clojure.core/float? [spec] {:type "number"})
-(defmethod to-json 'clojure.core/double? [spec] {:type "number" :format "double"})
+(defmethod to-json 'clojure.core/double? [spec] {:type "number"})
 
 (defmethod to-json 'clojure.core/pos? [spec] {:minimum 0 :exclusiveMinimum true})
 (defmethod to-json 'clojure.core/neg? [spec] {:maximum 0 :exclusiveMaximum true})

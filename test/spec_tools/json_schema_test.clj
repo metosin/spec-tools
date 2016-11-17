@@ -17,7 +17,7 @@
     (is (= (jsc/to-json (specize int?)) {:type "integer"}))
     (is (= (jsc/to-json (specize integer?)) {:type "integer"}))
     (is (= (jsc/to-json (specize float?)) {:type "number"}))
-    (is (= (jsc/to-json (specize double?)) {:type "number" :format "double"}))
+    (is (= (jsc/to-json (specize double?)) {:type "number"}))
     (is (= (jsc/to-json (specize string?)) {:type "string"}))
     (is (= (jsc/to-json (specize boolean?)) {:type "boolean"}))
     (is (= (jsc/to-json (specize nil?)) {:type "null"}))
