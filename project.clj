@@ -18,7 +18,9 @@
                                   [prismatic/schema "1.1.3"]
                                   [org.clojure/test.check "0.9.0"]
                                   [org.clojure/clojurescript "1.9.293"]
-                                  [org.clojure/tools.namespace "0.2.11"]]}
+                                  [org.clojure/tools.namespace "0.2.11"]
+                                  [com.gfredericks/test.chuck "0.2.7"]
+                                  [metosin/scjsv "0.4.0"]]}
              :perf {:jvm-opts ^:replace ["-server"]}}
   :aliases {"all" ["with-profile" "dev"]
             "perf" ["with-profile" "default,dev,perf"]

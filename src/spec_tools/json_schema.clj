@@ -2,6 +2,14 @@
   "Tools for converting specs into JSON Schemata."
   (:require [clojure.spec :as s]))
 
+(defn- strip-fn-if-needed [form]
+  (let [head (first form)]
+    ;; Deal with the form (clojure.core/fn [%] (foo ... %))
+    ;; We should just use core.match...
+    (if (and (= (count form) 3) (= head 'clojure.core/fn))
+      (nth form 2)
+      form)))
+
 (defn- spec-dispatch
   [spec]
   (cond
@@ -13,6 +21,7 @@
           (spec-dispatch form))
         spec))
     (set? spec) ::set
+    (list? spec) (first (strip-fn-if-needed spec))
     :else spec))
 
 (defmulti to-json "Convert a spec into a JSON Schema." spec-dispatch :default ::default)
@@ -67,6 +76,14 @@
 (defmethod to-json 'clojure.spec/and [spec]
   (let [[_ & inner-specs] (s/form spec)]
     {:allOf (mapv to-json inner-specs)}))
+
+(defmethod to-json 'clojure.spec/nilable [spec]
+  (let [[_ inner-spec] (s/form spec)]
+    {:oneOf [(to-json inner-spec) {:type "null"}]}))
+
+(defmethod to-json 'clojure.spec/int-in-range? [spec]
+  (let [[_ minimum maximum _] (strip-fn-if-needed spec)]
+    {:minimum minimum :maximum maximum}))
 
 (defmethod to-json ::default [spec]
   (prn :UNNOWN (spec-dispatch spec) spec)
