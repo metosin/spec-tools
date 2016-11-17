@@ -17,7 +17,7 @@ Status: **Experimental** (as spec is still a moving target).
 
 ### Type Records
 
-Spec is implemented using reified protocols. This makes extending current specs non-trivial. Spec-tools introduces Type Records that satisfy the Spec protocols (`clojure.spec.Spec` & `clojure.spec.Specize`) and implement the `clojure.lang.IFn`, so they can act as normal 1-arity functions. Type Records contain a type-hint keyword, a spec predicate and optionally an extra info map for documentation purposes.
+Spec is implemented using reified protocols. This makes extending current specs non-trivial. Spec-tools introduces Type Records that satisfy the Spec protocols (`clojure.spec.Spec` & `clojure.spec.Specize`) and implement the `clojure.lang.IFn`, so they can act as normal 1-arity functions. Type Records contain a type-hint, a spec predicate and optionally an extra info map for documentation purposes.
 
 ```clj
 (require '[clojure.spec :as s])
@@ -28,7 +28,6 @@ Spec is implemented using reified protocols. This makes extending current specs 
 my-integer?
 ; #Type{:hint :spec-tools.core/integer
 ;       :pred clojure.core/integer?}
-
 
 (my-integer? 1)
 ; true
