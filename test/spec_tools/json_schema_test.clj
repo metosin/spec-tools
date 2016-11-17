@@ -7,11 +7,20 @@
 (s/def ::string string?)
 (s/def ::set #{1 2 3})
 
+;; Modeled after s/def
+(defmacro specize [pred] `(#'s/specize ~pred '~(#'s/res pred)))
+
 (deftest simple-spec-test
   (testing "primitive predicates"
-    (is (= (jsc/to-json int?) {:type "integer"}))
-    (is (= (jsc/to-json float?) {:type "number"}))
-    (is (= (jsc/to-json string?) {:type "string"}))
+    ;; You're intented to call jsc/to-json with a registered spec, but to avoid
+    ;; boilerplate, we do inline specization here.
+    (is (= (jsc/to-json (specize int?)) {:type "integer"}))
+    (is (= (jsc/to-json (specize integer?)) {:type "integer"}))
+    (is (= (jsc/to-json (specize float?)) {:type "number"}))
+    (is (= (jsc/to-json (specize double?)) {:type "number" :format "double"}))
+    (is (= (jsc/to-json (specize string?)) {:type "string"}))
+    (is (= (jsc/to-json (specize boolean?)) {:type "boolean"}))
+    (is (= (jsc/to-json (specize nil?)) {:type "null"}))
     (is (= (jsc/to-json #{1 2 3}) {:enum [1 3 2]})))
   (testing "simple specs"
     (is (= (jsc/to-json ::int) {:type "integer"}))

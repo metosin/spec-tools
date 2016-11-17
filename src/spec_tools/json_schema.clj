@@ -1,7 +1,8 @@
 (ns spec-tools.json-schema
+  "Tools for converting specs into JSON Schemata."
   (:require [clojure.spec :as s]))
 
-(defn spec-dispatch
+(defn- spec-dispatch
   [spec]
   (cond
     (or (s/spec? spec) (s/regex? spec) (keyword? spec))
@@ -14,16 +15,22 @@
     (set? spec) ::set
     :else spec))
 
-(defmulti to-json spec-dispatch :default ::default)
+(defmulti to-json "Convert a spec into a JSON Schema." spec-dispatch :default ::default)
 
-(defmethod to-json 'int? [spec] {:type "integer"})
 (defmethod to-json 'clojure.core/int? [spec] {:type "integer"})
-(defmethod to-json int? [spec] {:type "integer"})
-(defmethod to-json float? [spec] {:type "number"})
-(defmethod to-json string? [spec] {:type "string"})
-(defmethod to-json 'clojure.core/string? [spec] {:type "string"})
+(defmethod to-json 'clojure.core/integer? [spec] {:type "integer"})
+
+(defmethod to-json 'clojure.core/float? [spec] {:type "number"})
+(defmethod to-json 'clojure.core/double? [spec] {:type "number" :format "double"})
 
 (defmethod to-json 'clojure.core/pos? [spec] {:minimum 0 :exclusiveMinimum true})
+(defmethod to-json 'clojure.core/neg? [spec] {:maximum 0 :exclusiveMaximum true})
+
+(defmethod to-json 'clojure.core/string? [spec] {:type "string"})
+
+(defmethod to-json 'clojure.core/boolean? [spec] {:type "boolean"})
+
+(defmethod to-json 'clojure.core/nil? [spec] {:type "null"})
 
 (defmethod to-json ::set [spec]
   {:enum (vec (if (keyword? spec) (s/form spec) spec))})
