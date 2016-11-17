@@ -4,16 +4,16 @@
             [spec-tools.core :as st]
             [clojure.string :as str]))
 
-(s/def ::age (s/and st/integer? #(> % 10)))
-(s/def ::over-a-million (s/and st/int? #(> % 1000000)))
-(s/def ::lat st/double?)
-(s/def ::language (s/and st/keyword? #{:clojure :clojurescript}))
-(s/def ::truth st/boolean?)
-(s/def ::uuid st/uuid?)
-(s/def ::birthdate st/inst?)
+(s/def ::age (s/and st/Integer #(> % 10)))
+(s/def ::over-a-million (s/and st/Int #(> % 1000000)))
+(s/def ::lat st/Double)
+(s/def ::language (s/and st/Keyword #{:clojure :clojurescript}))
+(s/def ::truth st/Boolean)
+(s/def ::uuid st/UUID)
+(s/def ::birthdate st/Inst)
 
 (deftest types-test
-  (let [my-integer? (st/type integer?)]
+  (let [my-integer? (st/type ::st/integer integer?)]
     (testing "types work as predicates"
       (is (true? (my-integer? 1)))
       (is (false? (my-integer? "1"))))
@@ -29,13 +29,15 @@
       (is (false? (s/valid? my-integer? "1")))
 
       (testing "fully qualifed predicate symbol is returned with s/form"
-        (is (= ['spec-tools.core/type #?(:clj  'clojure.core/integer?
-                                         :cljs 'cljs.core/integer?)] (s/form my-integer?)))
-        (is (= ['type 'integer?] (s/describe my-integer?))))
+        (is (= ['spec-tools.core/type
+                ::st/integer
+                #?(:clj  'clojure.core/integer?
+                   :cljs 'cljs.core/integer?)] (s/form my-integer?)))
+        (is (= ['type ::st/integer 'integer?] (s/describe my-integer?))))
 
       (testing "spec serialization"
-        (let [spec (st/type clojure.core/integer? {:description "cool"})]
-          (is (= `(st/type integer? {:description "cool"})
+        (let [spec (st/type ::integer clojure.core/integer? {:description "cool"})]
+          (is (= `(st/type ::integer integer? {:description "cool"})
                  (s/form spec)
                  #?(:clj (s/form (eval (s/form spec))))))))
 
@@ -96,12 +98,12 @@
 (deftest extending-test
   (let [my-conformations (-> st/string-conformers
                              (assoc
-                               keyword?
+                               ::st/keyword
                                (comp
                                  keyword
                                  str/reverse
                                  str/upper-case)))]
     (testing "string-conformers"
-      (is (= :kikka (st/conform st/keyword? "kikka" st/string-conformers))))
+      (is (= :kikka (st/conform st/Keyword "kikka" st/string-conformers))))
     (testing "my-conformers"
-      (is (= :AKKIK (st/conform st/keyword? "kikka" my-conformations))))))
+      (is (= :AKKIK (st/conform st/Keyword "kikka" my-conformations))))))
