@@ -1,10 +1,6 @@
 (ns spec-tools.core
-  (:refer-clojure :exclude [type any? some?
-                            number? integer? int? pos-int? neg-int? nat-int? float? double?
-                            boolean? string? ident? simple-ident? qualified-ident?
-                            keyword? simple-keyword? qualified-keyword? symbol? simple-symbol? qualified-symbol?
-                            uuid? uri? bigdec? inst? seqable? indexed? map? vector? list? seq? char? set?
-                            nil? false? true? zero? rational? coll? empty? associative? sequential? ratio? bytes?])
+  (:refer-clojure :exclude #?(:clj [type]
+                              :cljs [type Inst Keyword UUID]))
   #?(:cljs (:require-macros [spec-tools.core :refer [type]]))
   (:require
     [spec-tools.impl :as impl]
@@ -15,8 +11,7 @@
                [cljs.spec.impl.gen :as gen]]))
   (:import
     #?@(:clj
-        [(java.util Date UUID)
-         (clojure.lang AFn IFn Var)
+        [(clojure.lang AFn IFn Var)
          (java.io Writer)])))
 
 (defn- ->sym [x]
@@ -25,25 +20,25 @@
                (symbol (str (.name (.ns v)))
                        (str (.sym v))))
              x)
-     :cljs (if (clojure.core/map? x)
+     :cljs (if (map? x)
              (:name x)
              x)))
 
 (defn- double-like? [x]
-  (#?(:clj  clojure.core/double?
-      :cljs clojure.core/number?) x))
+  (#?(:clj  double?
+      :cljs number?) x))
 
 (defn -string->int [x]
-  (if (clojure.core/string? x)
+  (if (string? x)
     (try
-      #?(:clj  (Integer/parseInt x)
+      #?(:clj  (java.lang.Integer/parseInt x)
          :cljs (js/parseInt x 10))
       (catch #?(:clj  Exception
                 :cljs js/Error) _
         ::s/invalid))))
 
 (defn -string->long [x]
-  (if (clojure.core/string? x)
+  (if (string? x)
     (try
       #?(:clj  (Long/parseLong x)
          :cljs (js/parseInt x 10))
@@ -52,36 +47,36 @@
         ::s/invalid))))
 
 (defn -string->double [x]
-  (if (clojure.core/string? x)
+  (if (string? x)
     (try
-      #?(:clj  (Double/parseDouble x)
+      #?(:clj  (java.lang.Double/parseDouble x)
          :cljs (js/parseFloat x))
       (catch #?(:clj  Exception
                 :cljs js/Error) _
         ::s/invalid))))
 
 (defn -string->keyword [x]
-  (if (clojure.core/string? x)
+  (if (string? x)
     (keyword x)))
 
 (defn -string->boolean [x]
-  (if (clojure.core/string? x)
+  (if (string? x)
     (cond
       (= "true" x) true
       (= "false" x) false
       :else ::s/invalid)))
 
 (defn -string->uuid [x]
-  (if (clojure.core/string? x)
+  (if (string? x)
     (try
-      #?(:clj  (UUID/fromString x)
+      #?(:clj  (java.util.UUID/fromString x)
          :cljs (uuid x))
       (catch #?(:clj  Exception
                 :cljs js/Error) _
         ::s/invalid))))
 
 (defn -string->inst [x]
-  (if (clojure.core/string? x)
+  (if (string? x)
     (try
       #?(:clj  (.toDate (org.joda.time.DateTime/parse x))
          :cljs (js/Date. (.getTime (goog.date.UtcDateTime.fromIsoString x))))
@@ -94,18 +89,18 @@
 ;;
 
 (def string-conformers
-  {clojure.core/integer? -string->int
-   clojure.core/int? -string->long
-   double-like? -string->double
-   clojure.core/keyword? -string->keyword
-   clojure.core/boolean? -string->boolean
-   clojure.core/uuid? -string->uuid
-   clojure.core/inst? -string->inst})
+  {::integer -string->int
+   ::int -string->long
+   ::double -string->double
+   ::keyword -string->keyword
+   ::boolean -string->boolean
+   ::uuid -string->uuid
+   ::inst -string->inst})
 
 (def json-conformers
-  {clojure.core/keyword? -string->keyword
-   clojure.core/uuid? -string->uuid
-   clojure.core/inst? -string->inst})
+  {::keyword -string->keyword
+   ::uuid -string->uuid
+   ::inst -string->inst})
 
 (def ^:dynamic ^:private *conformers* nil)
 
@@ -120,13 +115,13 @@
 ;; Types
 ;;
 
-(defprotocol TypeLike
-  (type-like [this]))
+(defprotocol TypeHint
+  (type-hint [this]))
 
 (defn- extra-type-map [t]
-  (dissoc t :form :pred :gfn))
+  (dissoc t :hint :form :pred :gfn))
 
-(defrecord Type [form pred gfn]
+(defrecord Type [hint form pred gfn]
   #?@(:clj
       [s/Specize
        (specize* [s] s)
@@ -136,8 +131,8 @@
   (conform* [this x]
     (if (pred x)
       x
-      (if (clojure.core/string? x)
-        (if-let [conformer (get *conformers* (type-like this))]
+      (if (string? x)
+        (if-let [conformer (get *conformers* (type-hint this))]
           (conformer x)
           '::s/invalid)
         ::s/invalid)))
@@ -152,33 +147,34 @@
   (describe* [this]
     (let [info (extra-type-map this)]
       (if (seq info)
-        `(spec-tools.core/type ~form ~info)
-        `(spec-tools.core/type ~form))))
+        `(spec-tools.core/type ~hint ~form ~info)
+        `(spec-tools.core/type ~hint ~form))))
   IFn
   #?(:clj  (invoke [_ x] (pred x))
      :cljs (-invoke [_ x] (pred x)))
 
-  TypeLike
-  (type-like [_] pred))
+  TypeHint
+  (type-hint [_] hint))
 
 #?(:clj
    (defmethod print-method Type
      [^Type t ^Writer w]
      (.write w (str "#Type"
                     (merge
-                      {:pred (:form t)}
+                      {:hint (:hint t)
+                       :pred (:form t)}
                       (extra-type-map t))))))
 
 #?(:clj
    (defmacro type
-     ([pred]
+     ([hint pred]
       (if (impl/in-cljs? &env)
-        `(map->Type {:form '~(or (->> pred (impl/res &env) ->sym) pred), :pred ~pred})
-        `(map->Type {:form '~(or (->> pred resolve ->sym) pred), :pred ~pred})))
-     ([pred info]
+        `(map->Type {:hint ~hint :form '~(or (->> pred (impl/res &env) ->sym) pred), :pred ~pred})
+        `(map->Type {:hint ~hint :form '~(or (->> pred resolve ->sym) pred), :pred ~pred})))
+     ([hint pred info]
       (if (impl/in-cljs? &env)
-        `(map->Type (merge ~info {:form '~(or (->> pred (impl/res &env) ->sym) pred), :pred ~pred}))
-        `(map->Type (merge ~info {:form '~(or (->> pred resolve ->sym) pred), :pred ~pred}))))))
+        `(map->Type (merge ~info {:hint ~hint :form '~(or (->> pred (impl/res &env) ->sym) pred), :pred ~pred}))
+        `(map->Type (merge ~info {:hint ~hint :form '~(or (->> pred resolve ->sym) pred), :pred ~pred}))))))
 
 (defn with-info [^Type t info]
   (assoc t :info info))
@@ -190,93 +186,25 @@
 ;; concrete types
 ;;
 
-;(def any? (type clojure.core/any?))
-;(def some? (type clojure.core/some?))
-;(def number? (type clojure.core/number?))
-(def integer? (type clojure.core/integer?))
-(def int? (type clojure.core/int?))
-;(def pos-int? (type clojure.core/pos-int?))
-;(def neg-int? (type clojure.core/neg-int?))
-;(def nat-int? (type clojure.core/nat-int?))
-;(def float? (type clojure.core/float?))
-(def double? (type double-like?))
-(def boolean? (type clojure.core/boolean?))
-(def string? (type clojure.core/string?))
-;(def ident? (type clojure.core/ident?))
-;(def simple-ident? (type clojure.core/simple-ident?))
-;(def qualified-ident? (type clojure.core/qualified-ident?))
-(def keyword? (type clojure.core/keyword?))
-;(def simple-keyword? (type clojure.core/simple-keyword?))
-;(def qualified-keyword? (type clojure.core/qualified-keyword?))
-;(def symbol? (type clojure.core/symbol?))
-;(def simple-symbol? (type clojure.core/simple-symbol?))
-;(def qualified-symbol? (type clojure.core/qualified-symbol?))
-(def uuid? (type clojure.core/uuid?))
-;(def uri? (type clojure.core/uri?))
-;(def bigdec? (type clojure.core/bigdec?))
-(def inst? (type clojure.core/inst?))
-;(def seqable? (type clojure.core/seqable?))
-;(def indexed? (type clojure.core/indexed?))
-;(def map? (type clojure.core/map?))
-;(def vector? (type clojure.core/vector?))
-;(def list? (type clojure.core/list?))
-;(def seq? (type clojure.core/seq?))
-;(def char? (type clojure.core/char?))
-;(def set? (type clojure.core/set?))
-;(def nil? (type clojure.core/nil?))
-;(def false? (type clojure.core/false?))
-;(def true? (type clojure.core/true?))
-;(def zero? (type clojure.core/zero?))
-;(def rational? (type clojure.core/rational?))
-;(def coll? (type clojure.core/coll?))
-;(def empty? (type clojure.core/empty?))
-;(def associative? (type clojure.core/associative?))
-;(def sequential? (type clojure.core/sequential?))
-;(def ratio? (type clojure.core/ratio?))
-;(def bytes? (type clojure.core/bytes?))
+#?(:clj (ns-unmap *ns* 'String))
+(def spec-tools.core/String (type ::string string?))
 
-(comment
-  #{any?
-    some?
-    number?
-    integer?
-    int?
-    pos-int?
-    neg-int?
-    nat-int?
-    float?
-    double?
-    boolean?
-    string?
-    ident?
-    simple-ident?
-    qualified-ident?
-    keyword?
-    simple-keyword?
-    qualified-keyword?
-    symbol?
-    simple-symbol?
-    qualified-symbol?
-    uuid?
-    uri?
-    bigdec?
-    inst?
-    seqable?
-    indexed?
-    map?
-    vector?
-    list?
-    seq?
-    char?
-    set?
-    nil?
-    false?
-    true?
-    zero?
-    rational?
-    coll?
-    empty?
-    associative?
-    sequential?
-    ratio?
-    bytes?})
+#?(:clj (ns-unmap *ns* 'Integer))
+(def spec-tools.core/Integer (type ::integer integer?))
+
+#?(:clj (ns-unmap *ns* 'Int))
+(def spec-tools.core/Int (type ::int int?))
+
+#?(:clj (ns-unmap *ns* 'Double))
+(def spec-tools.core/Double (type ::double double-like?))
+
+#?(:clj (ns-unmap *ns* 'Keyword))
+(def spec-tools.core/Keyword (type ::keyword keyword?))
+
+#?(:clj (ns-unmap *ns* 'Boolean))
+(def spec-tools.core/Boolean (type ::boolean boolean?))
+
+(def spec-tools.core/UUID (type ::uuid uuid?))
+
+#?(:clj (ns-unmap *ns* 'Inst))
+(def spec-tools.core/Inst (type ::inst inst?))
