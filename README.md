@@ -2,7 +2,7 @@
 
 Clojure(Script) tools for [clojure.spec](http://clojure.org/about/spec). Like [Schema-tools](https://github.com/metosin/schema-tools) but for spec.
 
-Status: **Experimental** (as spec is still a moving target).
+Status: **Alpha** (as spec is still alpha too).
 
 ## Latest version
 
@@ -49,18 +49,18 @@ my-integer?
 
 Type records also support [dynamic conforming](#dynamic-conforming), making them great for runtime system border validation.
 
-## Out-of-the-box Type Records
+## Out-of-the-box Types
 
-| Type Record      | type hint        | spec predicate  |
+| type             | type hint        | predicate       |
 | -----------------|------------------|-----------------|
 | `st/String`      | `::st/string`    | `string?`       |
-| `st/Integer`     | `::st/integer`   | `integer?`      |
-| `st/Int`         | `::st/int`       | `int?`          |
+| `st/Integer`     | `::st/long`      | `integer?`      |
+| `st/Int`         | `::st/long`      | `int?`          |
 | `st/Double`      | `::st/double`    | `double?`       |
 | `st/Keyword`     | `::st/keyword`   | `keyword?`      |
 | `st/Boolean`     | `::st/boolean`   | `boolean?`      |
 | `st/UUID`        | `::st/uuid`      | `uuid?`         |
-| `st/Inst`        | `::st/inst`      | `inst?`         |
+| `st/Inst`        | `::st/date-time` | `inst?`         |
 
 **TODO**: support all common common types & `clojure.core` predicates.
 
@@ -72,11 +72,11 @@ Type Records are attached with dynamic conformers. By default, no conforming is 
 
 #### Out-of-the-box conformers
 
-| Name                                | Description                                                                             | 
+| Name                                | Description                                                                             |
 | ------------------------------------|-----------------------------------------------------------------------------------------|
-| `spec-tools.core/string-conformers` | Conforms all types from strings (`:query`, `:header` & `:path` -parameters).            | 
-| `spec-tools.core/json-conformers`   | [JSON](http://json.org/) Conforming (maps, arrays, numbers and booleans not conformed). | 
-| `nil`                               | No conforming (for [EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format)). | 
+| `spec-tools.core/string-conformers` | Conforms all types from strings (`:query`, `:header` & `:path` -parameters).            |
+| `spec-tools.core/json-conformers`   | [JSON](http://json.org/) Conforming (maps, arrays, numbers and booleans not conformed). |
+| `nil`                               | No conforming (for [EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format)). |
 
 In `spec-tools.core` there is a modified `conform` supporting setting the conformers as optional third parameter.
 
@@ -106,13 +106,13 @@ In `spec-tools.core` there is a modified `conform` supporting setting the confor
 (s/def ::name string?)
 (s/def ::birthdate st/Inst)
 
-(s/def ::languages 
-  (s/coll-of 
-    (s/and st/Keyword #{:clj :cljs}) 
+(s/def ::languages
+  (s/coll-of
+    (s/and st/Keyword #{:clj :cljs})
     :into #{}))
 
-(s/def ::user 
-  (s/keys 
+(s/def ::user
+  (s/keys
     :req-un [::name ::languages ::age]
     :opt-un [::birthdate]))
 

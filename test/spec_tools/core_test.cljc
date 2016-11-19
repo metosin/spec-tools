@@ -21,8 +21,7 @@
     (testing "adding info to types"
       (let [info {:description "desc"
                   :example 123}]
-        (is (= info (:info (st/with-info my-integer? info))))
-        (is (= info (st/info (st/with-info my-integer? info))))))
+        (is (= info (:info (assoc my-integer? :info info))))))
 
     (testing "types are specs"
       (is (true? (s/valid? my-integer? 1)))
