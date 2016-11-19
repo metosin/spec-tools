@@ -1,12 +1,13 @@
 (ns spec-tools.core
-  (:refer-clojure :exclude #?(:clj [type]
-                              :cljs [type Inst Keyword UUID]))
+  (:refer-clojure :exclude [type string? integer? int? double? keyword? boolean? uuid? inst?
+                            #?@(:cljs [Inst Keyword UUID])])
   #?(:cljs (:require-macros [spec-tools.core :refer [type]]))
   (:require
     [spec-tools.impl :as impl]
     [spec-tools.convert :as convert]
     [clojure.spec :as s]
-    #?@(:clj  [[clojure.spec.gen :as gen]]
+    #?@(:clj  [
+    [clojure.spec.gen :as gen]]
         :cljs [[goog.date.UtcDateTime]
                [goog.date.Date]
                [clojure.test.check.generators]
@@ -59,11 +60,9 @@
   (conform* [_ x]
     (if (pred x)
       x
-      (if (string? x)
-        (if-let [conformer (get *conformers* hint)]
-          (conformer x)
-          '::s/invalid)
-        ::s/invalid)))
+      (if-let [conformer (get *conformers* hint)]
+        (conformer x)
+        '::s/invalid)))
   (unform* [_ x] x)
   (explain* [_ path via in x]
     (when (= ::s/invalid (if (pred x) x ::s/invalid))
@@ -105,26 +104,11 @@
 ;; Types
 ;;
 
-#?(:clj (ns-unmap *ns* 'String))
-(def spec-tools.core/String (type ::string string?))
-
-#?(:clj (ns-unmap *ns* 'Integer))
-(def spec-tools.core/Integer (type ::long integer?))
-
-#?(:clj (ns-unmap *ns* 'Int))
-(def spec-tools.core/Int (type ::long int?))
-
-#?(:clj (ns-unmap *ns* 'Double))
-(def spec-tools.core/Double (type ::double #?(:clj  double?
-                                               :cljs number?)))
-
-#?(:clj (ns-unmap *ns* 'Keyword))
-(def spec-tools.core/Keyword (type ::keyword keyword?))
-
-#?(:clj (ns-unmap *ns* 'Boolean))
-(def spec-tools.core/Boolean (type ::boolean boolean?))
-
-(def spec-tools.core/UUID (type ::uuid uuid?))
-
-#?(:clj (ns-unmap *ns* 'Inst))
-(def spec-tools.core/Inst (type ::date-time inst?))
+(def spec-tools.core/string? (type ::string clojure.core/string?))
+(def spec-tools.core/integer? (type ::long clojure.core/integer?))
+(def spec-tools.core/int? (type ::long clojure.core/int?))
+(def spec-tools.core/double? (type ::double #?(:clj clojure.core/double?, :cljs clojure.core/number?)))
+(def spec-tools.core/keyword? (type ::keyword clojure.core/keyword?))
+(def spec-tools.core/boolean? (type ::boolean clojure.core/boolean?))
+(def spec-tools.core/uuid? (type ::uuid clojure.core/uuid?))
+(def spec-tools.core/inst? (type ::date-time clojure.core/inst?))
