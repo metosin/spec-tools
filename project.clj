@@ -14,6 +14,8 @@
             :src-uri-prefix "#L"}
 
   :profiles {:dev {:plugins [[jonase/eastwood "0.2.3"]]
+                   :jvm-opts ^:replace ["-server"]
+                   :global-vars {*warn-on-reflection* true}
                    :dependencies [[criterium "0.4.4"]
                                   [prismatic/schema "1.1.3"]
                                   [org.clojure/test.check "0.9.0"]

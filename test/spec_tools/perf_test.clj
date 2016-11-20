@@ -42,6 +42,7 @@
 
   ; 1260ns
   ; 81ns (alpha12)
+  ; 84ns (alpha14)
   (title "spec: integer?")
   (let [call #(spec/valid? ::age 12)]
     (assert (call))
@@ -50,6 +51,7 @@
 
   ; 1480ns
   ; 77ns (alpha12)
+  ; 82ns (alpha14)
   (title "spec: x-integer?")
   (let [call #(spec/valid? ::x-age 12)]
     (assert (call))
@@ -76,7 +78,8 @@
   (suite "no-op conform")
 
   ; 1315ns
-  ; 100ns (alpha12)
+  ;  100ns (alpha12)
+  ;   81ns (alpha14)
   (title "spec: integer?")
   (let [call #(spec/conform ::age 12)]
     (assert (= (call) 12))
@@ -84,21 +87,22 @@
       (call)))
 
   ; 1430ns
-  ; 95ns (alpha12)
+  ;   95ns (alpha12)
+  ;   83ns (alpha14)
   (title "spec: x-integer?")
   (let [call #(st/conform ::x-age 12)]
     (assert (= (call) 12))
     (cc/quick-bench
       (call)))
 
-  ; 452ns
+  ; 425ns
   (title "schema: s/Int")
   (let [call #((coerce/coercer age (constantly nil)) 12)]
     (assert (= (call) 12))
     (cc/quick-bench
       (call)))
 
-  ; 27ns
+  ; 25ns
   (title "schema: s/Int (compiled)")
   (let [coercer (coerce/coercer age (constantly nil))
         call #(coercer 12)]
@@ -115,6 +119,7 @@
 
     ; 4300ns
     ; 1440ns (alpha12)
+    ; 1160ns (alpha14)
     (title "spec: conform keyword enum")
     (let [call #(st/conform sizes-spec ["L" "M"] st/string-conformers)]
       (assert (= (call) #{:L :M}))
@@ -123,24 +128,25 @@
 
     ; 3700ns
     ; 990ns (alpha12)
+    ; 990ns (alpha14)
     (title "spec: conform keyword enum - no-op")
     (let [call #(st/conform sizes-spec #{:L :M} st/string-conformers)]
       (assert (= (call) #{:L :M}))
       (cc/quick-bench
         (call)))
 
-    ; 890ns
+    ; 1100ns
     (title "schema: conform keyword enum")
     (let [coercer (coerce/coercer sizes-schema coerce/string-coercion-matcher)
-          call #(coercer #{:L :M})]
+          call #(coercer ["L" "M"])]
       (assert (= (call) #{:L :M}))
       (cc/quick-bench
         (call)))
 
-    ; 1100ns
+    ; 780ns
     (title "schema: conform keyword enum - no-op")
     (let [coercer (coerce/coercer sizes-schema coerce/string-coercion-matcher)
-          call #(coercer ["L" "M"])]
+          call #(coercer #{:L :M})]
       (assert (= (call) #{:L :M}))
       (cc/quick-bench
         (call)))))
@@ -209,6 +215,7 @@
   (suite "conforming a nested map")
 
   ; 4.5µs (alpha12)
+  ; 3.9µs (alpha14)
   (title "spec: conform")
   (let [call #(st/conform ::order sample-order st/string-conformers)]
     (assert (= (call) sample-order-valid))
@@ -216,13 +223,14 @@
       (call)))
 
   ; 2.8µs (alpha12)
+  ; 2.7µs (alpha14)
   (title "spec: conform - no-op")
   (let [call #(st/conform ::order sample-order-valid st/string-conformers)]
     (assert (= (call) sample-order-valid))
     (cc/quick-bench
       (call)))
 
-  ; 8µs
+  ; 9.1µs
   (title "schema: conform")
   (let [coercer (coerce/coercer Order coerce/string-coercion-matcher)
         call #(coercer sample-order)]
@@ -230,15 +238,13 @@
     (cc/quick-bench
       (call)))
 
-  ; 114µs <-- woot
+  ; 9.3µs
   (title "schema: conform - no-op")
   (let [coercer (coerce/coercer Order coerce/string-coercion-matcher)
         call #(coercer sample-order-valid)]
     (assert (= (call) sample-order-valid))
     (cc/quick-bench
       (call))))
-
-(set! *warn-on-reflection* true)
 
 (comment
   (valid-test)
