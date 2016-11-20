@@ -23,10 +23,10 @@ Spec is implemented using reified protocols. This makes extending current specs 
 (require '[clojure.spec :as s])
 (require '[spec-tools.core :as st])
 
-(def my-integer? (st/type ::st/integer integer?))
+(def my-integer? (st/type ::st/long integer?))
 
 my-integer?
-; #Type{:hint :spec-tools.core/integer
+; #Type{:hint :spec-tools.core/long
 ;       :pred clojure.core/integer?}
 
 (my-integer? 1)
@@ -36,13 +36,12 @@ my-integer?
 ; true
 
 (assoc my-integer? :info {:description "It's a int"})
-; #Type{:hint :spec-tools.core/integer
+; #Type{:hint :spec-tools.core/long
 ;       :pred clojure.core/integer?
 ;       :info {:description "It's a int"}}
 
-
-(eval (s/form (st/type ::st/integer integer? {:description "It's a int"})))
-; #Type{:hint :spec-tools.core/integer
+(eval (s/form (st/type ::st/long integer? {:description "It's a int"})))
+; #Type{:hint :spec-tools.core/long
 ;       :pred clojure.core/integer?
 ;       :info {:description "It's a int"}}
 ```
@@ -53,14 +52,14 @@ Type records also support [dynamic conforming](#dynamic-conforming), making them
 
 | type             | type hint        | predicate       |
 | -----------------|------------------|-----------------|
-| `st/String`      | `::st/string`    | `string?`       |
-| `st/Integer`     | `::st/long`      | `integer?`      |
-| `st/Int`         | `::st/long`      | `int?`          |
-| `st/Double`      | `::st/double`    | `double?`       |
-| `st/Keyword`     | `::st/keyword`   | `keyword?`      |
-| `st/Boolean`     | `::st/boolean`   | `boolean?`      |
-| `st/UUID`        | `::st/uuid`      | `uuid?`         |
-| `st/Inst`        | `::st/date-time` | `inst?`         |
+| `st/string?`     | `::st/string`    | `string?`       |
+| `st/integer?`    | `::st/long`      | `integer?`      |
+| `st/int?`        | `::st/long`      | `int?`          |
+| `st/double?`     | `::st/double`    | `double?`       |
+| `st/keyword?`    | `::st/keyword`   | `keyword?`      |
+| `st/boolean?`    | `::st/boolean`   | `boolean?`      |
+| `st/uuid?`       | `::st/uuid`      | `uuid?`         |
+| `st/inst?`       | `::st/date-time` | `inst?`         |
 
 **TODO**: support all common common types & `clojure.core` predicates.
 
@@ -83,12 +82,12 @@ In `spec-tools.core` there is a modified `conform` supporting setting the confor
 #### Conforming examples
 
 ```clj
-(s/def ::age (s/and st/Integer #(> % 18)))
+(s/def ::age (s/and st/integer? #(> % 18)))
 
 ;; no conforming
 (s/conform ::age "20")
 (st/conform ::age "20")
-(st/conform ::age nil)
+(st/conform ::age "20" nil)
 ; ::s/invalid
 
 ;; json-conforming
@@ -104,11 +103,11 @@ In `spec-tools.core` there is a modified `conform` supporting setting the confor
 
 ```clj
 (s/def ::name string?)
-(s/def ::birthdate st/Inst)
+(s/def ::birthdate st/inst?)
 
 (s/def ::languages
   (s/coll-of
-    (s/and st/Keyword #{:clj :cljs})
+    (s/and st/keyword? #{:clj :cljs})
     :into #{}))
 
 (s/def ::user
@@ -152,13 +151,13 @@ Default conformers are just data, so extending them is easy:
           str/reverse
           str/upper-case))))
 
-(st/conform st/Keyword "kikka")
+(st/conform st/keyword? "kikka")
 ; ::s/invalid
 
-(st/conform st/Keyword "kikka" st/string-conformers)
+(st/conform st/keyword? "kikka" st/string-conformers)
 ; :kikka
 
-(st/conform st/Keyword "kikka" my-conformers)
+(st/conform st/keyword? "kikka" my-conformers)
 ; :AKKIK
 ```
 
