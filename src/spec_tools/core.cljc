@@ -1,7 +1,7 @@
 (ns spec-tools.core
-  (:refer-clojure :exclude [map type string? integer? int? double? keyword? boolean? uuid? inst?
+  (:refer-clojure :exclude [map string? integer? int? double? keyword? boolean? uuid? inst?
                             #?@(:cljs [Inst Keyword UUID])])
-  #?(:cljs (:require-macros [spec-tools.core :refer [type map]]))
+  #?(:cljs (:require-macros [spec-tools.core :refer [spec map]]))
   (:require
     [spec-tools.impl :as impl]
     [spec-tools.convert :as convert]
@@ -44,13 +44,13 @@
      (s/conform spec value))))
 
 ;;
-;; Type Record
+;; Spec Record
 ;;
 
-(defn- extra-type-map [t]
+(defn- extra-spec-map [t]
   (dissoc t :hint :form :pred :gfn))
 
-(defrecord Type [hint form pred gfn]
+(defrecord Spec [hint form pred gfn]
   #?@(:clj
       [s/Specize
        (specize* [s] s)
@@ -72,33 +72,33 @@
                     (gen/gen-for-pred pred)))
   (with-gen* [this gfn] (assoc this :gfn gfn))
   (describe* [this]
-    (let [info (extra-type-map this)]
+    (let [info (extra-spec-map this)]
       (if (seq info)
-        `(spec-tools.core/type ~hint ~form ~info)
-        `(spec-tools.core/type ~hint ~form))))
+        `(spec ~hint ~form ~info)
+        `(spec ~hint ~form))))
   IFn
   #?(:clj  (invoke [_ x] (pred x))
      :cljs (-invoke [_ x] (pred x))))
 
 #?(:clj
-   (defmethod print-method Type
-     [^Type t ^Writer w]
-     (.write w (str "#Type"
+   (defmethod print-method Spec
+     [^Spec t ^Writer w]
+     (.write w (str "#Spec"
                     (merge
                       {:hint (:hint t)
                        :pred (:form t)}
-                      (extra-type-map t))))))
+                      (extra-spec-map t))))))
 
 #?(:clj
-   (defmacro type
+   (defmacro spec
      ([hint pred]
       (if (impl/in-cljs? &env)
-        `(map->Type {:hint ~hint :form '~(or (->> pred (impl/cljs-resolve &env) impl/->sym) pred), :pred ~pred})
-        `(map->Type {:hint ~hint :form '~(or (->> pred resolve impl/->sym) pred), :pred ~pred})))
+        `(map->Spec {:hint ~hint :form '~(or (->> pred (impl/cljs-resolve &env) impl/->sym) pred), :pred ~pred})
+        `(map->Spec {:hint ~hint :form '~(or (->> pred resolve impl/->sym) pred), :pred ~pred})))
      ([hint pred info]
       (if (impl/in-cljs? &env)
-        `(map->Type (merge ~info {:hint ~hint :form '~(or (->> pred (impl/cljs-resolve &env) impl/->sym) pred), :pred ~pred}))
-        `(map->Type (merge ~info {:hint ~hint :form '~(or (->> pred resolve impl/->sym) pred), :pred ~pred}))))))
+        `(map->Spec (merge ~info {:hint ~hint :form '~(or (->> pred (impl/cljs-resolve &env) impl/->sym) pred), :pred ~pred}))
+        `(map->Spec (merge ~info {:hint ~hint :form '~(or (->> pred resolve impl/->sym) pred), :pred ~pred}))))))
 
 ;;
 ;; Map Spec
@@ -136,14 +136,14 @@
           (s/keys ~@margs)))))
 
 ;;
-;; Types
+;; Specs
 ;;
 
-(def spec-tools.core/string? (type ::string clojure.core/string?))
-(def spec-tools.core/integer? (type ::long clojure.core/integer?))
-(def spec-tools.core/int? (type ::long clojure.core/int?))
-(def spec-tools.core/double? (type ::double #?(:clj clojure.core/double?, :cljs clojure.core/number?)))
-(def spec-tools.core/keyword? (type ::keyword clojure.core/keyword?))
-(def spec-tools.core/boolean? (type ::boolean clojure.core/boolean?))
-(def spec-tools.core/uuid? (type ::uuid clojure.core/uuid?))
-(def spec-tools.core/inst? (type ::date-time clojure.core/inst?))
+(def spec-tools.core/string? (spec ::string clojure.core/string?))
+(def spec-tools.core/integer? (spec ::long clojure.core/integer?))
+(def spec-tools.core/int? (spec ::long clojure.core/int?))
+(def spec-tools.core/double? (spec ::double #?(:clj clojure.core/double?, :cljs clojure.core/number?)))
+(def spec-tools.core/keyword? (spec ::keyword clojure.core/keyword?))
+(def spec-tools.core/boolean? (spec ::boolean clojure.core/boolean?))
+(def spec-tools.core/uuid? (spec ::uuid clojure.core/uuid?))
+(def spec-tools.core/inst? (spec ::date-time clojure.core/inst?))

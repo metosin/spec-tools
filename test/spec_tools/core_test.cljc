@@ -12,35 +12,35 @@
 (s/def ::uuid st/uuid?)
 (s/def ::birthdate st/inst?)
 
-(deftest types-test
-  (let [my-integer? (st/type ::st/long integer?)]
-    (testing "types work as predicates"
+(deftest specs-test
+  (let [my-integer? (st/spec ::st/long integer?)]
+    (testing "work as predicates"
       (is (true? (my-integer? 1)))
       (is (false? (my-integer? "1"))))
 
-    (testing "adding info to types"
+    (testing "adding info"
       (let [info {:description "desc"
                   :example 123}]
         (is (= info (:info (assoc my-integer? :info info))))))
 
-    (testing "types are specs"
+    (testing "are specs"
       (is (true? (s/valid? my-integer? 1)))
       (is (false? (s/valid? my-integer? "1")))
 
       (testing "fully qualifed predicate symbol is returned with s/form"
-        (is (= ['spec-tools.core/type
+        (is (= ['spec-tools.core/spec
                 ::st/long
                 #?(:clj  'clojure.core/integer?
                    :cljs 'cljs.core/integer?)] (s/form my-integer?)))
-        (is (= ['type ::st/long 'integer?] (s/describe my-integer?))))
+        (is (= ['spec ::st/long 'integer?] (s/describe my-integer?))))
 
-      (testing "spec serialization"
-        (let [spec (st/type ::integer clojure.core/integer? {:description "cool"})]
-          (is (= `(st/type ::integer integer? {:description "cool"})
+      (testing "serialization"
+        (let [spec (st/spec ::integer clojure.core/integer? {:description "cool"})]
+          (is (= `(st/spec ::integer integer? {:description "cool"})
                  (s/form spec)
                  #?(:clj (s/form (eval (s/form spec))))))))
 
-      (testing "also gen works"
+      (testing "gen"
         (is (seq? (s/exercise my-integer?)))))))
 
 (deftest spec-tools-conform-test

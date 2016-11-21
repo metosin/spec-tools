@@ -1,5 +1,5 @@
 (ns spec-tools.convert
-  #?(:cljs (:refer-clojure :exclude [type Inst Keyword UUID]))
+  #?(:cljs (:refer-clojure :exclude [Inst Keyword UUID]))
   (:require [clojure.spec :as s]
     #?@(:cljs [[goog.date.UtcDateTime]
                [goog.date.Date]])))
