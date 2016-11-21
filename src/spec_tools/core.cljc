@@ -11,8 +11,7 @@
         :cljs [[goog.date.UtcDateTime]
                [goog.date.Date]
                [clojure.test.check.generators]
-               [cljs.spec.impl.gen :as gen]])
-    [clojure.string :as str])
+               [cljs.spec.impl.gen :as gen]]))
   (:import
     #?@(:clj
         [(clojure.lang AFn IFn Var)
@@ -112,28 +111,23 @@
 (defn req [k] (->RequiredKey k))
 
 #?(:clj
-   (defn -map [n m env]
-     (reduce-kv
-       (fn [acc k v]
-         (let [resolve (if (impl/in-cljs? env) (partial impl/cljs-resolve env) resolve)
-               [req? kv] (if (seq? k) [(not= (resolve `opt) (resolve (first k))) (second k)] [true k])
-               k1 (if req? "req" "opt")
-               k2 (if-not (qualified-keyword? kv) "-un")
-               ak (keyword (str k1 k2))
-               [k' v'] (if (qualified-keyword? kv)
-                         [kv (if (not= kv v) v)]
-                         [(keyword (str (namespace n) "$$" (name n) "/" (name kv))) v])]
-
-           (-> acc
-               (update ak (fnil conj []) k')
-               (cond-> v' (update ::defs (fnil conj []) [k' v'])))))
-       {}
-       m)))
-
-
-#?(:clj
    (defmacro map [n m]
-     (let [m (-map n m &env)
+     (let [m (reduce-kv
+               (fn [acc k v]
+                 (let [resolve (if (impl/in-cljs? &env) (partial impl/cljs-resolve &env) resolve)
+                       [req? kv] (if (seq? k) [(not= (resolve `opt) (resolve (first k))) (second k)] [true k])
+                       k1 (if req? "req" "opt")
+                       k2 (if-not (qualified-keyword? kv) "-un")
+                       ak (keyword (str k1 k2))
+                       [k' v'] (if (qualified-keyword? kv)
+                                 [kv (if (not= kv v) v)]
+                                 [(keyword (str (namespace n) "$$" (name n) "/" (name kv))) v])]
+
+                   (-> acc
+                       (update ak (fnil conj []) k')
+                       (cond-> v' (update ::defs (fnil conj []) [k' v'])))))
+               {}
+               m)
            defs (::defs m)
            margs (apply concat (dissoc m ::defs))]
        `(do
