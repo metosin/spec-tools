@@ -1,5 +1,5 @@
 (ns spec-tools.core
-  (:refer-clojure :exclude [type string? integer? int? double? keyword? boolean? uuid? inst?
+  (:refer-clojure :exclude [map type string? integer? int? double? keyword? boolean? uuid? inst?
                             #?@(:cljs [Inst Keyword UUID])])
   #?(:cljs (:require-macros [spec-tools.core :refer [type]]))
   (:require
@@ -99,6 +99,39 @@
       (if (impl/in-cljs? &env)
         `(map->Type (merge ~info {:hint ~hint :form '~(or (->> pred (impl/cljs-resolve &env) impl/->sym) pred), :pred ~pred}))
         `(map->Type (merge ~info {:hint ~hint :form '~(or (->> pred resolve impl/->sym) pred), :pred ~pred}))))))
+
+;;
+;; Map Spec
+;;
+
+(defrecord OptionalKey [k])
+(defrecord RequiredKey [k])
+
+(defn opt [k] (->OptionalKey k))
+(defn req [k] (->RequiredKey k))
+
+(defn -map [n m]
+  (reduce-kv
+    (fn [acc k v]
+      (let [opt? (instance? OptionalKey k)
+            req? (instance? RequiredKey k)
+            k1 (if opt? "opt" "req")
+            k2 (if-not (qualified-keyword? k) "-un")
+            ak (keyword (str k1 k2))
+            kv (if (or req? opt?) (:k k) k)
+            [k' v'] (if (qualified-keyword? kv)
+                      [kv (if (not= kv v) v)]
+                      [(keyword (str (namespace n) "$$" (name n) "/" (name kv))) v])]
+        (when v'
+          (s/def k' v'))
+        (update acc ak (fnil conj []) k')))
+    {}
+    m))
+
+(defmacro map [n m]
+  `(let [m# (-map ~n ~m)
+         margs# (apply concat m#)]
+     (eval `(s/keys ~@margs#))))
 
 ;;
 ;; Types

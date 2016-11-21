@@ -106,3 +106,21 @@
       (is (= :kikka (st/conform st/keyword? "kikka" st/string-conformers))))
     (testing "my-conformers"
       (is (= :AKKIK (st/conform st/keyword? "kikka" my-conformations))))))
+
+(deftest map-test
+  (let [st-map (st/map
+                 ::my-map
+                 {::id integer?
+                  ::age ::age
+                  :boss st/boolean?
+                  (st/req :name) string?
+                  (st/opt :description) string?})
+        s-keys (s/keys
+                 :req [::id ::age]
+                 :req-un [:spec-tools.core-test$$my-map/boss
+                          :spec-tools.core-test$$my-map/name]
+                 :opt-un [:spec-tools.core-test$$my-map/description])]
+    (is (= (s/form s-keys) (s/form st-map)))
+    (testing "conforming"
+      (let [value {::id 1, ::age 18 :boss true, :name "Mikko", :description "Shoes"}]
+        (is (= value (st/conform st-map value)))))))
