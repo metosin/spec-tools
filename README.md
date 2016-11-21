@@ -163,7 +163,33 @@ Default conformers are just data, so extending them is easy:
 
 ### Concise Map Specs
 
-**TODO**
+Creating `s/keys` specs with non-qualified keyword keys is quite verbose because all keys have to be defined forehand. Spec-tools adds Schema-like concise map-syntax separating keys and values. `spec-tools.core/map` expects a qualified map name (for qualified key generation) and a map with separate keys & values. Keys can optionally be wrapped into `st/opt` or `st/req` to denote whether they are required or not - by default, keys are required. Qualified keywords are supported too, by setting the qualified key also as a value.
+
+```clj`
+(s/def ::age st/integer?)
+
+(def my-map
+  (st/map
+    ::my-map
+    {::id integer?
+     ::age ::age
+     :boss st/boolean?
+     (st/req :name) string?
+     (st/opt :description) string?}))
+
+(s/form my-map)
+;(clojure.spec/keys
+;  :req [:user/id 
+;        :user/age]
+;  :req-un [:user$$my-map/boss 
+;           :user$$my-map/name]
+;  :opt-un [:user$$my-map/description])
+
+(st/conform my-map {::id 1, ::age 18, :boss false, :name "Terttu"})
+; {:user/id 1, :user/age 18, :boss false, :name "Terttu"}
+```
+
+**TODO**: create via `st/type` to get map-conformations like `disallow-extra-keys` etc.
 
 ### Generating JSON Schemas
 
