@@ -10,8 +10,8 @@ Status: **Alpha** (as spec is still alpha too).
 
 ## Features
 
-* [Spec records](#spec-records)
-* [Dynamic conforming](#dynamic-conforming)
+* [Spec Records](#spec-records)
+* [Dynamic Conforming](#dynamic-conforming)
 * [Concise Map Specs](#concise-map-specs)
 * [Generating JSON Schemas](#generating-json-schemas)
 
@@ -63,7 +63,7 @@ Spec records also support [dynamic conforming](#dynamic-conforming), making them
 
 **TODO**: support all common common specs & `clojure.core` predicates.
 
-### Dynamic conforming
+### Dynamic Conforming
 
 [Schema](https://github.com/plumatic/schema) supports runtime-defined schema coercions. Spec does not. Runtime conforming of the specs is needed to use specs effectively with less capable wire formats like JSON.
 
