@@ -1,7 +1,7 @@
 (ns spec-tools.core
   (:refer-clojure :exclude [map type string? integer? int? double? keyword? boolean? uuid? inst?
                             #?@(:cljs [Inst Keyword UUID])])
-  #?(:cljs (:require-macros [spec-tools.core :refer [type]]))
+  #?(:cljs (:require-macros [spec-tools.core :refer [type map]]))
   (:require
     [spec-tools.impl :as impl]
     [spec-tools.convert :as convert]
@@ -11,7 +11,8 @@
         :cljs [[goog.date.UtcDateTime]
                [goog.date.Date]
                [clojure.test.check.generators]
-               [cljs.spec.impl.gen :as gen]]))
+               [cljs.spec.impl.gen :as gen]])
+    [clojure.string :as str])
   (:import
     #?@(:clj
         [(clojure.lang AFn IFn Var)
@@ -110,28 +111,40 @@
 (defn opt [k] (->OptionalKey k))
 (defn req [k] (->RequiredKey k))
 
-(defn -map [n m]
-  (reduce-kv
-    (fn [acc k v]
-      (let [opt? (instance? OptionalKey k)
-            req? (instance? RequiredKey k)
-            k1 (if opt? "opt" "req")
-            k2 (if-not (qualified-keyword? k) "-un")
-            ak (keyword (str k1 k2))
-            kv (if (or req? opt?) (:k k) k)
-            [k' v'] (if (qualified-keyword? kv)
-                      [kv (if (not= kv v) v)]
-                      [(keyword (str (namespace n) "$$" (name n) "/" (name kv))) v])]
-        (when v'
-          (s/def k' v'))
-        (update acc ak (fnil conj []) k')))
-    {}
-    m))
+#?(:clj
+   (defn -map [n m]
+     (reduce-kv
+       (fn [acc k v]
+         (let [required? (fn [x]
+                           ;; FIXME: dirty hack for cljs.
+                           (cond
+                             (str/ends-with? (str x) "req") true
+                             (str/ends-with? (str x) "opt") false
+                             :else (throw (ex-info (str "Invalid key: " x) {}))))
+               [req? kv] (if (seq? k) [(required? (first k)) (second k)] [true k])
+               k1 (if req? "req" "opt")
+               k2 (if-not (qualified-keyword? kv) "-un")
+               ak (keyword (str k1 k2))
+               [k' v'] (if (qualified-keyword? kv)
+                         [kv (if (not= kv v) v)]
+                         [(keyword (str (namespace n) "$$" (name n) "/" (name kv))) v])]
 
-(defmacro map [n m]
-  `(let [m# (-map ~n ~m)
-         margs# (apply concat m#)]
-     (eval `(s/keys ~@margs#))))
+           (-> acc
+               (update ak (fnil conj []) k')
+               (cond-> v' (update ::defs (fnil conj []) [k' v'])))))
+       {}
+       m)))
+
+
+#?(:clj
+   (defmacro map [n m]
+     (let [m (-map n m)
+           defs (::defs m)
+           margs (apply concat (dissoc m ::defs))]
+       `(do
+          ~@(for [[k v] defs]
+              `(s/def ~k ~v))
+          (s/keys ~@margs)))))
 
 ;;
 ;; Types
