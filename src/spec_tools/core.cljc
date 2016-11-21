@@ -112,16 +112,11 @@
 (defn req [k] (->RequiredKey k))
 
 #?(:clj
-   (defn -map [n m]
+   (defn -map [n m env]
      (reduce-kv
        (fn [acc k v]
-         (let [required? (fn [x]
-                           ;; FIXME: dirty hack for cljs.
-                           (cond
-                             (str/ends-with? (str x) "req") true
-                             (str/ends-with? (str x) "opt") false
-                             :else (throw (ex-info (str "Invalid key: " x) {}))))
-               [req? kv] (if (seq? k) [(required? (first k)) (second k)] [true k])
+         (let [resolve (if (impl/in-cljs? env) (partial impl/cljs-resolve env) resolve)
+               [req? kv] (if (seq? k) [(not= (resolve `opt) (resolve (first k))) (second k)] [true k])
                k1 (if req? "req" "opt")
                k2 (if-not (qualified-keyword? kv) "-un")
                ak (keyword (str k1 k2))
@@ -138,7 +133,7 @@
 
 #?(:clj
    (defmacro map [n m]
-     (let [m (-map n m)
+     (let [m (-map n m &env)
            defs (::defs m)
            margs (apply concat (dissoc m ::defs))]
        `(do
