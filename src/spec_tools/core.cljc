@@ -121,7 +121,7 @@
                        ak (keyword (str k1 k2))
                        [k' v'] (if (qualified-keyword? kv)
                                  [kv (if (not= kv v) v)]
-                                 [(keyword (str (namespace n) "$$" (name n) "/" (name kv))) v])]
+                                 [(keyword (str (namespace n) "$" (name n) "/" (name kv))) v])]
 
                    (-> acc
                        (update ak (fnil conj []) k')

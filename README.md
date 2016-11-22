@@ -181,9 +181,9 @@ Creating `s/keys` specs with non-qualified keyword keys is quite verbose because
 ;(clojure.spec/keys
 ;  :req [:user/id 
 ;        :user/age]
-;  :req-un [:user$$my-map/boss 
-;           :user$$my-map/name]
-;  :opt-un [:user$$my-map/description])
+;  :req-un [:user$my-map/boss 
+;           :user$my-map/name]
+;  :opt-un [:user$my-map/description])
 
 (st/conform my-map {::id 1, ::age 18, :boss false, :name "Terttu"})
 ; {:user/id 1, :user/age 18, :boss false, :name "Terttu"}
