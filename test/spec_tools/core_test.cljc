@@ -117,9 +117,9 @@
                   (st/opt :description) string?})
         s-keys (s/keys
                  :req [::id ::age]
-                 :req-un [:spec-tools.core-test$$my-map/boss
-                          :spec-tools.core-test$$my-map/name]
-                 :opt-un [:spec-tools.core-test$$my-map/description])]
+                 :req-un [:spec-tools.core-test$my-map/boss
+                          :spec-tools.core-test$my-map/name]
+                 :opt-un [:spec-tools.core-test$my-map/description])]
     (is (= (s/form s-keys) (s/form st-map)))
     (testing "conforming"
       (let [value {::id 1, ::age 18 :boss true, :name "Mikko", :description "Shoes"}]
