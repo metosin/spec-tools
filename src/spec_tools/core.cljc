@@ -1,7 +1,7 @@
 (ns spec-tools.core
-  (:refer-clojure :exclude [map string? integer? int? double? keyword? boolean? uuid? inst?
+  (:refer-clojure :exclude [string? integer? int? double? keyword? boolean? uuid? inst?
                             #?@(:cljs [Inst Keyword UUID])])
-  #?(:cljs (:require-macros [spec-tools.core :refer [spec map]]))
+  #?(:cljs (:require-macros [spec-tools.core :refer [spec coll-spec]]))
   (:require
     [spec-tools.impl :as impl]
     [spec-tools.convert :as convert]
@@ -110,11 +110,33 @@
 (defn opt [k] (->OptionalKey k))
 (defn req [k] (->RequiredKey k))
 
+(defn- -vector [_ n v]
+  (if-not (= 1 (count v))
+    (throw
+      (ex-info
+        "only single maps allowed in nested vectors"
+        {:k n :v v}))
+    (let [v' (if (map? (first v))
+               `(coll-spec ~n ~(first v))
+               (first v))]
+      `(s/coll-of ~v' :into []))))
+
+(defn- -set [_ n v]
+  (if-not (= 1 (count v))
+    (throw
+      (ex-info
+        "only single maps allowed in nested sets"
+        {:k n :v v}))
+    (let [v' (if (map? (first v))
+               `(coll-spec ~n ~(first v))
+               (first v))]
+      `(s/coll-of ~v' :into #{}))))
+
 #?(:clj
-   (defmacro map [n m]
+   (defn- -map [env n m]
      (let [m (reduce-kv
                (fn [acc k v]
-                 (let [resolve (if (impl/in-cljs? &env) (partial impl/cljs-resolve &env) resolve)
+                 (let [resolve (if (impl/in-cljs? env) (partial impl/cljs-resolve env) resolve)
                        [req? kv] (if (seq? k) [(not= (resolve `opt) (resolve (first k))) (second k)] [true k])
                        k1 (if req? "req" "opt")
                        k2 (if-not (qualified-keyword? kv) "-un")
@@ -122,27 +144,8 @@
                        [k' v'] (if (qualified-keyword? kv)
                                  [kv (if (not= kv v) v)]
                                  (let [k' (keyword (str (str (namespace n) "$" (name n)) "/" (name kv)))]
-                                   [k' (cond
-                                         (map? v) `(map ~k' ~v)
-                                         (vector? v) (if-not (= 1 (count v))
-                                                       (throw
-                                                         (ex-info
-                                                           "only single maps allowed in nested vectors"
-                                                           {:k k' :v v}))
-                                                       (let [v' (if (map? (first v))
-                                                                  `(map ~k' ~(first v))
-                                                                  (first v))]
-                                                         `(s/coll-of ~v' :into [])))
-                                         (set? v) (if-not (= 1 (count v))
-                                                    (throw
-                                                      (ex-info
-                                                        "only single maps allowed in nested vectors"
-                                                        {:k k' :v v}))
-                                                    (let [v' (if (map? (first v))
-                                                               `(map ~k' ~(first v))
-                                                               (first v))]
-                                                      `(s/coll-of ~v' :into #{})))
-                                         :else v)]))]
+                                   [k' (if (or (map? v) (vector? v) (set? v))
+                                         `(spec-tools.core/coll-spec ~k' ~v) v)]))]
                    (-> acc
                        (update ak (fnil conj []) k')
                        (cond-> v' (update ::defs (fnil conj []) [k' v'])))))
@@ -154,6 +157,14 @@
           ~@(for [[k v] defs]
               `(s/def ~k ~v))
           (s/keys ~@margs)))))
+
+#?(:clj
+   (defmacro coll-spec [n m]
+     (let [f (cond
+               (map? m) -map
+               (vector? m) -vector
+               (set? m) -set)]
+       (f &env n m))))
 
 ;;
 ;; Specs

@@ -108,53 +108,68 @@
       (is (= :AKKIK (st/conform st/keyword? "kikka" my-conformations))))))
 
 (deftest map-test
-  (let [st-map (st/map
-                 ::my-map
-                 {::id integer?
-                  ::age ::age
-                  :boss st/boolean?
-                  (st/req :name) string?
-                  (st/opt :description) string?
-                  :languages #{keyword?}
-                  :orders [{:id int?
-                            :description string?}]
-                  :address {:street string?
-                            :zip string?}})
-        s-keys (s/keys
-                 :req [::id ::age]
-                 :req-un [:spec-tools.core-test$my-map/boss
-                          :spec-tools.core-test$my-map/name
-                          :spec-tools.core-test$my-map/languages
-                          :spec-tools.core-test$my-map/orders
-                          :spec-tools.core-test$my-map/address]
-                 :opt-un [:spec-tools.core-test$my-map/description])]
-    (testing "vanilla keys-spec is generated"
-      (is (= (s/form s-keys) (s/form st-map))))
-    (testing "nested keys are in the registry"
-      (let [generated-keys (->> (s/registry)
-                                (filter #(-> % first str (str/starts-with? ":spec-tools.core-test$my-map")))
-                                (map first)
-                                set)]
-        (is (= #{:spec-tools.core-test$my-map/boss
-                 :spec-tools.core-test$my-map/name
-                 :spec-tools.core-test$my-map/description
-                 :spec-tools.core-test$my-map/languages
-                 :spec-tools.core-test$my-map/orders
-                 :spec-tools.core-test$my-map$orders/id
-                 :spec-tools.core-test$my-map$orders/description
-                 :spec-tools.core-test$my-map/address
-                 :spec-tools.core-test$my-map$address/zip
-                 :spec-tools.core-test$my-map$address/street}
-               generated-keys))))
-    (testing "validating"
-      (let [value {::id 1
-                   ::age 63
-                   :boss true
-                   :name "Liisa"
-                   :languages #{:clj :cljs}
-                   :orders [{:id 1, :description "cola"}
-                            {:id 2, :description "kebab"}]
-                   :description "Liisa is a valid boss"
-                   :address {:street "Amurinkatu 2"
-                             :zip "33210"}}]
-        (is (true? (s/valid? st-map value)))))))
+  (testing "nested map spec"
+    (let [st-map (st/coll-spec
+                   ::my-map
+                   {::id integer?
+                    ::age ::age
+                    :boss st/boolean?
+                    (st/req :name) string?
+                    (st/opt :description) string?
+                    :languages #{keyword?}
+                    :orders [{:id int?
+                              :description string?}]
+                    :address {:street string?
+                              :zip string?}})
+          s-keys (s/keys
+                   :req [::id ::age]
+                   :req-un [:spec-tools.core-test$my-map/boss
+                            :spec-tools.core-test$my-map/name
+                            :spec-tools.core-test$my-map/languages
+                            :spec-tools.core-test$my-map/orders
+                            :spec-tools.core-test$my-map/address]
+                   :opt-un [:spec-tools.core-test$my-map/description])]
+      (testing "vanilla keys-spec is generated"
+        (is (= (s/form s-keys) (s/form st-map))))
+      (testing "nested keys are in the registry"
+        (let [generated-keys (->> (s/registry)
+                                  (filter #(-> % first str (str/starts-with? ":spec-tools.core-test$my-map")))
+                                  (map first)
+                                  set)]
+          (is (= #{:spec-tools.core-test$my-map/boss
+                   :spec-tools.core-test$my-map/name
+                   :spec-tools.core-test$my-map/description
+                   :spec-tools.core-test$my-map/languages
+                   :spec-tools.core-test$my-map/orders
+                   :spec-tools.core-test$my-map$orders/id
+                   :spec-tools.core-test$my-map$orders/description
+                   :spec-tools.core-test$my-map/address
+                   :spec-tools.core-test$my-map$address/zip
+                   :spec-tools.core-test$my-map$address/street}
+                 generated-keys))))
+      (testing "validating"
+        (let [value {::id 1
+                     ::age 63
+                     :boss true
+                     :name "Liisa"
+                     :languages #{:clj :cljs}
+                     :orders [{:id 1, :description "cola"}
+                              {:id 2, :description "kebab"}]
+                     :description "Liisa is a valid boss"
+                     :address {:street "Amurinkatu 2"
+                               :zip "33210"}}]
+          (is (true? (s/valid? st-map value)))))))
+
+  (testing "top-level vector"
+    (is (true?
+          (s/valid?
+            (st/coll-spec ::vector [{:olipa {:kerran string?}}])
+            [{:olipa {:kerran "avaruus"}}
+             {:olipa {:kerran "elämä"}}]))))
+
+  (testing "top-level set"
+    (is (true?
+          (s/valid?
+            (st/coll-spec ::vector #{{:olipa {:kerran string?}}})
+            #{{:olipa {:kerran "avaruus"}}
+              {:olipa {:kerran "elämä"}}})))))
