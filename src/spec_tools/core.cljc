@@ -122,7 +122,27 @@
                        [k' v'] (if (qualified-keyword? kv)
                                  [kv (if (not= kv v) v)]
                                  (let [k' (keyword (str (str (namespace n) "$" (name n)) "/" (name kv)))]
-                                   [k' (if (map? v) `(map ~k' ~v) v)]))]
+                                   [k' (cond
+                                         (map? v) `(map ~k' ~v)
+                                         (vector? v) (if-not (= 1 (count v))
+                                                       (throw
+                                                         (ex-info
+                                                           "only single maps allowed in nested vectors"
+                                                           {:k k' :v v}))
+                                                       (let [v' (if (map? (first v))
+                                                                  `(map ~k' ~(first v))
+                                                                  (first v))]
+                                                         `(s/coll-of ~v' :into [])))
+                                         (set? v) (if-not (= 1 (count v))
+                                                    (throw
+                                                      (ex-info
+                                                        "only single maps allowed in nested vectors"
+                                                        {:k k' :v v}))
+                                                    (let [v' (if (map? (first v))
+                                                               `(map ~k' ~(first v))
+                                                               (first v))]
+                                                      `(s/coll-of ~v' :into #{})))
+                                         :else v)]))]
                    (-> acc
                        (update ak (fnil conj []) k')
                        (cond-> v' (update ::defs (fnil conj []) [k' v'])))))

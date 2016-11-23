@@ -115,12 +115,17 @@
                   :boss st/boolean?
                   (st/req :name) string?
                   (st/opt :description) string?
+                  :languages #{keyword?}
+                  :orders [{:id int?
+                            :description string?}]
                   :address {:street string?
                             :zip string?}})
         s-keys (s/keys
                  :req [::id ::age]
                  :req-un [:spec-tools.core-test$my-map/boss
                           :spec-tools.core-test$my-map/name
+                          :spec-tools.core-test$my-map/languages
+                          :spec-tools.core-test$my-map/orders
                           :spec-tools.core-test$my-map/address]
                  :opt-un [:spec-tools.core-test$my-map/description])]
     (testing "vanilla keys-spec is generated"
@@ -133,6 +138,10 @@
         (is (= #{:spec-tools.core-test$my-map/boss
                  :spec-tools.core-test$my-map/name
                  :spec-tools.core-test$my-map/description
+                 :spec-tools.core-test$my-map/languages
+                 :spec-tools.core-test$my-map/orders
+                 :spec-tools.core-test$my-map$orders/id
+                 :spec-tools.core-test$my-map$orders/description
                  :spec-tools.core-test$my-map/address
                  :spec-tools.core-test$my-map$address/zip
                  :spec-tools.core-test$my-map$address/street}
@@ -142,6 +151,9 @@
                    ::age 63
                    :boss true
                    :name "Liisa"
+                   :languages #{:clj :cljs}
+                   :orders [{:id 1, :description "cola"}
+                            {:id 2, :description "kebab"}]
                    :description "Liisa is a valid boss"
                    :address {:street "Amurinkatu 2"
                              :zip "33210"}}]
