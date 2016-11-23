@@ -12,7 +12,7 @@ Status: **Alpha** (as spec is still alpha too).
 
 * [Spec Records](#spec-records)
 * [Dynamic Conforming](#dynamic-conforming)
-* [Concise Map Specs](#concise-map-specs)
+* [Simple Collection Specs](#simple-collection-specs)
 * [Generating JSON Schemas](#generating-json-schemas)
 
 ### Spec Records
@@ -161,40 +161,44 @@ Default conformers are just data, so extending them is easy:
 ; :AKKIK
 ```
 
-### Concise Map Specs
+### Simple Collection Specs
 
-Creating `s/keys` specs with non-qualified keyword keys is quite verbose because all key specs have to be defined separately. Spec-tools adds Schema-like concise nested map-syntax separating keys and values. `spec-tools.core/map` takes a qualified map name (for qualified key generation) and a map of keyword keys & spec values. Keys are required by default, but wrapping a key into `st/opt` marks them optional. To reuse an existing spec, it's qualified name should be used both as a key and a value. Nested maps are automatically converted into nested Map Specs.
+Creating nested anonymous collection specs with Clojure Spec is quite verbose as all leaf specs have to be registered separately forehand. Spec-tools enables simple, Schema-like nested collection syntax for specs. `spec-tools.core/coll-spec` takes a spec name (for qualified key generation) and a normal Clojure `map`, `vector` or `set` as a value. Vectors and Sets are homogeneous, and must contains exactly one spec element. Maps contain keyword keys & spec values. Keys are required by default, but wrapping a key into `st/opt` makes them optional. To reuse an already registered spec in a map, it's qualified spec name should be used both as a key and a value. Collection specs are recursive.
+
 
 ```clj
 (s/def ::age (s/and integer? #(> % 18)))
 
 (def person-spec
-  (st/map
+  (st/coll-spec
     ::person
     {::id integer?
      ::age ::age
-     (st/req :name) string?
+     :name string?
+     (st/req :languages) #{keyword?}
      (st/opt :address) {:street string?
                         :zip string?}}))
-
-(s/form person-spec)
-; (clojure.spec/keys 
-;   :req [:user/id 
-;         :user/age] 
-;   :req-un [:user$person/name] 
-;   :opt-un [:user$person/address])
 
 (s/valid?
   person-spec
   {::id 1
    ::age 63
    :name "Liisa"
+   :languages #{:clj :cljs}
    :address {:street "Amurinkatu 2"
              :zip "33210"}})
 ; true
+
+; the following specs got registered:
+;  :user/id
+;  :user/age
+;  :user$person/name
+;  :user$person/languages
+;  :user$person/address
+;  :user$person$address/zip
+;  :user$person$address/street
 ```
 
-**TODO**: Support also nested vectors & sets (rename to `st/coll-spec`?)
 **TODO**: Support optional values via `st/maybe` or such.
 **TODO**: create via `st/spec` to get type-hinted map-conformations like `disallow-extra-keys` etc.
 
