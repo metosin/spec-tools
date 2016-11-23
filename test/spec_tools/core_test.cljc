@@ -114,13 +114,35 @@
                   ::age ::age
                   :boss st/boolean?
                   (st/req :name) string?
-                  (st/opt :description) string?})
+                  (st/opt :description) string?
+                  :address {:street string?
+                            :zip string?}})
         s-keys (s/keys
                  :req [::id ::age]
                  :req-un [:spec-tools.core-test$my-map/boss
-                          :spec-tools.core-test$my-map/name]
+                          :spec-tools.core-test$my-map/name
+                          :spec-tools.core-test$my-map/address]
                  :opt-un [:spec-tools.core-test$my-map/description])]
-    (is (= (s/form s-keys) (s/form st-map)))
+    (testing "vanilla keys-spec is generated"
+      (is (= (s/form s-keys) (s/form st-map))))
+    (testing "nested keys are in the registry"
+      (let [generated-keys (->> (s/registry)
+                                (filter #(-> % first str (str/starts-with? ":spec-tools.core-test$my-map")))
+                                (map first)
+                                set)]
+        (is (= #{:spec-tools.core-test$my-map/boss
+                 :spec-tools.core-test$my-map/name
+                 :spec-tools.core-test$my-map/description
+                 :spec-tools.core-test$my-map/address
+                 :spec-tools.core-test$my-map$address/zip
+                 :spec-tools.core-test$my-map$address/street}
+               generated-keys))))
     (testing "conforming"
-      (let [value {::id 1, ::age 18 :boss true, :name "Mikko", :description "Shoes"}]
+      (let [value {::id 1
+                   ::age 63
+                   :boss true
+                   :name "Liisa"
+                   :description "Liisa is a valid boss"
+                   :address {:street "Amurinkatu 2"
+                             :zip "33210"}}]
         (is (= value (st/conform st-map value)))))))

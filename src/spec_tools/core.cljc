@@ -121,8 +121,8 @@
                        ak (keyword (str k1 k2))
                        [k' v'] (if (qualified-keyword? kv)
                                  [kv (if (not= kv v) v)]
-                                 [(keyword (str (namespace n) "$" (name n) "/" (name kv))) v])]
-
+                                 (let [k' (keyword (str (str (namespace n) "$" (name n)) "/" (name kv)))]
+                                   [k' (if (map? v) `(map ~k' ~v) v)]))]
                    (-> acc
                        (update ak (fnil conj []) k')
                        (cond-> v' (update ::defs (fnil conj []) [k' v'])))))

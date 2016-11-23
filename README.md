@@ -163,33 +163,40 @@ Default conformers are just data, so extending them is easy:
 
 ### Concise Map Specs
 
-Creating `s/keys` specs with non-qualified keyword keys is quite verbose because all key specs have to be defined separately. Spec-tools adds Schema-like concise map-syntax separating keys and values. `spec-tools.core/map` takes a qualified map name (for qualified key generation) and a map of keyword keys & spec values. Keys are required by default, but can optionally be wrapped into `st/opt` or `st/req` to denote whether they are required. Qualified keywords are supported too, by setting the qualified key also as a value.
+Creating `s/keys` specs with non-qualified keyword keys is quite verbose because all key specs have to be defined separately. Spec-tools adds Schema-like concise nested map-syntax separating keys and values. `spec-tools.core/map` takes a qualified map name (for qualified key generation) and a map of keyword keys & spec values. Keys are required by default, but wrapping a key into `st/opt` marks them optional. To reuse an existing spec, it's qualified name should be used both as a key and a value. Nested maps are automatically converted into nested Map Specs.
 
 ```clj
-(s/def ::age st/integer?)
+(s/def ::age (s/and integer? #(> % 18)))
 
-(def my-map
+(def person-spec
   (st/map
-    ::my-map
+    ::person
     {::id integer?
      ::age ::age
-     :boss st/boolean?
      (st/req :name) string?
-     (st/opt :description) string?}))
+     (st/opt :address) {:street string?
+                        :zip string?}}))
 
-(s/form my-map)
-;(clojure.spec/keys
-;  :req [:user/id 
-;        :user/age]
-;  :req-un [:user$my-map/boss 
-;           :user$my-map/name]
-;  :opt-un [:user$my-map/description])
+(s/form person-spec)
+; (clojure.spec/keys 
+;   :req [:user/id 
+;         :user/age] 
+;   :req-un [:user$person/name] 
+;   :opt-un [:user$person/address])
 
-(st/conform my-map {::id 1, ::age 18, :boss false, :name "Terttu"})
-; {:user/id 1, :user/age 18, :boss false, :name "Terttu"}
+(s/valid?
+  person-spec
+  {::id 1
+   ::age 63
+   :name "Liisa"
+   :address {:street "Amurinkatu 2"
+             :zip "33210"}})
+; true
 ```
 
-**TODO**: create via `st/spec` to get map-conformations like `disallow-extra-keys` etc.
+**TODO**: Support also nested vectors & sets (rename to `st/coll-spec`?)
+**TODO**: Support optional values via `st/maybe` or such.
+**TODO**: create via `st/spec` to get type-hinted map-conformations like `disallow-extra-keys` etc.
 
 ### Generating JSON Schemas
 
