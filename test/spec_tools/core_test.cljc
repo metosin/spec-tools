@@ -146,7 +146,7 @@
                  :spec-tools.core-test$my-map$address/zip
                  :spec-tools.core-test$my-map$address/street}
                generated-keys))))
-    (testing "conforming"
+    (testing "validating"
       (let [value {::id 1
                    ::age 63
                    :boss true
@@ -157,4 +157,4 @@
                    :description "Liisa is a valid boss"
                    :address {:street "Amurinkatu 2"
                              :zip "33210"}}]
-        (is (= value (st/conform st-map value)))))))
+        (is (true? (s/valid? st-map value)))))))
