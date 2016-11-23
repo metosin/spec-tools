@@ -116,10 +116,7 @@
       (ex-info
         "only single maps allowed in nested vectors"
         {:k n :v v}))
-    (let [v' (if (map? (first v))
-               `(coll-spec ~n ~(first v))
-               (first v))]
-      `(s/coll-of ~v' :into []))))
+    `(s/coll-of (coll-spec ~n ~(first v)) :into [])))
 
 (defn- -set [_ n v]
   (if-not (= 1 (count v))
@@ -127,10 +124,7 @@
       (ex-info
         "only single maps allowed in nested sets"
         {:k n :v v}))
-    (let [v' (if (map? (first v))
-               `(coll-spec ~n ~(first v))
-               (first v))]
-      `(s/coll-of ~v' :into #{}))))
+    `(s/coll-of (coll-spec ~n ~(first v)) :into #{})))
 
 #?(:clj
    (defn- -map [env n m]
@@ -160,11 +154,12 @@
 
 #?(:clj
    (defmacro coll-spec [n m]
-     (let [f (cond
-               (map? m) -map
-               (vector? m) -vector
-               (set? m) -set)]
-       (f &env n m))))
+     (if-let [f (cond
+                  (map? m) -map
+                  (vector? m) -vector
+                  (set? m) -set)]
+       (f &env n m)
+       `~m)))
 
 ;;
 ;; Specs

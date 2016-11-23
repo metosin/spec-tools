@@ -172,4 +172,10 @@
           (s/valid?
             (st/coll-spec ::vector #{{:olipa {:kerran string?}}})
             #{{:olipa {:kerran "avaruus"}}
-              {:olipa {:kerran "elämä"}}})))))
+              {:olipa {:kerran "elämä"}}}))))
+
+  (testing "mega-nested"
+    (is (true?
+          (s/valid?
+            (st/coll-spec ::vector [[[[[[[[[[string?]]]]]]]]]])
+            [[[[[[[[[["kikka" "kakka" "kukka"]]]]]]]]]])))))
