@@ -128,29 +128,44 @@
 
 #?(:clj
    (defn- -map [env n m]
-     (let [m (reduce-kv
-               (fn [acc k v]
-                 (let [resolve (if (impl/in-cljs? env) (partial impl/cljs-resolve env) resolve)
-                       [req? kv] (if (seq? k) [(not= (resolve `opt) (resolve (first k))) (second k)] [true k])
-                       k1 (if req? "req" "opt")
-                       k2 (if-not (qualified-keyword? kv) "-un")
-                       ak (keyword (str k1 k2))
-                       [k' v'] (if (qualified-keyword? kv)
-                                 [kv (if (not= kv v) v)]
-                                 (let [k' (keyword (str (str (namespace n) "$" (name n)) "/" (name kv)))]
-                                   [k' (if (or (map? v) (vector? v) (set? v))
-                                         `(spec-tools.core/coll-spec ~k' ~v) v)]))]
-                   (-> acc
-                       (update ak (fnil conj []) k')
-                       (cond-> v' (update ::defs (fnil conj []) [k' v'])))))
-               {}
-               m)
-           defs (::defs m)
-           margs (apply concat (dissoc m ::defs))]
-       `(do
-          ~@(for [[k v] defs]
-              `(s/def ~k ~v))
-          (s/keys ~@margs)))))
+     (let [resolve (if (impl/in-cljs? env) (partial impl/cljs-resolve env) resolve)
+           resolved-opt (resolve `opt)
+           resolved-req (resolve `req)]
+
+       ;; predicate keys
+       (if-let [key-spec (and (= 1 (count m))
+                              (let [k (first (keys m))]
+                                (and
+                                  (not
+                                    (or (clojure.core/keyword? k)
+                                        (and (seq? k)
+                                             (let [resolved (resolve (first k))]
+                                               (#{resolved-opt resolved-req} resolved)))))
+                                  k)))]
+         `(s/map-of ~key-spec (spec-tools.core/coll-spec ~n ~(first (vals m))))
+         ;; keyword keys
+         (let [m (reduce-kv
+                   (fn [acc k v]
+                     (let [[req? kv] (if (seq? k) [(not= resolved-opt (resolve (first k))) (second k)] [true k])
+                           k1 (if req? "req" "opt")
+                           k2 (if-not (qualified-keyword? kv) "-un")
+                           ak (keyword (str k1 k2))
+                           [k' v'] (if (qualified-keyword? kv)
+                                     [kv (if (not= kv v) v)]
+                                     (let [k' (keyword (str (str (namespace n) "$" (name n)) "/" (name kv)))]
+                                       [k' (if (or (map? v) (vector? v) (set? v))
+                                             `(spec-tools.core/coll-spec ~k' ~v) v)]))]
+                       (-> acc
+                           (update ak (fnil conj []) k')
+                           (cond-> v' (update ::defs (fnil conj []) [k' v'])))))
+                   {}
+                   m)
+               defs (::defs m)
+               margs (apply concat (dissoc m ::defs))]
+           `(do
+              ~@(for [[k v] defs]
+                  `(s/def ~k ~v))
+              (s/keys ~@margs)))))))
 
 #?(:clj
    (defmacro coll-spec [n m]

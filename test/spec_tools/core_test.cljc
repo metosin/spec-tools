@@ -191,3 +191,16 @@
           (s/valid?
             (st/coll-spec ::vector [[[[[[[[[[string?]]]]]]]]]])
             [[[[[[[[[123]]]]]]]]]))))
+
+  (testing "predicate keys"
+    (is
+      (true?
+        (s/valid?
+          (st/coll-spec ::pred-keys {string? {keyword? [integer?]}})
+          {"winning numbers" {:are [1 12 46 45]}
+           "empty?" {:is []}})))
+    (is
+      (false?
+        (s/valid?
+          (st/coll-spec ::pred-keys {string? {keyword? [integer?]}})
+          {"invalid spec" "is this"})))))

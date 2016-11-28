@@ -163,7 +163,7 @@ Default conformers are just data, so extending them is easy:
 
 ### Simple Collection Specs
 
-Creating nested anonymous collection specs with Clojure Spec is quite verbose as all leaf specs have to be registered separately forehand. Spec-tools enables simple, Schema-like nested collection syntax for specs. `spec-tools.core/coll-spec` takes a spec name (for qualified key generation) and a normal Clojure `map`, `vector` or `set` as a value. Vectors and Sets are homogeneous, and must contains exactly one spec element. Maps contain keyword keys & spec values. Keys are required by default, but wrapping a key into `st/opt` makes them optional. To reuse an already registered spec in a map, it's qualified spec name should be used both as a key and a value. Collection specs are recursive.
+Creating nested anonymous collection specs with Clojure Spec is quite verbose as all leaf specs have to be registered separately forehand. Spec-tools enables simple, Schema-like nested collection syntax for specs. `spec-tools.core/coll-spec` takes a spec name (for qualified key generation) and a normal Clojure `map`, `vector` or `set` as a value. Vectors and Sets are homogeneous, and must contains exactly one spec element. Maps contain either predicate or keyword keys and specs as values. Keyword keys are required by default, but wrapping a key into `st/opt` makes them optional. To reuse an already registered spec in a map, it's qualified spec name should be used both as a key and a value. Collection specs are recursive.
 
 
 ```clj
@@ -175,6 +175,7 @@ Creating nested anonymous collection specs with Clojure Spec is quite verbose as
     {::id integer?
      ::age ::age
      :name string?
+     :likes {string? boolean?}
      (st/req :languages) #{keyword?}
      (st/opt :address) {:street string?
                         :zip string?}}))
@@ -184,6 +185,8 @@ Creating nested anonymous collection specs with Clojure Spec is quite verbose as
   {::id 1
    ::age 63
    :name "Liisa"
+   :likes {"coffee" true
+           "maksapihvi" false}
    :languages #{:clj :cljs}
    :address {:street "Amurinkatu 2"
              :zip "33210"}})
@@ -193,6 +196,7 @@ Creating nested anonymous collection specs with Clojure Spec is quite verbose as
 ;  :user/id
 ;  :user/age
 ;  :user$person/name
+;  :user$person/likes
 ;  :user$person/languages
 ;  :user$person/address
 ;  :user$person$address/zip
