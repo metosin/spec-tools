@@ -165,17 +165,29 @@
           (s/valid?
             (st/coll-spec ::vector [{:olipa {:kerran string?}}])
             [{:olipa {:kerran "avaruus"}}
-             {:olipa {:kerran "elämä"}}]))))
+             {:olipa {:kerran "elämä"}}])))
+    (is (false?
+          (s/valid?
+            (st/coll-spec ::vector [{:olipa {:kerran string?}}])
+            [{:olipa {:kerran :muumuu}}]))))
 
   (testing "top-level set"
     (is (true?
           (s/valid?
             (st/coll-spec ::vector #{{:olipa {:kerran string?}}})
             #{{:olipa {:kerran "avaruus"}}
-              {:olipa {:kerran "elämä"}}}))))
+              {:olipa {:kerran "elämä"}}})))
+    (is (false?
+          (s/valid?
+            (st/coll-spec ::vector #{{:olipa {:kerran string?}}})
+            #{{:olipa {:kerran :muumuu}}}))))
 
   (testing "mega-nested"
     (is (true?
           (s/valid?
             (st/coll-spec ::vector [[[[[[[[[[string?]]]]]]]]]])
-            [[[[[[[[[["kikka" "kakka" "kukka"]]]]]]]]]])))))
+            [[[[[[[[[["kikka" "kakka" "kukka"]]]]]]]]]])))
+    (is (false?
+          (s/valid?
+            (st/coll-spec ::vector [[[[[[[[[[string?]]]]]]]]]])
+            [[[[[[[[[123]]]]]]]]]))))
