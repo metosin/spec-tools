@@ -21,8 +21,10 @@
           (spec-dispatch form))
         spec))
     (set? spec) ::set
-    (list? spec) (first (strip-fn-if-needed spec))
+    (seq? spec) (first (strip-fn-if-needed spec))
     :else spec))
+
+(defn- formize [spec] (if (seq? spec) spec (s/form spec)))
 
 (defmulti to-json "Convert a spec into a JSON Schema." spec-dispatch :default ::default)
 
@@ -36,6 +38,7 @@
 (defmethod to-json 'clojure.core/neg? [spec] {:maximum 0 :exclusiveMaximum true})
 
 (defmethod to-json 'clojure.core/string? [spec] {:type "string"})
+(defmethod to-json 'clojure.core/keyword? [spec] {:type "string"})
 
 (defmethod to-json 'clojure.core/boolean? [spec] {:type "boolean"})
 
@@ -45,11 +48,11 @@
   {:enum (vec (if (keyword? spec) (s/form spec) spec))})
 
 (defmethod to-json 'clojure.spec/every [spec]
-  (let [[_ inner-spec] (s/form spec)]
+  (let [[_ inner-spec] (formize spec)]
     {:type "array" :items (to-json inner-spec)}))
 
 (defmethod to-json 'clojure.spec/tuple [spec]
-  (let [[_ & inner-specs] (s/form spec)]
+  (let [[_ & inner-specs] (formize spec)]
     {:type "array" :items (mapv to-json inner-specs) :minItems (count inner-specs)}))
 
 (defmethod to-json 'clojure.spec/* [spec]
