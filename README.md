@@ -8,6 +8,8 @@ Status: **Alpha** (as spec is still alpha too).
 
 [![Clojars Project](http://clojars.org/metosin/spec-tools/latest-version.svg)](http://clojars.org/metosin/spec-tools)
 
+No dependencies, but requires Java 1.8 & Clojure 1.9.0 (alpha14).
+
 ## Features
 
 * [Spec Records](#spec-records)
@@ -59,7 +61,7 @@ Spec records also support [dynamic conforming](#dynamic-conforming), making them
 | `st/keyword?`    | `::st/keyword`   | `keyword?`      |
 | `st/boolean?`    | `::st/boolean`   | `boolean?`      |
 | `st/uuid?`       | `::st/uuid`      | `uuid?`         |
-| `st/inst?`       | `::st/date-time` | `inst?`         |
+| `st/inst?`       | `::st/date`      | `inst?`         |
 
 **TODO**: support all common common specs & `clojure.core` predicates.
 
@@ -119,7 +121,7 @@ In `spec-tools.core` there is a modified `conform` supporting setting the confor
   {:name "Ilona"
    :age "48"
    :languages ["clj" "cljs"]
-   :birthdate "1968-01-02T15:04:05.999999-07:00"})
+   :birthdate "1968-01-02T15:04:05Z"})
 
 ;; no conforming
 (st/conform ::user data)
@@ -134,7 +136,7 @@ In `spec-tools.core` there is a modified `conform` supporting setting the confor
 ; {:name "Ilona"
 ;  :age 48
 ;  :languages #{:clj :cljs}
-;  :birthdate #inst"1968-01-02T22:04:05.999-00:00"}
+;  :birthdate #inst"1968-01-02T15:04:05.000-00:00"}
 ```
 
 #### Extending
