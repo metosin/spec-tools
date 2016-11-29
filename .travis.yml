@@ -6,12 +6,7 @@ env:
   matrix:
   - TEST=clj
   - TEST=cljs
-matrix:
-  exclude:
-    - env: TEST=cljs
-      jdk: openjdk7
 jdk:
-  - openjdk7
   - oraclejdk8
 node_js:
   - "6.1"
