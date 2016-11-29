@@ -53,12 +53,12 @@
    ::keyword convert/string->keyword
    ::boolean convert/string->boolean
    ::uuid convert/string->uuid
-   ::date-time convert/string->date-time})
+   ::date convert/string->date})
 
 (def json-conformers
   {::keyword convert/string->keyword
    ::uuid convert/string->uuid
-   ::date-time convert/string->date-time})
+   ::date convert/string->date})
 
 (defn conform
   ([spec value]
@@ -211,4 +211,4 @@
 (def spec-tools.core/keyword? (spec ::keyword clojure.core/keyword?))
 (def spec-tools.core/boolean? (spec ::boolean clojure.core/boolean?))
 (def spec-tools.core/uuid? (spec ::uuid clojure.core/uuid?))
-(def spec-tools.core/inst? (spec ::date-time clojure.core/inst?))
+(def spec-tools.core/inst? (spec ::date clojure.core/inst?))

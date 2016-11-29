@@ -2,7 +2,10 @@
   #?(:cljs (:refer-clojure :exclude [Inst Keyword UUID]))
   (:require [clojure.spec :as s]
     #?@(:cljs [[goog.date.UtcDateTime]
-               [goog.date.Date]])))
+               [goog.date.Date]]))
+  #?(:clj
+     (:import (java.util Date)
+              (java.time Instant))))
 
 (defn string->long [x]
   (if (string? x)
@@ -42,10 +45,11 @@
                 :cljs js/Error) _
         ::s/invalid))))
 
-(defn string->date-time [x]
+(defn string->date [x]
   (if (string? x)
     (try
-      #?(:clj  (.toDate (org.joda.time.DateTime/parse x))
+      #?(:clj  (Date/from
+                 (Instant/parse x))
          :cljs (js/Date. (.getTime (goog.date.UtcDateTime.fromIsoString x))))
       (catch #?(:clj  Exception
                 :cljs js/Error) _

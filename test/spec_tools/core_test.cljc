@@ -52,7 +52,8 @@
       (is (= ::s/invalid (st/conform ::language "clojure")))
       (is (= ::s/invalid (st/conform ::truth "false")))
       (is (= ::s/invalid (st/conform ::uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e")))
-      (is (= ::s/invalid (st/conform ::birthdate "2006-01-02T15:04:05.999999-07:00")))))
+      (is (= ::s/invalid (st/conform ::birthdate "2014-02-18T18:25:37.456Z")))
+      (is (= ::s/invalid (st/conform ::birthdate "2014-02-18T18:25:37Z")))))
 
   (testing "string-conformers"
     (let [conform #(st/conform %1 %2 st/string-conformers)]
@@ -64,8 +65,10 @@
         (is (= :clojure (conform ::language "clojure")))
         (is (= #uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e"
                (conform ::uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e")))
-        (is (= #inst "2006-01-02T15:04:05.999999-07:00"
-               (conform ::birthdate "2006-01-02T15:04:05.999999-07:00"))))))
+        (is (= #inst "2014-02-18T18:25:37.456Z"
+               (conform ::birthdate "2014-02-18T18:25:37.456Z")))
+        (is (= #inst "2014-02-18T18:25:37Z"
+               (conform ::birthdate "2014-02-18T18:25:37Z"))))))
 
   (testing "json-conformers"
     (let [conform #(st/conform %1 %2 st/json-conformers)]
@@ -78,8 +81,12 @@
         (is (= :clojure (conform ::language "clojure")))
         (is (= #uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e"
                (conform ::uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e")))
-        (is (= #inst "2006-01-02T15:04:05.999999-07:00"
-               (conform ::birthdate "2006-01-02T15:04:05.999999-07:00")))))))
+        (is (= #inst "2014-02-18T18:25:37.456Z"
+               (conform ::birthdate "2014-02-18T18:25:37.456Z")))
+        (is (= #inst "2014-02-18T18:25:37Z"
+               (conform ::birthdate "2014-02-18T18:25:37Z")))))))
+
+(st/conform ::birthdate "1968-01-02T15:04:05Z" st/string-conformers)
 
 (deftest unform-test
   (let [unform-conform #(s/unform %1 (st/conform %1 %2 st/string-conformers))]
@@ -91,8 +98,10 @@
       (is (= :clojure (unform-conform ::language "clojure")))
       (is (= #uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e"
              (unform-conform ::uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e")))
-      (is (= #inst "2006-01-02T15:04:05.999999-07:00"
-             (unform-conform ::birthdate "2006-01-02T15:04:05.999999-07:00"))))))
+      (is (= #inst "2014-02-18T18:25:37.456Z"
+             (unform-conform ::birthdate "2014-02-18T18:25:37.456Z")))
+      (is (= #inst "2014-02-18T18:25:37.456Z"
+             (unform-conform ::birthdate "2014-02-18T18:25:37.456Z"))))))
 
 (deftest extending-test
   (let [my-conformations (-> st/string-conformers
