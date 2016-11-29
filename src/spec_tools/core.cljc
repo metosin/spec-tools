@@ -18,6 +18,30 @@
          (java.io Writer)])))
 
 ;;
+;; helpers
+;;
+
+(defn ^:skip-wiki registry
+  ([]
+   (s/registry))
+  ([re]
+   (->> (s/registry)
+        (filter #(-> % first str (subs 1) (->> (re-matches re))))
+        (into {}))))
+
+(defn ^:skip-wiki eq [value]
+  #{value})
+
+(defn ^:skip-wiki set-of [value]
+  (s/coll-of
+    value
+    :kind set?))
+
+(defn ^:skip-wiki enum [& values]
+  (s/spec (set values)))
+
+
+;;
 ;; Dynamic conforming
 ;;
 

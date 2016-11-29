@@ -132,10 +132,7 @@
       (testing "vanilla keys-spec is generated"
         (is (= (s/form s-keys) (s/form st-map))))
       (testing "nested keys are in the registry"
-        (let [generated-keys (->> (s/registry)
-                                  (filter #(-> % first str (str/starts-with? ":spec-tools.core-test$my-map")))
-                                  (map first)
-                                  set)]
+        (let [generated-keys (->> (st/registry #"spec-tools.core-test\$my-map.*") (map first) set)]
           (is (= #{:spec-tools.core-test$my-map/boss
                    :spec-tools.core-test$my-map/name
                    :spec-tools.core-test$my-map/description
