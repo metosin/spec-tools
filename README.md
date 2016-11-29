@@ -165,8 +165,15 @@ Default conformers are just data, so extending them is easy:
 
 ### Simple Collection Specs
 
-Creating nested anonymous collection specs with Clojure Spec is quite verbose as all leaf specs have to be registered separately forehand. Spec-tools enables simple, Schema-like nested collection syntax for specs. `spec-tools.core/coll-spec` takes a spec name (for qualified key generation) and a normal Clojure `map`, `vector` or `set` as a value. Vectors and Sets are homogeneous, and must contains exactly one spec element. Maps contain either predicate or keyword keys and specs as values. Keyword keys are required by default, but wrapping a key into `st/opt` makes them optional. To reuse an already registered spec in a map, it's qualified spec name should be used both as a key and a value. Collection specs are recursive.
+Creating nested anonymous collection specs with Clojure Spec is quite verbose as all leaf specs have to be registered forehand. Spec-tools enables simple, Schema-like nested collection syntax for specs. `spec-tools.core/coll-spec` takes a qualified spec name (for nested qualified key generation) and a vanilla Clojure `map`, `vector` or `set` as a value. Collection specs are recursive.
 
+* Vectors and Sets are homogeneous, and must contains exactly one spec
+* Maps have either a single spec key (homogeneous keys) or any number keyword keys.
+* Map keyword keys
+   * can be qualified or non-qualified (a qualified name will be generated for it)
+   * are required by default
+   * can be wrapped into `st/opt` or `st/req` for marking them optional or required.
+* Map values can be specs, qualified spec names or nested collections.
 
 ```clj
 (s/def ::age (s/and integer? #(> % 18)))
@@ -175,7 +182,7 @@ Creating nested anonymous collection specs with Clojure Spec is quite verbose as
   (st/coll-spec
     ::person
     {::id integer?
-     ::age ::age
+     :age ::age
      :name string?
      :likes {string? boolean?}
      (st/req :languages) #{keyword?}
@@ -185,7 +192,7 @@ Creating nested anonymous collection specs with Clojure Spec is quite verbose as
 (s/valid?
   person-spec
   {::id 1
-   ::age 63
+   :age 63
    :name "Liisa"
    :likes {"coffee" true
            "maksapihvi" false}
@@ -195,18 +202,19 @@ Creating nested anonymous collection specs with Clojure Spec is quite verbose as
 ; true
 
 ; the following specs got registered:
-;  :user/id
-;  :user/age
-;  :user$person/name
-;  :user$person/likes
-;  :user$person/languages
-;  :user$person/address
-;  :user$person$address/zip
-;  :user$person$address/street
+(st/registry #"user.*")
+; #{:user/id
+;   :user$person/age
+;   :user$person/name
+;   :user$person/likes
+;   :user$person/languages
+;   :user$person/address
+;   :user$person$address/zip
+;   :user$person$address/street}
 ```
 
-**TODO**: Support optional values via `st/maybe` or such.
-**TODO**: create via `st/spec` to get type-hinted map-conformations like `disallow-extra-keys` etc.
+* **TODO**: Support optional values via `st/maybe`
+* **TODO**: create via `st/spec` to allow type-hinted map-conformations like `disallow-extra-keys` etc.
 
 ### Generating JSON Schemas
 
@@ -215,6 +223,7 @@ Targetting to generate JSON Schemas from arbitrary specs (not just Spec Records)
 Related: https://github.com/metosin/ring-swagger/issues/95
 
 WIP: https://github.com/metosin/spec-tools/blob/master/test/spec_tools/json_schema_test.clj
+
 
 ## License
 
