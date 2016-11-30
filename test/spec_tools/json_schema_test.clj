@@ -36,8 +36,7 @@
     (is (= (jsc/to-json (s/keys :req-un [::int] :opt-un [::string]))
            {:type "object"
             :properties {"int" {:type "integer"} "string" {:type "string"}}
-            :required ["int"]
-            :additionalProperties false}))
+            :required ["int"]}))
     (is (= (jsc/to-json (s/tuple int? string?))
            {:type "array" :items [{:type "integer"} {:type "string"}] :minItems 2}))
     (is (= (jsc/to-json (s/* int?)) {:type "array" :items {:type "integer"}}))
@@ -88,7 +87,6 @@
 (deftest readme-test
   (is (= {:type "object"
           :required ["id" "age" "name" "likes" "languages"]
-          :additionalProperties false
           :properties
           {"id" {:type "integer"}
            "age" {:type "integer"}  ; not supporting > yet
@@ -97,7 +95,6 @@
            "languages" {:type "array", :items {:type "string"}}
            "address" {:type "object"
                       :required ["street" "zip"]
-                      :additionalProperties false
                       :properties {"street" {:type "string"}
                                    "zip" {:type "string"}}}}}
          (jsc/to-json person-spec))))

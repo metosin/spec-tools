@@ -82,8 +82,7 @@
                                  (concat req req-un opt opt-un)))]
     {:type "object"
      :properties properties
-     :required (map name (concat req req-un))
-     :additionalProperties false}))
+     :required (map name (concat req req-un))}))
 
 (defmethod to-json 'clojure.spec/or [spec]
   (let [[_ & {:as inner-spec-map}] (s/form spec)]
