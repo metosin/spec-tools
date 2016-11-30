@@ -39,11 +39,13 @@
             :additionalProperties false}))
     (is (= (jsc/to-json (s/tuple int? string?))
            {:type "array" :items [{:type "integer"} {:type "string"}] :minItems 2}))
-    ;; The next test fails because of
-    ;; <http://dev.clojure.org/jira/browse/CLJ-2035>
-    #_(is (= (jsc/to-json (s/every int?)) {:type "array" :items {:type "integer"}}))
     (is (= (jsc/to-json (s/* int?)) {:type "array" :items {:type "integer"}}))
-    (is (= (jsc/to-json (s/+ int?)) {:type "array" :items {:type "integer"} :minItems 1})))
+    (is (= (jsc/to-json (s/+ int?)) {:type "array" :items {:type "integer"} :minItems 1}))
+    ;; The following tests require the full qualifying of the predicates until
+    ;; this is fixed: <http://dev.clojure.org/jira/browse/CLJ-2035>
+    (is (= (jsc/to-json (s/every clojure.core/int?)) {:type "array" :items {:type "integer"}}))
+    (is (= (jsc/to-json (s/map-of clojure.core/string? clojure.core/integer?))
+           {:type "object" :additionalProperties {:type "integer"}})))
   (testing "composite specs"
     (is (= (jsc/to-json (s/or :int int? :string string?))
            {:anyOf [{:type "integer"} {:type "string"}]}))

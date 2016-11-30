@@ -48,8 +48,14 @@
   {:enum (vec (if (keyword? spec) (s/form spec) spec))})
 
 (defmethod to-json 'clojure.spec/every [spec]
-  (let [[_ inner-spec] (formize spec)]
-    {:type "array" :items (to-json inner-spec)}))
+  (let [[_ inner-spec & kwargs] (formize spec)
+        pred (when (seq? inner-spec) (first inner-spec))]
+    ;; Special case handling for (s/map-of). If someone actually wants to have a
+    ;; list of tuples in their JSON, this will break.
+    (if (and (= pred 'clojure.spec/tuple)
+             (= (get (into {} (map vec (partition 2 kwargs))) :into)) {})
+      {:type "object" :additionalProperties (get-in (to-json inner-spec) [:items 1])}
+      {:type "array" :items (to-json inner-spec)})))
 
 (defmethod to-json 'clojure.spec/tuple [spec]
   (let [[_ & inner-specs] (formize spec)]
@@ -89,5 +95,5 @@
     {:minimum minimum :maximum maximum}))
 
 (defmethod to-json ::default [spec]
-  (prn :UNNOWN (spec-dispatch spec) spec)
+  (prn :UNKNOWN (spec-dispatch spec) spec)
   {})
