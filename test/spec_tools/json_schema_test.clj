@@ -2,8 +2,9 @@
   (:require  [clojure.test :refer [deftest testing is]]
              [clojure.spec :as s]
              [clojure.spec.test :as stest]
-             [scjsv.core :as scjsv]
              [com.gfredericks.test.chuck.clojure-test :refer [checking]]
+             [scjsv.core :as scjsv]
+             [spec-tools.core :as st]
              [spec-tools.json-schema :as jsc]))
 
 (s/def ::int int?)
@@ -68,3 +69,35 @@
   (test-spec-conversion ::compound)
   (test-spec-conversion (s/nilable ::string))
   (test-spec-conversion (s/int-in 0 100)))
+
+;; Test the example from README
+
+(s/def ::age (s/and integer? #(> % 18)))
+
+(def person-spec
+  (st/coll-spec
+   ::person
+   {::id clojure.core/integer?
+    :age ::age
+    :name clojure.core/string?
+    :likes {clojure.core/string? clojure.core/boolean?}
+    (st/req :languages) #{clojure.core/keyword?}
+    (st/opt :address) {:street clojure.core/string?
+                       :zip clojure.core/string?}}))
+
+(deftest readme-test
+  (is (= {:type "object"
+          :required ["id" "age" "name" "likes" "languages"]
+          :additionalProperties false
+          :properties
+          {"id" {:type "integer"}
+           "age" {:type "integer"}  ; not supporting > yet
+           "name" {:type "string"}
+           "likes" {:type "object" :additionalProperties {:type "boolean"}}
+           "languages" {:type "array", :items {:type "string"}}
+           "address" {:type "object"
+                      :required ["street" "zip"]
+                      :additionalProperties false
+                      :properties {"street" {:type "string"}
+                                   "zip" {:type "string"}}}}}
+         (jsc/to-json person-spec))))

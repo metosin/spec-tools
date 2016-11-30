@@ -26,6 +26,13 @@
 
 (defn- formize [spec] (if (seq? spec) spec (s/form spec)))
 
+(defn- simplify-all-of [spec]
+  (let [subspecs (->> (:allOf spec) (remove empty?))]
+    (cond
+      (empty? subspecs) (dissoc spec :allOf)
+      (and (= (count subspecs) 1) (= [:allOf] (keys spec))) (first subspecs)
+      :else (assoc spec :allOf subspecs))))
+
 (defmulti to-json "Convert a spec into a JSON Schema." spec-dispatch :default ::default)
 
 (defmethod to-json 'clojure.core/int? [spec] {:type "integer"})
@@ -84,7 +91,7 @@
 
 (defmethod to-json 'clojure.spec/and [spec]
   (let [[_ & inner-specs] (s/form spec)]
-    {:allOf (mapv to-json inner-specs)}))
+    (simplify-all-of {:allOf (mapv to-json inner-specs)})))
 
 (defmethod to-json 'clojure.spec/nilable [spec]
   (let [[_ inner-spec] (s/form spec)]
