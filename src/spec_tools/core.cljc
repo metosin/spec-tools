@@ -134,21 +134,23 @@
 (defn opt [k] (->OptionalKey k))
 (defn req [k] (->RequiredKey k))
 
-(defn- -vector [_ n v]
+#?(:clj (declare ^:private coll-spec-fn))
+
+(defn- -vector [env n v]
   (if-not (= 1 (count v))
     (throw
       (ex-info
         "only single maps allowed in nested vectors"
         {:k n :v v}))
-    `(s/coll-of (coll-spec ~n ~(first v)) :into [])))
+    `(s/coll-of ~(coll-spec-fn env n (first v)) :into [])))
 
-(defn- -set [_ n v]
+(defn- -set [env n v]
   (if-not (= 1 (count v))
     (throw
       (ex-info
         "only single maps allowed in nested sets"
         {:k n :v v}))
-    `(s/coll-of (coll-spec ~n ~(first v)) :into #{})))
+    `(s/coll-of ~(coll-spec-fn env n (first v)) :into #{})))
 
 #?(:clj
    (defn- -map [env n m]
@@ -166,7 +168,7 @@
                                              (let [resolved (resolve (first k))]
                                                (#{resolved-opt resolved-req} resolved)))))
                                   k)))]
-         `(s/map-of ~key-spec (spec-tools.core/coll-spec ~n ~(first (vals m))))
+         `(s/map-of ~key-spec ~(coll-spec-fn env n (first (vals m))))
          ;; keyword keys
          (let [m (reduce-kv
                    (fn [acc k v]
@@ -178,7 +180,7 @@
                                      [kv (if (not= kv v) v)]
                                      (let [k' (keyword (str (str (namespace n) "$" (name n)) "/" (name kv)))]
                                        [k' (if (or (map? v) (vector? v) (set? v))
-                                             `(spec-tools.core/coll-spec ~k' ~v) v)]))]
+                                             (coll-spec-fn env k' v) v)]))]
                        (-> acc
                            (update ak (fnil conj []) k')
                            (cond-> v' (update ::defs (fnil conj []) [k' v'])))))
@@ -192,13 +194,16 @@
               (s/keys ~@margs)))))))
 
 #?(:clj
-   (defmacro coll-spec [n m]
+   (defn- coll-spec-fn [env n m]
      (if-let [f (cond
                   (map? m) -map
                   (vector? m) -vector
                   (set? m) -set)]
-       (f &env n m)
+       (f env n m)
        `~m)))
+#?(:clj
+   (defmacro coll-spec [n m]
+     (coll-spec-fn &env n m)))
 
 ;;
 ;; Specs

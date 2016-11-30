@@ -2,8 +2,9 @@
   (:require  [clojure.test :refer [deftest testing is]]
              [clojure.spec :as s]
              [clojure.spec.test :as stest]
-             [scjsv.core :as scjsv]
              [com.gfredericks.test.chuck.clojure-test :refer [checking]]
+             [scjsv.core :as scjsv]
+             [spec-tools.core :as st]
              [spec-tools.json-schema :as jsc]))
 
 (s/def ::int int?)
@@ -35,15 +36,16 @@
     (is (= (jsc/to-json (s/keys :req-un [::int] :opt-un [::string]))
            {:type "object"
             :properties {"int" {:type "integer"} "string" {:type "string"}}
-            :required ["int"]
-            :additionalProperties false}))
+            :required ["int"]}))
     (is (= (jsc/to-json (s/tuple int? string?))
            {:type "array" :items [{:type "integer"} {:type "string"}] :minItems 2}))
-    ;; The next test fails because of
-    ;; <http://dev.clojure.org/jira/browse/CLJ-2035>
-    #_(is (= (jsc/to-json (s/every int?)) {:type "array" :items {:type "integer"}}))
     (is (= (jsc/to-json (s/* int?)) {:type "array" :items {:type "integer"}}))
-    (is (= (jsc/to-json (s/+ int?)) {:type "array" :items {:type "integer"} :minItems 1})))
+    (is (= (jsc/to-json (s/+ int?)) {:type "array" :items {:type "integer"} :minItems 1}))
+    ;; The following tests require the full qualifying of the predicates until
+    ;; this is fixed: <http://dev.clojure.org/jira/browse/CLJ-2035>
+    (is (= (jsc/to-json (s/every clojure.core/int?)) {:type "array" :items {:type "integer"}}))
+    (is (= (jsc/to-json (s/map-of clojure.core/string? clojure.core/integer?))
+           {:type "object" :additionalProperties {:type "integer"}})))
   (testing "composite specs"
     (is (= (jsc/to-json (s/or :int int? :string string?))
            {:anyOf [{:type "integer"} {:type "string"}]}))
@@ -66,3 +68,33 @@
   (test-spec-conversion ::compound)
   (test-spec-conversion (s/nilable ::string))
   (test-spec-conversion (s/int-in 0 100)))
+
+;; Test the example from README
+
+(s/def ::age (s/and integer? #(> % 18)))
+
+(def person-spec
+  (st/coll-spec
+   ::person
+   {::id clojure.core/integer?
+    :age ::age
+    :name clojure.core/string?
+    :likes {clojure.core/string? clojure.core/boolean?}
+    (st/req :languages) #{clojure.core/keyword?}
+    (st/opt :address) {:street clojure.core/string?
+                       :zip clojure.core/string?}}))
+
+(deftest readme-test
+  (is (= {:type "object"
+          :required ["id" "age" "name" "likes" "languages"]
+          :properties
+          {"id" {:type "integer"}
+           "age" {:type "integer"}  ; not supporting > yet
+           "name" {:type "string"}
+           "likes" {:type "object" :additionalProperties {:type "boolean"}}
+           "languages" {:type "array", :items {:type "string"}}
+           "address" {:type "object"
+                      :required ["street" "zip"]
+                      :properties {"street" {:type "string"}
+                                   "zip" {:type "string"}}}}}
+         (jsc/to-json person-spec))))

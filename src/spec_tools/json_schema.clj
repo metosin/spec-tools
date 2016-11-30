@@ -21,8 +21,17 @@
           (spec-dispatch form))
         spec))
     (set? spec) ::set
-    (list? spec) (first (strip-fn-if-needed spec))
+    (seq? spec) (first (strip-fn-if-needed spec))
     :else spec))
+
+(defn- formize [spec] (if (seq? spec) spec (s/form spec)))
+
+(defn- simplify-all-of [spec]
+  (let [subspecs (->> (:allOf spec) (remove empty?))]
+    (cond
+      (empty? subspecs) (dissoc spec :allOf)
+      (and (= (count subspecs) 1) (= [:allOf] (keys spec))) (first subspecs)
+      :else (assoc spec :allOf subspecs))))
 
 (defmulti to-json "Convert a spec into a JSON Schema." spec-dispatch :default ::default)
 
@@ -36,6 +45,7 @@
 (defmethod to-json 'clojure.core/neg? [spec] {:maximum 0 :exclusiveMaximum true})
 
 (defmethod to-json 'clojure.core/string? [spec] {:type "string"})
+(defmethod to-json 'clojure.core/keyword? [spec] {:type "string"})
 
 (defmethod to-json 'clojure.core/boolean? [spec] {:type "boolean"})
 
@@ -45,11 +55,17 @@
   {:enum (vec (if (keyword? spec) (s/form spec) spec))})
 
 (defmethod to-json 'clojure.spec/every [spec]
-  (let [[_ inner-spec] (s/form spec)]
-    {:type "array" :items (to-json inner-spec)}))
+  (let [[_ inner-spec & kwargs] (formize spec)
+        pred (when (seq? inner-spec) (first inner-spec))]
+    ;; Special case handling for (s/map-of). If someone actually wants to have a
+    ;; list of tuples in their JSON, this will break.
+    (if (and (= pred 'clojure.spec/tuple)
+             (= (get (into {} (map vec (partition 2 kwargs))) :into)) {})
+      {:type "object" :additionalProperties (get-in (to-json inner-spec) [:items 1])}
+      {:type "array" :items (to-json inner-spec)})))
 
 (defmethod to-json 'clojure.spec/tuple [spec]
-  (let [[_ & inner-specs] (s/form spec)]
+  (let [[_ & inner-specs] (formize spec)]
     {:type "array" :items (mapv to-json inner-specs) :minItems (count inner-specs)}))
 
 (defmethod to-json 'clojure.spec/* [spec]
@@ -66,8 +82,7 @@
                                  (concat req req-un opt opt-un)))]
     {:type "object"
      :properties properties
-     :required (map name (concat req req-un))
-     :additionalProperties false}))
+     :required (map name (concat req req-un))}))
 
 (defmethod to-json 'clojure.spec/or [spec]
   (let [[_ & {:as inner-spec-map}] (s/form spec)]
@@ -75,7 +90,7 @@
 
 (defmethod to-json 'clojure.spec/and [spec]
   (let [[_ & inner-specs] (s/form spec)]
-    {:allOf (mapv to-json inner-specs)}))
+    (simplify-all-of {:allOf (mapv to-json inner-specs)})))
 
 (defmethod to-json 'clojure.spec/nilable [spec]
   (let [[_ inner-spec] (s/form spec)]
@@ -86,5 +101,5 @@
     {:minimum minimum :maximum maximum}))
 
 (defmethod to-json ::default [spec]
-  (prn :UNNOWN (spec-dispatch spec) spec)
+  (prn :UNKNOWN (spec-dispatch spec) spec)
   {})
