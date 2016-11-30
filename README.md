@@ -218,12 +218,29 @@ Creating nested anonymous collection specs with Clojure Spec is quite verbose as
 
 ### Generating JSON Schemas
 
-Targetting to generate JSON Schemas from arbitrary specs (not just Spec Records).
+Targeting to generate JSON Schemas from arbitrary specs (not just Spec Records).
+
+```clj
+(require '[spec-tools.json-schema :as jsc])
+
+(jsc/to-json person-spec)
+; {:type "object",
+;  :properties {"id" {:type "integer"},
+;               "age" {:type "integer"},
+;               "name" {:type "string"},
+;               "likes" {:type "object"
+;                        :additionalProperties {:type "boolean"}},
+;               "languages" {:type "array", :items {:type "string"}},
+;               "address" {:type "object",
+;                          :properties {"street" {:type "string"}
+;                                       "zip" {:type "string"}},
+;                          :required ("street" "zip")}},
+;  :required ("id" "age" "name" "likes" "languages")}
+```
 
 Related: https://github.com/metosin/ring-swagger/issues/95
 
 WIP: https://github.com/metosin/spec-tools/blob/master/test/spec_tools/json_schema_test.clj
-
 
 ## License
 
