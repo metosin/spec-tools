@@ -45,13 +45,13 @@
 
 (deftest doc-test
   (testing "just docs, #12"
-    (let [pred (st/doc integer? {:description "kikka"})]
-      (is (= "kikka" (:description pred)))
-      (is (true? (s/valid? pred 1)))
-      (is (false? (s/valid? pred "1")))
+    (let [spec (st/doc integer? {:description "kikka"})]
+      (is (= "kikka" (:description spec)))
+      (is (true? (s/valid? spec 1)))
+      (is (false? (s/valid? spec "1")))
       (is (= `(st/spec nil integer? {:description "kikka"})
-             (s/form (eval (s/form pred)))
-             (s/form pred))))))
+             #?(:clj (s/form (eval (s/form spec))))
+             (s/form spec))))))
 
 (deftest spec-tools-conform-test
   (testing "in default mode"
