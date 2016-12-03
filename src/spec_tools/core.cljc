@@ -109,8 +109,8 @@
      [^Spec t ^Writer w]
      (.write w (str "#Spec"
                     (merge
-                      {:hint (:hint t)
-                       :pred (:form t)}
+                      {:pred (:form t)}
+                      (if (:hint t) (select-keys t [:hint]))
                       (extra-spec-map t))))))
 
 #?(:clj
@@ -123,6 +123,10 @@
       (if (impl/in-cljs? &env)
         `(map->Spec (merge ~info {:hint ~hint :form '~(or (->> pred (impl/cljs-resolve &env) impl/->sym) pred), :pred ~pred}))
         `(map->Spec (merge ~info {:hint ~hint :form '~(or (->> pred resolve impl/->sym) pred), :pred ~pred}))))))
+
+#?(:clj
+   (defmacro doc [pred info]
+     `(spec nil ~pred ~info)))
 
 ;;
 ;; Map Spec
