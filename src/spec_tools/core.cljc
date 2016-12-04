@@ -6,9 +6,10 @@
     [spec-tools.impl :as impl]
     [spec-tools.convert :as convert]
     [clojure.spec :as s]
-    #?@(:clj  [
-    [clojure.spec.gen :as gen]]
+    #?@(:clj  [[clojure.spec.gen :as gen]
+               [clojure.edn]]
         :cljs [[goog.date.UtcDateTime]
+               [cljs.reader]
                [goog.date.Date]
                [clojure.test.check.generators]
                [cljs.spec.impl.gen :as gen]]))
@@ -40,6 +41,18 @@
 (defn ^:skip-wiki enum [& values]
   (s/spec (set values)))
 
+(defn ^:skip-wiki serialize
+  "Writes specs into a string that can be read by the reader.
+  TODO: Should optionally write the realated Registry entries."
+  [spec]
+  (pr-str (s/form spec)))
+
+(defn ^:skip-wiki  deserialize
+  "Reads specs from a string.
+  TODO: Should optionally read the realated Registry entries."
+  [s]
+  #?(:clj (clojure.edn/read-string s)
+     :cljs (cljs.reader/read-string s)))
 
 ;;
 ;; Dynamic conforming

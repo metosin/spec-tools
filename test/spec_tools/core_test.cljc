@@ -38,7 +38,7 @@
         (let [spec (st/spec ::integer clojure.core/integer? {:description "cool"})]
           (is (= `(st/spec ::integer integer? {:description "cool"})
                  (s/form spec)
-                 #?(:clj (s/form (eval (s/form spec))))))))
+                 (st/deserialize (st/serialize spec))))))
 
       (testing "gen"
         (is (seq? (s/exercise my-integer?)))))))
@@ -50,7 +50,7 @@
       (is (true? (s/valid? spec 1)))
       (is (false? (s/valid? spec "1")))
       (is (= `(st/spec nil integer? {:description "kikka"})
-             #?(:clj (s/form (eval (s/form spec))))
+             (st/deserialize (st/serialize spec))
              (s/form spec))))))
 
 (deftest spec-tools-conform-test
@@ -148,6 +148,7 @@
                             :spec-tools.core-test$my-map/orders
                             :spec-tools.core-test$my-map/address]
                    :opt-un [:spec-tools.core-test$my-map/description])]
+
       (testing "vanilla keys-spec is generated"
         (is (= (s/form s-keys) (s/form st-map))))
       (testing "nested keys are in the registry"
