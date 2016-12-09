@@ -53,9 +53,9 @@
              (st/deserialize (st/serialize spec))
              (s/form spec))))))
 
-(deftest spec-tools-conform-test
+#_(deftest spec-tools-conform-test
   (testing "in default mode"
-    (testing "nothing is conformed"
+    #_(testing "nothing is conformed"
       (is (= ::s/invalid (st/conform ::age "12")))
       (is (= ::s/invalid (st/conform ::over-a-million "1234567")))
       (is (= ::s/invalid (st/conform ::lat "23.1234")))
