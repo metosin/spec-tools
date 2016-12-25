@@ -2,20 +2,20 @@
 
 Clojure(Script) tools for [clojure.spec](http://clojure.org/about/spec). Like [Schema-tools](https://github.com/metosin/schema-tools) but for spec.
 
-Status: **Alpha** (as spec is still alpha too).
-
-## Latest version
-
-[![Clojars Project](http://clojars.org/metosin/spec-tools/latest-version.svg)](http://clojars.org/metosin/spec-tools)
-
-No dependencies, but requires Java 1.8 & Clojure 1.9.0 (alpha14).
-
 ## Features
 
 * [Spec Records](#spec-records)
 * [Dynamic Conforming](#dynamic-conforming)
 * [Simple Collection Specs](#simple-collection-specs)
 * [Generating JSON Schemas](#generating-json-schemas)
+
+Status: **Alpha** (as spec is still alpha too).
+
+## Latest version
+
+[![Clojars Project](http://clojars.org/metosin/spec-tools/latest-version.svg)](http://clojars.org/metosin/spec-tools)
+
+No dependencies, but requires Java 1.8, Clojure `1.9.0-alpha14` and ClojureScript `1.9.293`.
 
 ### Spec Records
 
