@@ -2,8 +2,6 @@
 
 Clojure(Script) tools for [clojure.spec](http://clojure.org/about/spec). Like [Schema-tools](https://github.com/metosin/schema-tools) but for spec.
 
-## Features
-
 * [Spec Records](#spec-records)
 * [Dynamic Conforming](#dynamic-conforming)
 * [Simple Collection Specs](#simple-collection-specs)
