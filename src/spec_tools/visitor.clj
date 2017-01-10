@@ -1,8 +1,9 @@
 (ns spec-tools.visitor
+  "Tools for walking spec definitions."
   (:require [clojure.spec :as s]
             [clojure.set :as set]))
 
-(defn- strip-fn-if-needed [form]
+(defn strip-fn-if-needed [form]
   (let [head (first form)]
     ;; Deal with the form (clojure.core/fn [%] (foo ... %))
     ;; We should just use core.match...
@@ -26,10 +27,22 @@
     (seq? spec) (first (strip-fn-if-needed spec))
     :else spec))
 
-(defmulti visit spec-dispatch :default ::default)
+(defmulti visit
+  "Walk a spec definition. Takes two arguments, the spec and the accept
+  function, and returns the result of calling the accept function.
+
+  The accept function is called with three arguments: the dispatch term for the
+  spec (see below), the spec itself and the vector with the results of
+  recursively walking the children of the spec.
+
+  The dispatch term is one of the following
+  * if the spec is a function call: a fully qualified symbol for the function
+  * if the spec is a set: :spec-tools.visitor/set
+  * otherwise: the spec itself"
+  spec-dispatch :default ::default)
 
 (defmethod visit ::set [spec accept]
-  (accept ::set (vec spec)))
+  (accept ::set spec (vec (if (keyword? spec) (s/form spec) spec))))
 
 (defmethod visit 'clojure.spec/every [spec accept]
   (let [[_ inner-spec & kwargs] (formize spec)]
@@ -65,32 +78,3 @@
 
 (defmethod visit ::default [spec accept]
   (accept (spec-dispatch spec accept) spec nil))
-
-(s/def ::a string?)
-(s/def ::b integer?)
-(s/def ::f integer?)
-(s/def ::e ::f)
-(s/def ::c (s/keys :req [::a]))
-(s/def ::d (s/tuple ::e integer?))
-(s/def ::foo (s/keys :req [::b ::c ::d]))
-
-(prn (visit ::foo (fn [x y z]
-                    (case x
-                      clojure.spec/keys
-                      (let [[_ & {:keys [req req-un opt opt-un]}] (s/form y)]
-                        {:type "object"
-                         :properties (zipmap (map name (concat req req-un opt opt-un)) z)
-                         :required (mapv name (concat req req-un))})
-                      clojure.core/string?
-                      {:type "string"}
-                      clojure.core/integer?
-                      {:type "number"}
-                      {}
-                      ))))
-
-(prn (visit ::foo (fn [dispatch spec children]
-                    (case dispatch
-                      clojure.spec/keys
-                      (let [[_ & {:keys [req req-un opt opt-un]}] (s/form spec)]
-                        (apply set/union (set (concat req req-un opt opt-un)) children))
-                      (apply set/union (when (keyword? spec) #{spec}) children)))))
