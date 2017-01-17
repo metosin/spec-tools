@@ -2,8 +2,7 @@
 set -e
 case $1 in
     cljs)
-        lein trampoline run -m clojure.main scripts/build.clj
-        node target/generated/js/out/tests.js
+        lein "do" test-phantom once, test-node once
         ;;
     clj)
         lein test-clj
