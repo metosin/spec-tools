@@ -11,6 +11,12 @@
       (nth form 2)
       form)))
 
+(defn- normalize-symbol [kw]
+  (case (and (symbol? kw) (namespace kw))
+    "cljs.core" (symbol "clojure.core" (name kw))
+    "cljs.spec" (symbol "clojure.spec" (name kw))
+    kw))
+
 (defn- formize [spec] (if (seq? spec) spec (s/form spec)))
 
 (defn- spec-dispatch
@@ -20,12 +26,12 @@
     (let [form (s/form spec)]
       (if (not= form :clojure.spec/unknown)
         (if (seq? form)
-          (first form)
+          (normalize-symbol (first form))
           (spec-dispatch form accept))
         spec))
     (set? spec) ::set
-    (seq? spec) (first (strip-fn-if-needed spec))
-    :else spec))
+    (seq? spec) (normalize-symbol (first (strip-fn-if-needed spec)))
+    :else (normalize-symbol spec)))
 
 (defmulti visit
   "Walk a spec definition. Takes two arguments, the spec and the accept
@@ -37,6 +43,9 @@
 
   The dispatch term is one of the following
   * if the spec is a function call: a fully qualified symbol for the function
+    with the following exceptions:
+    - cljs.core symbols are converted to clojure.core symbols
+    - cljs.spec symbols are converted to clojure.spec symbols
   * if the spec is a set: :spec-tools.visitor/set
   * otherwise: the spec itself"
   spec-dispatch :default ::default)
