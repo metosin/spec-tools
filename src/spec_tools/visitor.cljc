@@ -7,9 +7,15 @@
   (let [head (first form)]
     ;; Deal with the form (clojure.core/fn [%] (foo ... %))
     ;; We should just use core.match...
-    (if (and (= (count form) 3) (= head 'clojure.core/fn))
+    (if (and (= (count form) 3) (= head #?(:clj 'clojure.core/fn :cljs 'cljs.core/fn)))
       (nth form 2)
       form)))
+
+(defn- normalize-symbol [kw]
+  (case (and (symbol? kw) (namespace kw))
+    "cljs.core" (symbol "clojure.core" (name kw))
+    "cljs.spec" (symbol "clojure.spec" (name kw))
+    kw))
 
 (defn- formize [spec] (if (seq? spec) spec (s/form spec)))
 
@@ -18,14 +24,14 @@
   (cond
     (or (s/spec? spec) (s/regex? spec) (keyword? spec))
     (let [form (s/form spec)]
-      (if (not= form :clojure.spec/unknown)
+      (if (not= form ::s/unknown)
         (if (seq? form)
-          (first form)
+          (normalize-symbol (first form))
           (spec-dispatch form accept))
         spec))
     (set? spec) ::set
-    (seq? spec) (first (strip-fn-if-needed spec))
-    :else spec))
+    (seq? spec) (normalize-symbol (first (strip-fn-if-needed spec)))
+    :else (normalize-symbol spec)))
 
 (defmulti visit
   "Walk a spec definition. Takes two arguments, the spec and the accept
@@ -37,6 +43,9 @@
 
   The dispatch term is one of the following
   * if the spec is a function call: a fully qualified symbol for the function
+    with the following exceptions:
+    - cljs.core symbols are converted to clojure.core symbols
+    - cljs.spec symbols are converted to clojure.spec symbols
   * if the spec is a set: :spec-tools.visitor/set
   * otherwise: the spec itself"
   spec-dispatch :default ::default)
@@ -72,6 +81,8 @@
   (let [[_ & inner-specs] (s/form spec)]
     (accept 'clojure.spec/and spec (mapv #(visit % accept) inner-specs))))
 
+;; Does not work correctly with CLJS because of
+;; <http://dev.clojure.org/jira/browse/CLJS-1890>
 (defmethod visit 'clojure.spec/nilable [spec accept]
   (let [[_ inner-spec] (s/form spec)]
     (accept 'clojure.spec/nilable spec [(visit inner-spec accept)])))

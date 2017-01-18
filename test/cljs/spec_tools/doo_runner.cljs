@@ -1,5 +1,11 @@
 (ns spec-tools.doo-runner
   (:require [doo.runner :refer-macros [doo-tests]]
-            spec-tools.core-test))
+            spec-tools.core-test
+            spec-tools.json-schema-test
+            spec-tools.visitor-test))
 
-(doo-tests 'spec-tools.core-test)
+(enable-console-print!)
+
+(doo-tests 'spec-tools.core-test
+           'spec-tools.json-schema-test
+           'spec-tools.visitor-test)

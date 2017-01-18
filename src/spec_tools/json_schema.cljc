@@ -3,14 +3,6 @@
   (:require [clojure.spec :as s]
             [spec-tools.visitor :as visitor :refer [visit]]))
 
-(defn- strip-fn-if-needed [form]
-  (let [head (first form)]
-    ;; Deal with the form (clojure.core/fn [%] (foo ... %))
-    ;; We should just use core.match...
-    (if (and (= (count form) 3) (= head 'clojure.core/fn))
-      (nth form 2)
-      form)))
-
 (defn- only-entry? [key a-map] (= [key] (keys a-map)))
 
 (defn- simplify-all-of [spec]
@@ -55,7 +47,7 @@
         pred (when (seq? inner-spec) (first inner-spec))]
     ;; (s/map-of key-spec value-spec) expands to
     ;; (s/every (s/tuple key-spec value-spec) :into {} ...)
-    (and (= pred 'clojure.spec/tuple) (= (get kwargs :into)) {})))
+    (and (= pred #?(:clj 'clojure.spec/tuple :cljs 'cljs.spec/tuple)) (= (get kwargs :into)) {})))
 
 (defmethod accept-spec 'clojure.spec/every [dispatch spec children]
   ;; Special case handling of s/map-of, which expands to s/every
