@@ -25,9 +25,7 @@
     (is (= (jsc/to-json (s/spec nil?)) {:type "null"}))
     (is (= (jsc/to-json #{1 2 3}) {:enum [1 3 2]})))
   (testing "clojure.spec predicates"
-    ;; (s/nilable) only works correctly with Clojure. CLJS support is blocked by
-    ;; <http://dev.clojure.org/jira/browse/CLJS-1890>.
-    #?(:clj (is (= (jsc/to-json (s/nilable ::string)) {:oneOf [{:type "string"} {:type "null"}]})))
+    (is (= (jsc/to-json (s/nilable ::string)) {:oneOf [{:type "string"} {:type "null"}]}))
     (is (= (jsc/to-json (s/int-in 1 10)) {:allOf [{:type "integer"} {:minimum 1 :maximum 10}]})))
   (testing "simple specs"
     (is (= (jsc/to-json ::int) {:type "integer"}))

@@ -81,8 +81,6 @@
   (let [[_ & inner-specs] (s/form spec)]
     (accept 'clojure.spec/and spec (mapv #(visit % accept) inner-specs))))
 
-;; Does not work correctly with CLJS because of
-;; <http://dev.clojure.org/jira/browse/CLJS-1890>
 (defmethod visit 'clojure.spec/nilable [spec accept]
   (let [[_ inner-spec] (s/form spec)]
     (accept 'clojure.spec/nilable spec [(visit inner-spec accept)])))
