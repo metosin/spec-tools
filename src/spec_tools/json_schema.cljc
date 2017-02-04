@@ -21,21 +21,85 @@
 (defn- spec-dispatch [dispatch spec children] dispatch)
 (defmulti accept-spec spec-dispatch :default ::default)
 
-(defmethod accept-spec 'clojure.core/int? [_ _ _] {:type "integer"})
+;; predicate list taken from https://github.com/clojure/clojure/blob/master/src/clj/clojure/spec/gen.clj
+
+; any? (one-of [(return nil) (any-printable)])
+; some? (such-that some? (any-printable))
+; number? (one-of [(large-integer) (double)])
+
+; integer? (large-integer)
 (defmethod accept-spec 'clojure.core/integer? [_ _ _] {:type "integer"})
 
+; int? (large-integer)
+(defmethod accept-spec 'clojure.core/int? [_ _ _] {:type "integer"})
+
+; pos-int? (large-integer* {:min 1})
+; neg-int? (large-integer* {:max -1})
+; nat-int? (large-integer* {:min 0})
+
+; float? (double)
 (defmethod accept-spec 'clojure.core/float? [_ _ _] {:type "number"})
+
+; double? (double)
 (defmethod accept-spec 'clojure.core/double? [_ _ _] {:type "number"})
+
+; boolean? (boolean)
+(defmethod accept-spec 'clojure.core/boolean? [_ _ _] {:type "boolean"})
+
+; string? (string-alphanumeric)
+(defmethod accept-spec 'clojure.core/string? [_ _ _] {:type "string"})
+
+; ident? (one-of [(keyword-ns) (symbol-ns)])
+; simple-ident? (one-of [(keyword) (symbol)])
+; qualified-ident? (such-that qualified? (one-of [(keyword-ns) (symbol-ns)]))
+
+; keyword? (keyword-ns)
+(defmethod accept-spec 'clojure.core/keyword? [_ _ _] {:type "string"})
+
+; simple-keyword? (keyword)
+; qualified-keyword? (such-that qualified? (keyword-ns))
+; symbol? (symbol-ns)
+; simple-symbol? (symbol)
+; qualified-symbol? (such-that qualified? (symbol-ns))
+; uuid? (uuid)
+; uri? (fmap #(java.net.URI/create (str "http://" % ".com")) (uuid))
+; bigdec? (fmap #(BigDecimal/valueOf %)
+;               (double* {:infinite? false :NaN? false}))
+; inst? (fmap #(java.util.Date. %)
+;             (large-integer))
+; seqable? (one-of [(return nil)
+;                   (list simple)
+;                   (vector simple)
+;                   (map simple simple)
+;                   (set simple)
+;                   (string-alphanumeric)])
+; indexed? (vector simple)
+; map? (map simple simple)
+; vector? (vector simple)
+; list? (list simple)
+; seq? (list simple)
+; char? (char)
+; set? (set simple)
+
+; nil? (return nil)
+(defmethod accept-spec 'clojure.core/nil? [_ _ _] {:type "null"})
+
+; false? (return false)
+; true? (return true)
+; zero? (return 0)
+; rational? (one-of [(large-integer) (ratio)])
+; coll? (one-of [(map simple simple)
+;                (list simple)
+;                (vector simple)
+;                (set simple)])
+; empty? (elements [nil '() [] {} #{}])
+; associative? (one-of [(map simple simple) (vector simple)])
+; sequential? (one-of [(list simple) (vector simple)])
+; ratio? (such-that ratio? (ratio))
+; bytes? (bytes)
 
 (defmethod accept-spec 'clojure.core/pos? [_ _ _] {:minimum 0 :exclusiveMinimum true})
 (defmethod accept-spec 'clojure.core/neg? [_ _ _] {:maximum 0 :exclusiveMaximum true})
-
-(defmethod accept-spec 'clojure.core/string? [_ _ _] {:type "string"})
-(defmethod accept-spec 'clojure.core/keyword? [_ _ _] {:type "string"})
-
-(defmethod accept-spec 'clojure.core/boolean? [_ _ _] {:type "boolean"})
-
-(defmethod accept-spec 'clojure.core/nil? [_ _ _] {:type "null"})
 
 (defmethod accept-spec ::visitor/set [dispatch spec children]
   {:enum children})
