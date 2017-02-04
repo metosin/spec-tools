@@ -113,21 +113,7 @@
     ;; (s/every (s/tuple key-spec value-spec) :into {} ...)
     (and (= pred #?(:clj 'clojure.spec/tuple :cljs 'cljs.spec/tuple)) (= (get kwargs :into)) {})))
 
-(defmethod accept-spec 'clojure.spec/every [dispatch spec children]
-  ;; Special case handling of s/map-of, which expands to s/every
-  (if (is-map-of? spec)
-    {:type "object" :additionalProperties (get-in (unwrap children) [:items 1])}
-    {:type "array" :items (unwrap children)}))
-
-(defmethod accept-spec 'clojure.spec/tuple [dispatch spec children]
-  {:type "array" :items children :minItems (count children)})
-
-(defmethod accept-spec 'clojure.spec/* [dispatch spec children]
-  {:type "array" :items (unwrap children)})
-
-(defmethod accept-spec 'clojure.spec/+ [dispatch spec children]
-  {:type "array" :items (unwrap children) :minItems 1})
-
+; keys
 (defmethod accept-spec 'clojure.spec/keys [dispatch spec children]
   (let [[_ & {:keys [req req-un opt opt-un]}] (s/form spec)
         names (map name (concat req req-un opt opt-un))
@@ -136,15 +122,52 @@
      :properties (zipmap names children)
      :required required}))
 
+; or
 (defmethod accept-spec 'clojure.spec/or [dispatch spec children]
   {:anyOf children})
 
+; and
 (defmethod accept-spec 'clojure.spec/and [dispatch spec children]
   (simplify-all-of {:allOf children}))
+
+; merge
+
+; every
+(defmethod accept-spec 'clojure.spec/every [dispatch spec children]
+  ;; Special case handling of s/map-of, which expands to s/every
+  (if (is-map-of? spec)
+    {:type "object" :additionalProperties (get-in (unwrap children) [:items 1])}
+    {:type "array" :items (unwrap children)}))
+
+; every-ks
+; coll-of
+; map-of
+
+; *
+(defmethod accept-spec 'clojure.spec/* [dispatch spec children]
+  {:type "array" :items (unwrap children)})
+
+; +
+(defmethod accept-spec 'clojure.spec/+ [dispatch spec children]
+  {:type "array" :items (unwrap children) :minItems 1})
+
+; ?
+; alt
+; cat
+; &
+
+; tuple
+(defmethod accept-spec 'clojure.spec/tuple [dispatch spec children]
+  {:type "array" :items children :minItems (count children)})
+
+; keys*
+
+; nilable
 
 (defmethod accept-spec 'clojure.spec/nilable [dispatch spec children]
   {:oneOf [(unwrap children) {:type "null"}]})
 
+;; this is just a function in clojure.spec?
 (defmethod accept-spec 'clojure.spec/int-in-range? [dispatch spec children]
   (let [[_ minimum maximum _] (visitor/strip-fn-if-needed spec)]
     {:minimum minimum :maximum maximum}))
