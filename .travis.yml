@@ -1,7 +1,9 @@
 sudo: false
 language: clojure
 lein: lein2
-script: ./scripts/test.sh $TEST
+script:
+  - ./scripts/test.sh $TEST
+  - ./scripts/submit-to-coveralls.sh
 env:
   matrix:
   - TEST=clj
