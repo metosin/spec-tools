@@ -56,14 +56,14 @@
 (deftest spec-tools-conform-test
   (testing "in default mode"
     (testing "nothing is conformed"
-      (is (= ::s/invalid (st/conform ::age "12")))
-      (is (= ::s/invalid (st/conform ::over-a-million "1234567")))
-      (is (= ::s/invalid (st/conform ::lat "23.1234")))
-      (is (= ::s/invalid (st/conform ::language "clojure")))
-      (is (= ::s/invalid (st/conform ::truth "false")))
-      (is (= ::s/invalid (st/conform ::uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e")))
-      (is (= ::s/invalid (st/conform ::birthdate "2014-02-18T18:25:37.456Z")))
-      (is (= ::s/invalid (st/conform ::birthdate "2014-02-18T18:25:37Z")))))
+      (is (= st/invalid (st/conform ::age "12")))
+      (is (= st/invalid (st/conform ::over-a-million "1234567")))
+      (is (= st/invalid (st/conform ::lat "23.1234")))
+      (is (= st/invalid (st/conform ::language "clojure")))
+      (is (= st/invalid (st/conform ::truth "false")))
+      (is (= st/invalid (st/conform ::uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e")))
+      (is (= st/invalid (st/conform ::birthdate "2014-02-18T18:25:37.456Z")))
+      (is (= st/invalid (st/conform ::birthdate "2014-02-18T18:25:37Z")))))
 
   (testing "string-conformers"
     (let [conform #(st/conform %1 %2 st/string-conformers)]
@@ -83,10 +83,10 @@
   (testing "json-conformers"
     (let [conform #(st/conform %1 %2 st/json-conformers)]
       (testing "some are not conformed"
-        (is (= ::s/invalid (conform ::age "12")))
-        (is (= ::s/invalid (conform ::over-a-million "1234567")))
-        (is (= ::s/invalid (conform ::lat "23.1234")))
-        (is (= ::s/invalid (conform ::truth "false"))))
+        (is (= st/invalid (conform ::age "12")))
+        (is (= st/invalid (conform ::over-a-million "1234567")))
+        (is (= st/invalid (conform ::lat "23.1234")))
+        (is (= st/invalid (conform ::truth "false"))))
       (testing "some are conformed"
         (is (= :clojure (conform ::language "clojure")))
         (is (= #uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e"

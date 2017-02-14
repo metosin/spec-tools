@@ -54,6 +54,8 @@
   #?(:clj (clojure.edn/read-string s)
      :cljs (cljs.reader/read-string s)))
 
+(def invalid '::s/invalid)
+
 ;;
 ;; Dynamic conforming
 ;;
