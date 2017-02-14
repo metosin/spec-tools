@@ -146,10 +146,11 @@ Default conformers are just data, so extending them is easy:
   (-> st/string-conformers
       (assoc
         ::st/keyword
-        (comp
-          keyword
-          str/reverse
-          str/upper-case))))
+        (fn [_ value]
+          (-> value
+              str/upper-case
+              str/reverse
+              keyword))))
 
 (st/conform st/keyword? "kikka")
 ; ::s/invalid

@@ -117,10 +117,11 @@
   (let [my-conformations (-> st/string-conformers
                              (assoc
                                ::st/keyword
-                               (comp
-                                 keyword
-                                 str/reverse
-                                 str/upper-case)))]
+                               (fn [_ value]
+                                 (-> value
+                                     str/upper-case
+                                     str/reverse
+                                     keyword))))]
     (testing "string-conformers"
       (is (= :kikka (st/conform st/keyword? "kikka" st/string-conformers))))
     (testing "my-conformers"

@@ -7,7 +7,7 @@
      (:import (java.util Date)
               (java.time Instant))))
 
-(defn string->long [x]
+(defn string->long [_ x]
   (if (string? x)
     (try
       #?(:clj  (Long/parseLong x)
@@ -16,7 +16,7 @@
                 :cljs js/Error) _
         ::s/invalid))))
 
-(defn string->double [x]
+(defn string->double [_ x]
   (if (string? x)
     (try
       #?(:clj  (java.lang.Double/parseDouble x)
@@ -25,18 +25,18 @@
                 :cljs js/Error) _
         ::s/invalid))))
 
-(defn string->keyword [x]
+(defn string->keyword [_ x]
   (if (string? x)
     (keyword x)))
 
-(defn string->boolean [x]
+(defn string->boolean [_ x]
   (if (string? x)
     (cond
       (= "true" x) true
       (= "false" x) false
       :else ::s/invalid)))
 
-(defn string->uuid [x]
+(defn string->uuid [_ x]
   (if (string? x)
     (try
       #?(:clj  (java.util.UUID/fromString x)
@@ -45,7 +45,7 @@
                 :cljs js/Error) _
         ::s/invalid))))
 
-(defn string->date [x]
+(defn string->date [_ x]
   (if (string? x)
     (try
       #?(:clj  (Date/from

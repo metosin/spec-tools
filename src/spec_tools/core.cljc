@@ -97,19 +97,28 @@
 
   s/Spec
   (conform* [_ x]
-    (if (pred x)
+    ;; function predicate
+    (if (and (fn? pred) (pred x))
       x
+      ;; there is a dynamic conformer
       (if-let [conformer (get *conformers* hint)]
-        (conformer x)
-        '::s/invalid)))
-  (unform* [_ x] x)
+        (conformer pred x)
+        ;; spec predicate
+        (if (s/spec? pred)
+          (s/conform pred x)
+          ;; invalid
+          '::s/invalid))))
+  (unform* [_ x]
+    x)
   (explain* [_ path via in x]
     (when (= ::s/invalid (if (pred x) x ::s/invalid))
       [{:path path :pred (s/abbrev form) :val x :via via :in in}]))
-  (gen* [_ _ _ _] (if gfn
-                    (gfn)
-                    (gen/gen-for-pred pred)))
-  (with-gen* [this gfn] (assoc this :gfn gfn))
+  (gen* [_ _ _ _]
+    (if gfn
+      (gfn)
+      (gen/gen-for-pred pred)))
+  (with-gen* [this gfn]
+    (assoc this :gfn gfn))
   (describe* [this]
     (let [info (extra-spec-map this)]
       (if (seq info)
