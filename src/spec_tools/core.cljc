@@ -47,11 +47,11 @@
   [spec]
   (pr-str (s/form spec)))
 
-(defn ^:skip-wiki  deserialize
+(defn ^:skip-wiki deserialize
   "Reads specs from a string.
   TODO: Should optionally read the realated Registry entries."
   [s]
-  #?(:clj (clojure.edn/read-string s)
+  #?(:clj  (clojure.edn/read-string s)
      :cljs (cljs.reader/read-string s)))
 
 (def invalid '::s/invalid)
