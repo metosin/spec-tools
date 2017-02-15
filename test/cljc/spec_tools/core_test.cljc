@@ -96,7 +96,27 @@
         (is (= #inst "2014-02-18T18:25:37Z"
                (conform ::birthdate "2014-02-18T18:25:37Z")))))))
 
-(st/conform ::birthdate "1968-01-02T15:04:05Z" st/string-conformers)
+(s/def ::height integer?)
+(s/def ::weight integer?)
+(s/def ::person (st/spec ::human (s/keys :req-un [::height ::weight])))
+
+(defn bmi [{:keys [height weight]}]
+  (let [h (/ height 100)]
+    (double (/ weight (* h h)))))
+
+(deftest map-specs-test
+  (let [person {:height 200, :weight 80}
+        bmi-conformer (fn [_ human]
+                        (assoc human :bmi (bmi human)))]
+
+    (testing "conform"
+      (is (= {:height 200, :weight 80}
+             (s/conform ::person person)
+             (st/conform ::person person))))
+
+    (testing "bmi-conforming"
+      (is (= {:height 200, :weight 80, :bmi 20.0}
+             (st/conform ::person person {::human bmi-conformer}))))))
 
 (deftest unform-test
   (let [unform-conform #(s/unform %1 (st/conform %1 %2 st/string-conformers))]

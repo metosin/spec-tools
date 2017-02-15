@@ -141,12 +141,36 @@
    (defmacro spec
      ([hint pred]
       (if (impl/in-cljs? &env)
-        `(map->Spec {:hint ~hint :form '~(or (->> pred (impl/cljs-resolve &env) impl/->sym) pred), :pred ~pred})
-        `(map->Spec {:hint ~hint :form '~(or (->> pred resolve impl/->sym) pred), :pred ~pred})))
+        `(map->Spec
+           {:hint ~hint
+            :pred ~pred
+            :form (if (symbol? '~pred)
+                    '~(or (and (symbol? pred) (some->> pred (impl/cljs-resolve &env) impl/->sym)) pred)
+                    (s/form ~pred))})
+        `(map->Spec
+           {:hint ~hint
+            :pred ~pred
+            :form (if (symbol? '~pred)
+                    '~(or (and (symbol? pred) (some->> pred resolve impl/->sym)) pred)
+                    (s/form ~pred))})))
      ([hint pred info]
       (if (impl/in-cljs? &env)
-        `(map->Spec (merge ~info {:hint ~hint :form '~(or (->> pred (impl/cljs-resolve &env) impl/->sym) pred), :pred ~pred}))
-        `(map->Spec (merge ~info {:hint ~hint :form '~(or (->> pred resolve impl/->sym) pred), :pred ~pred}))))))
+        `(map->Spec
+           (merge
+             ~info
+             {:hint ~hint
+              :form (if (symbol? '~pred)
+                      '~(or (and (symbol? pred) (some->> pred (impl/cljs-resolve &env) impl/->sym)) pred)
+                      (s/form ~pred))
+              :pred ~pred}))
+        `(map->Spec
+           (merge
+             ~info
+             {:hint ~hint
+              :form (if (symbol? '~pred)
+                      '~(or (and (symbol? pred) (some->> pred resolve impl/->sym)) pred)
+                      (s/form ~pred))
+              :pred ~pred}))))))
 
 #?(:clj
    (defmacro doc [pred info]
