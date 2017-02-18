@@ -304,8 +304,8 @@
 (def simple-symbol? (spec clojure.core/simple-symbol?))
 (def qualified-symbol? (spec clojure.core/qualified-symbol?))
 (def uuid? (spec clojure.core/uuid?))
-(def uri? (spec clojure.core/uri?))                         ;; not in cljs
-(def bigdec? (spec clojure.core/bigdec?))                   ;; not in cljs
+#?(:clj (def uri? (spec clojure.core/uri?)))
+#?(:clj (def bigdec? (spec clojure.core/bigdec?)))
 (def inst? (spec clojure.core/inst?))
 (def seqable? (spec clojure.core/seqable?))
 (def indexed? (spec clojure.core/indexed?))
@@ -319,10 +319,10 @@
 (def false? (spec clojure.core/false?))
 (def true? (spec clojure.core/true?))
 (def zero? (spec clojure.core/zero?))
-(def rational? (spec clojure.core/rational?))               ;; not in cljs
+#?(:clj (def rational? (spec clojure.core/rational?)))
 (def coll? (spec clojure.core/coll?))
 (def empty? (spec clojure.core/empty?))
 (def associative? (spec clojure.core/associative?))
 (def sequential? (spec clojure.core/sequential?))
-(def ratio? (spec clojure.core/ratio?))                     ;; not in cljs
-(def bytes? (spec clojure.core/bytes?))                     ;; not in cljs
+#?(:clj (def ratio? (spec clojure.core/ratio?)))
+#?(:clj (def bytes? (spec clojure.core/bytes?)))
