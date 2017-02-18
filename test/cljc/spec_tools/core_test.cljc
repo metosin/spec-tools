@@ -13,7 +13,8 @@
 (s/def ::birthdate st/inst?)
 
 (deftest specs-test
-  (let [my-integer? (st/spec :long integer?)]
+  (let [my-integer? (st/spec integer?)]
+
     (testing "work as predicates"
       (is (true? (my-integer? 1)))
       (is (false? (my-integer? "1"))))
@@ -29,14 +30,19 @@
 
       (testing "fully qualifed predicate symbol is returned with s/form"
         (is (= ['spec-tools.core/spec
-                :long
                 #?(:clj  'clojure.core/integer?
-                   :cljs 'cljs.core/integer?)] (s/form my-integer?)))
-        (is (= ['spec :long 'integer?] (s/describe my-integer?))))
+                   :cljs 'cljs.core/integer?)
+                {:hint :long}] (s/form my-integer?)))
+        (is (= ['spec 'integer? {:hint :long}] (s/describe my-integer?))))
+
+      (testing "type resolution"
+        (is (= (st/spec integer?)
+               (st/spec integer? {:hint :long})
+               (st/typed-spec :long integer?))))
 
       (testing "serialization"
-        (let [spec (st/spec ::integer clojure.core/integer? {:description "cool"})]
-          (is (= `(st/spec ::integer integer? {:description "cool"})
+        (let [spec (st/spec integer? {:description "cool", :hint ::integer})]
+          (is (= `(st/spec integer? {:description "cool", :hint ::integer})
                  (s/form spec)
                  (st/deserialize (st/serialize spec))))))
 
@@ -49,7 +55,7 @@
       (is (= "kikka" (:description spec)))
       (is (true? (s/valid? spec 1)))
       (is (false? (s/valid? spec "1")))
-      (is (= `(st/spec nil integer? {:description "kikka"})
+      (is (= `(st/spec integer? {:description "kikka", :hint nil})
              (st/deserialize (st/serialize spec))
              (s/form spec))))))
 
@@ -98,7 +104,7 @@
 
 (s/def ::height integer?)
 (s/def ::weight integer?)
-(s/def ::person (st/spec ::human (s/keys :req-un [::height ::weight])))
+(s/def ::person (st/typed-spec ::human (s/keys :req-un [::height ::weight])))
 
 (defn bmi [{:keys [height weight]}]
   (let [h (/ height 100)]

@@ -4,6 +4,7 @@
   #?(:cljs (:require-macros [spec-tools.core :refer [spec coll-spec]]))
   (:require
     [spec-tools.impl :as impl]
+    [spec-tools.types :as types]
     [spec-tools.convert :as convert]
     [clojure.spec :as s]
     #?@(:clj  [[clojure.spec.gen :as gen]
@@ -87,7 +88,7 @@
 ;;
 
 (defn- extra-spec-map [t]
-  (dissoc t :hint :form :pred :gfn))
+  (dissoc t :form :pred :gfn))
 
 (defrecord Spec [hint form pred gfn]
   #?@(:clj
@@ -121,9 +122,7 @@
     (assoc this :gfn gfn))
   (describe* [this]
     (let [info (extra-spec-map this)]
-      (if (seq info)
-        `(spec ~hint ~form ~info)
-        `(spec ~hint ~form))))
+      `(spec ~form ~info)))
   IFn
   #?(:clj  (invoke [_ x] (pred x))
      :cljs (-invoke [_ x] (pred x))))
@@ -139,42 +138,59 @@
 
 #?(:clj
    (defmacro spec
-     ([hint pred]
+     ([pred]
       (if (impl/in-cljs? &env)
-        `(map->Spec
-           {:hint ~hint
-            :pred ~pred
-            :form (if (symbol? '~pred)
-                    '~(or (and (symbol? pred) (some->> pred (impl/cljs-resolve &env) impl/->sym)) pred)
-                    (s/form ~pred))})
-        `(map->Spec
-           {:hint ~hint
-            :pred ~pred
-            :form (if (symbol? '~pred)
-                    '~(or (and (symbol? pred) (some->> pred resolve impl/->sym)) pred)
-                    (s/form ~pred))})))
-     ([hint pred info]
+        `(let [form# (if (symbol? '~pred)
+                       '~(or (and (symbol? pred) (some->> pred (impl/cljs-resolve &env) impl/->sym)) pred)
+                       (s/form ~pred))]
+           (map->Spec
+             {:hint (types/resolve-type form#)
+              :pred ~pred
+              :form form#}))
+        `(let [form# (if (symbol? '~pred)
+                       '~(or (and (symbol? pred) (some->> pred resolve impl/->sym)) pred)
+                       (s/form ~pred))]
+           (map->Spec
+             {:hint (types/resolve-type form#)
+              :pred ~pred
+              :form form#}))))
+     ([pred info]
       (if (impl/in-cljs? &env)
-        `(map->Spec
-           (merge
-             ~info
-             {:hint ~hint
-              :form (if (symbol? '~pred)
-                      '~(or (and (symbol? pred) (some->> pred (impl/cljs-resolve &env) impl/->sym)) pred)
-                      (s/form ~pred))
-              :pred ~pred}))
-        `(map->Spec
-           (merge
-             ~info
-             {:hint ~hint
-              :form (if (symbol? '~pred)
-                      '~(or (and (symbol? pred) (some->> pred resolve impl/->sym)) pred)
-                      (s/form ~pred))
-              :pred ~pred}))))))
+        `(let [info# ~info
+               form# (if (symbol? '~pred)
+                       '~(or (and (symbol? pred) (some->> pred (impl/cljs-resolve &env) impl/->sym)) pred)
+                       (s/form ~pred))]
+           (assert (map? info#) (str "spec info should be a map, was: " info#))
+           (map->Spec
+             (merge
+               ~info
+               (if-not (contains? info# :hint)
+                 {:hint (types/resolve-type form#)})
+               {:form form#
+                :pred ~pred})))
+        `(let [info# ~info
+               form# (if (symbol? '~pred)
+                       '~(or (and (symbol? pred) (some->> pred resolve impl/->sym)) pred)
+                       (s/form ~pred))]
+           (assert (map? info#) (str "spec info should be a map, was: " info#))
+           (map->Spec
+             (merge
+               ~info
+               (if-not (contains? info# :hint)
+                 {:hint (types/resolve-type form#)})
+               {:form form#
+                :pred ~pred})))))))
 
 #?(:clj
    (defmacro doc [pred info]
-     `(spec nil ~pred ~info)))
+     `(spec ~pred (merge ~info {:hint nil}))))
+
+#?(:clj
+   (defmacro typed-spec
+     ([hint pred]
+      `(spec ~pred {:hint ~hint}))
+     ([hint pred info]
+      `(spec ~pred (merge ~info {:hint ~hint})))))
 
 ;;
 ;; Map Spec
@@ -261,11 +277,11 @@
 ;; Specs
 ;;
 
-(def spec-tools.core/string? (spec :string clojure.core/string?))
-(def spec-tools.core/integer? (spec :long clojure.core/integer?))
-(def spec-tools.core/int? (spec :long clojure.core/int?))
-(def spec-tools.core/double? (spec :double #?(:clj clojure.core/double?, :cljs clojure.core/number?)))
-(def spec-tools.core/keyword? (spec :keyword clojure.core/keyword?))
-(def spec-tools.core/boolean? (spec :boolean clojure.core/boolean?))
-(def spec-tools.core/uuid? (spec :uuid clojure.core/uuid?))
-(def spec-tools.core/inst? (spec :date clojure.core/inst?))
+(def spec-tools.core/string? (spec clojure.core/string?))
+(def spec-tools.core/integer? (spec clojure.core/integer?))
+(def spec-tools.core/int? (spec clojure.core/int?))
+(def spec-tools.core/double? (spec #?(:clj clojure.core/double?, :cljs clojure.core/number?)))
+(def spec-tools.core/keyword? (spec clojure.core/keyword?))
+(def spec-tools.core/boolean? (spec clojure.core/boolean?))
+(def spec-tools.core/uuid? (spec clojure.core/uuid?))
+(def spec-tools.core/inst? (spec clojure.core/inst?))
