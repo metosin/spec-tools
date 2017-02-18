@@ -15,9 +15,11 @@
     x))
 
 (defn clojure-core-symbol-or-any [x]
-  (if (and (clojure.core/symbol? x)
-           (= "cljs.core" (namespace x)))
-    (symbol "clojure.core" (name x))
+  (or
+    (if (symbol? x)
+      (if-let [ns (get {"cljs.core" "clojure.core"
+                        "cljs.spec" "clojure.spec"} (namespace x))]
+        (symbol ns (name x))))
     x))
 
 (defn- clj-sym [x]

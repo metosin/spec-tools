@@ -7,9 +7,21 @@
     "You need to provide a `:hint` for the spec or "
     "add a dispatch function for `spec-tools.types/resolve-type`."))
 
-(defmulti resolve-type
-  impl/clojure-core-symbol-or-any
-  :default ::default)
+(defn- dispatch [x]
+  (cond
+
+    ;; symbol
+    (symbol? x)
+    (impl/clojure-core-symbol-or-any x)
+
+    ;; a from
+    (seq? x)
+    (impl/clojure-core-symbol-or-any (first x))
+
+    ;; default
+    :else x))
+
+(defmulti resolve-type #'dispatch :default ::default)
 
 (defmethod resolve-type ::default [x]
   (println (error-message x)))
@@ -63,3 +75,5 @@
 (defmethod resolve-type 'clojure.core/sequential? [_] nil)
 (defmethod resolve-type 'clojure.core/ratio? [_] :ratio)
 (defmethod resolve-type 'clojure.core/bytes? [_] nil)
+
+(defmethod resolve-type 'clojure.spec/keys [_] :map)

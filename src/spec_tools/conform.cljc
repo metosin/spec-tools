@@ -1,4 +1,4 @@
-(ns spec-tools.convert
+(ns spec-tools.conform
   #?(:cljs (:refer-clojure :exclude [Inst Keyword UUID]))
   (:require [clojure.spec :as s]
     #?@(:cljs [[goog.date.UtcDateTime]
@@ -6,6 +6,10 @@
   #?(:clj
      (:import (java.util Date UUID)
               (java.time Instant))))
+
+;;
+;; Strings
+;;
 
 (defn string->long [_ x]
   (if (string? x)
@@ -54,3 +58,12 @@
       (catch #?(:clj  Exception
                 :cljs js/Error) _
         ::s/invalid))))
+
+;;
+;; Maps
+;;
+
+(defn map->strip-extra-keys [{:keys [keys pred]} x]
+  (if (map? x)
+    (s/conform pred (select-keys x keys))
+    x))

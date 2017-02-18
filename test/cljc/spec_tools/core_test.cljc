@@ -2,7 +2,8 @@
   (:require [clojure.test :refer [deftest testing is]]
             [clojure.spec :as s]
             [spec-tools.core :as st]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [spec-tools.conform :as conform]))
 
 (s/def ::age (s/and st/integer? #(> % 10)))
 (s/def ::over-a-million (s/and st/int? #(> % 1000000)))
@@ -11,6 +12,17 @@
 (s/def ::truth st/boolean?)
 (s/def ::uuid st/uuid?)
 (s/def ::birthdate st/inst?)
+
+(deftest extract-extra-info-test
+  (testing "keys are extracted from keys-specs"
+    (let [spec (st/spec
+                 (s/keys
+                   :req [::age]
+                   :opt [::lat]
+                   :req-un [::uuid]
+                   :opt-un [::truth]))]
+      (is (= #{::age ::lat :uuid :truth}
+             (:keys spec))))))
 
 (deftest specs-test
   (let [my-integer? (st/spec integer?)]
@@ -104,25 +116,41 @@
 
 (s/def ::height integer?)
 (s/def ::weight integer?)
-(s/def ::person (st/typed-spec ::human (s/keys :req-un [::height ::weight])))
+(s/def ::person (st/spec (s/keys :req-un [::height ::weight])))
+
+(st/spec (s/keys :req-un [::height ::weight]))
+
+(deftest map-specs-test
+  (let [person {:height 200, :weight 80, :age 36}]
+
+    (testing "conform"
+      (is (= {:height 200, :weight 80, :age 36}
+             (s/conform ::person person)
+             (st/conform ::person person))))
+
+    (testing "stripping extra keys"
+      (is (= {:height 200, :weight 80}
+             (st/conform ::person person {:map conform/map->strip-extra-keys}))))))
+
+(s/def ::human (st/spec (s/keys :req-un [::height ::weight]) {:hint ::human}))
 
 (defn bmi [{:keys [height weight]}]
   (let [h (/ height 100)]
     (double (/ weight (* h h)))))
 
-(deftest map-specs-test
+(deftest custom-map-specs-test
   (let [person {:height 200, :weight 80}
         bmi-conformer (fn [_ human]
                         (assoc human :bmi (bmi human)))]
 
     (testing "conform"
       (is (= {:height 200, :weight 80}
-             (s/conform ::person person)
-             (st/conform ::person person))))
+             (s/conform ::human person)
+             (st/conform ::human person))))
 
     (testing "bmi-conforming"
       (is (= {:height 200, :weight 80, :bmi 20.0}
-             (st/conform ::person person {::human bmi-conformer}))))))
+             (st/conform ::human person {::human bmi-conformer}))))))
 
 (deftest unform-test
   (let [unform-conform #(s/unform %1 (st/conform %1 %2 st/string-conformers))]

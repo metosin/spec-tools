@@ -7,13 +7,13 @@
                             rational? coll? empty? associative? sequential? ratio? bytes?
                             #?@(:cljs [Inst Keyword UUID])])
   #?(:cljs (:require-macros [spec-tools.core :refer [spec coll-spec]]))
-  (:require
-    [spec-tools.impl :as impl]
-    [spec-tools.types :as types]
-    [spec-tools.convert :as convert]
-    [clojure.spec :as s]
-    #?@(:clj  [[clojure.spec.gen :as gen]
-               [clojure.edn]]
+  (:require [spec-tools.impl :as impl]
+            [spec-tools.types :as types]
+            [spec-tools.conform :as conform]
+            [clojure.spec :as s]
+    #?@(:clj  [
+            [clojure.spec.gen :as gen]
+            [clojure.edn]]
         :cljs [[goog.date.UtcDateTime]
                [cljs.reader]
                [goog.date.Date]
@@ -69,17 +69,17 @@
 (def ^:dynamic ^:private *conformers* nil)
 
 (def string-conformers
-  {:long convert/string->long
-   :double convert/string->double
-   :keyword convert/string->keyword
-   :boolean convert/string->boolean
-   :uuid convert/string->uuid
-   :date convert/string->date})
+  {:long conform/string->long
+   :double conform/string->double
+   :keyword conform/string->keyword
+   :boolean conform/string->boolean
+   :uuid conform/string->uuid
+   :date conform/string->date})
 
 (def json-conformers
-  {:keyword convert/string->keyword
-   :uuid convert/string->uuid
-   :date convert/string->date})
+  {:keyword conform/string->keyword
+   :uuid conform/string->uuid
+   :date conform/string->date})
 
 (defn conform
   ([spec value]
@@ -102,13 +102,13 @@
        (specize* [s _] s)])
 
   s/Spec
-  (conform* [_ x]
+  (conform* [this x]
     ;; function predicate
     (if (and (fn? pred) (pred x))
       x
       ;; there is a dynamic conformer
       (if-let [conformer (get *conformers* hint)]
-        (conformer pred x)
+        (conformer this x)
         ;; spec predicate
         (if (s/spec? pred)
           (s/conform pred x)
@@ -141,6 +141,26 @@
                       (if (:hint t) (select-keys t [:hint]))
                       (extra-spec-map t))))))
 
+
+;; TODO: use specs of specs here
+(defn- extract-extra-info [form]
+  (if (and
+        (clojure.core/seq? form)
+        (= 'clojure.spec/keys (impl/clojure-core-symbol-or-any (first form))))
+    (if-let [m (some->> form
+                        (rest)
+                        (apply hash-map))]
+      {:keys (set
+               (concat
+                 (:req m)
+                 (:opt m)
+                 (map (comp keyword name) (:req-un m))
+                 (map (comp keyword name) (:opt-un m))))})))
+
+(defn create-spec [m]
+  (let [info (extract-extra-info (:form m))]
+    (map->Spec (merge m info))))
+
 #?(:clj
    (defmacro spec
      ([pred]
@@ -148,14 +168,14 @@
         `(let [form# (if (clojure.core/symbol? '~pred)
                        '~(or (and (clojure.core/symbol? pred) (some->> pred (impl/cljs-resolve &env) impl/->sym)) pred)
                        (s/form ~pred))]
-           (map->Spec
+           (create-spec
              {:hint (types/resolve-type form#)
               :pred ~pred
               :form form#}))
         `(let [form# (if (clojure.core/symbol? '~pred)
                        '~(or (and (clojure.core/symbol? pred) (some->> pred resolve impl/->sym)) pred)
                        (s/form ~pred))]
-           (map->Spec
+           (create-spec
              {:hint (types/resolve-type form#)
               :pred ~pred
               :form form#}))))
@@ -166,7 +186,7 @@
                        '~(or (and (clojure.core/symbol? pred) (some->> pred (impl/cljs-resolve &env) impl/->sym)) pred)
                        (s/form ~pred))]
            (assert (clojure.core/map? info#) (str "spec info should be a map, was: " info#))
-           (map->Spec
+           (create-spec
              (merge
                ~info
                (if-not (contains? info# :hint)
@@ -178,7 +198,7 @@
                        '~(or (and (clojure.core/symbol? pred) (some->> pred resolve impl/->sym)) pred)
                        (s/form ~pred))]
            (assert (clojure.core/map? info#) (str "spec info should be a map, was: " info#))
-           (map->Spec
+           (create-spec
              (merge
                ~info
                (if-not (contains? info# :hint)
