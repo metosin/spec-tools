@@ -4,7 +4,7 @@
     #?@(:cljs [[goog.date.UtcDateTime]
                [goog.date.Date]]))
   #?(:clj
-     (:import (java.util Date)
+     (:import (java.util Date UUID)
               (java.time Instant))))
 
 (defn string->long [_ x]
@@ -19,7 +19,7 @@
 (defn string->double [_ x]
   (if (string? x)
     (try
-      #?(:clj  (java.lang.Double/parseDouble x)
+      #?(:clj  (Double/parseDouble x)
          :cljs (js/parseFloat x))
       (catch #?(:clj  Exception
                 :cljs js/Error) _
@@ -39,7 +39,7 @@
 (defn string->uuid [_ x]
   (if (string? x)
     (try
-      #?(:clj  (java.util.UUID/fromString x)
+      #?(:clj  (UUID/fromString x)
          :cljs (uuid x))
       (catch #?(:clj  Exception
                 :cljs js/Error) _
