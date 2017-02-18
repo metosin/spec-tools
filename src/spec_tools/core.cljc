@@ -63,17 +63,17 @@
 (def ^:dynamic ^:private *conformers* nil)
 
 (def string-conformers
-  {::long convert/string->long
-   ::double convert/string->double
-   ::keyword convert/string->keyword
-   ::boolean convert/string->boolean
-   ::uuid convert/string->uuid
-   ::date convert/string->date})
+  {:long convert/string->long
+   :double convert/string->double
+   :keyword convert/string->keyword
+   :boolean convert/string->boolean
+   :uuid convert/string->uuid
+   :date convert/string->date})
 
 (def json-conformers
-  {::keyword convert/string->keyword
-   ::uuid convert/string->uuid
-   ::date convert/string->date})
+  {:keyword convert/string->keyword
+   :uuid convert/string->uuid
+   :date convert/string->date})
 
 (defn conform
   ([spec value]
@@ -261,11 +261,11 @@
 ;; Specs
 ;;
 
-(def spec-tools.core/string? (spec ::string clojure.core/string?))
-(def spec-tools.core/integer? (spec ::long clojure.core/integer?))
-(def spec-tools.core/int? (spec ::long clojure.core/int?))
-(def spec-tools.core/double? (spec ::double #?(:clj clojure.core/double?, :cljs clojure.core/number?)))
-(def spec-tools.core/keyword? (spec ::keyword clojure.core/keyword?))
-(def spec-tools.core/boolean? (spec ::boolean clojure.core/boolean?))
-(def spec-tools.core/uuid? (spec ::uuid clojure.core/uuid?))
-(def spec-tools.core/inst? (spec ::date clojure.core/inst?))
+(def spec-tools.core/string? (spec :string clojure.core/string?))
+(def spec-tools.core/integer? (spec :long clojure.core/integer?))
+(def spec-tools.core/int? (spec :long clojure.core/int?))
+(def spec-tools.core/double? (spec :double #?(:clj clojure.core/double?, :cljs clojure.core/number?)))
+(def spec-tools.core/keyword? (spec :keyword clojure.core/keyword?))
+(def spec-tools.core/boolean? (spec :boolean clojure.core/boolean?))
+(def spec-tools.core/uuid? (spec :uuid clojure.core/uuid?))
+(def spec-tools.core/inst? (spec :date clojure.core/inst?))

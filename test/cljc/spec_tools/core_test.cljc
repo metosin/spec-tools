@@ -13,7 +13,7 @@
 (s/def ::birthdate st/inst?)
 
 (deftest specs-test
-  (let [my-integer? (st/spec ::st/long integer?)]
+  (let [my-integer? (st/spec :long integer?)]
     (testing "work as predicates"
       (is (true? (my-integer? 1)))
       (is (false? (my-integer? "1"))))
@@ -29,10 +29,10 @@
 
       (testing "fully qualifed predicate symbol is returned with s/form"
         (is (= ['spec-tools.core/spec
-                ::st/long
+                :long
                 #?(:clj  'clojure.core/integer?
                    :cljs 'cljs.core/integer?)] (s/form my-integer?)))
-        (is (= ['spec ::st/long 'integer?] (s/describe my-integer?))))
+        (is (= ['spec :long 'integer?] (s/describe my-integer?))))
 
       (testing "serialization"
         (let [spec (st/spec ::integer clojure.core/integer? {:description "cool"})]
@@ -136,7 +136,7 @@
 (deftest extending-test
   (let [my-conformations (-> st/string-conformers
                              (assoc
-                               ::st/keyword
+                               :keyword
                                (fn [_ value]
                                  (-> value
                                      str/upper-case
