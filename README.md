@@ -23,10 +23,10 @@ Clojure Spec is implemented using reified protocols. This makes extending curren
 (require '[clojure.spec :as s])
 (require '[spec-tools.core :as st])
 
-(def my-integer? (st/spec ::st/long integer?))
+(def my-integer? (st/spec integer? {:hint :long}))
 
 my-integer?
-; #Spec{:hint :spec-tools.core/long
+; #Spec{:hint :long
 ;       :pred clojure.core/integer?}
 
 (my-integer? 1)
@@ -36,12 +36,12 @@ my-integer?
 ; true
 
 (assoc my-integer? :info {:description "It's a int"})
-; #Spec{:hint :spec-tools.core/long
+; #Spec{:hint :long
 ;       :pred clojure.core/integer?
 ;       :info {:description "It's a int"}}
 
 (eval (s/form (st/spec ::st/long integer? {:description "It's a int"})))
-; #Spec{:hint :spec-tools.core/long
+; #Spec{:hint :long
 ;       :pred clojure.core/integer?
 ;       :info {:description "It's a int"}}
 ```
@@ -52,14 +52,14 @@ Spec records also support [dynamic conforming](#dynamic-conforming), making them
 
 | spec             | type hint        | predicate       |
 | -----------------|------------------|-----------------|
-| `st/string?`     | `::st/string`    | `string?`       |
-| `st/integer?`    | `::st/long`      | `integer?`      |
-| `st/int?`        | `::st/long`      | `int?`          |
-| `st/double?`     | `::st/double`    | `double?`       |
-| `st/keyword?`    | `::st/keyword`   | `keyword?`      |
-| `st/boolean?`    | `::st/boolean`   | `boolean?`      |
-| `st/uuid?`       | `::st/uuid`      | `uuid?`         |
-| `st/inst?`       | `::st/date`      | `inst?`         |
+| `st/string?`     | `:string`    | `string?`       |
+| `st/integer?`    | `:long`      | `integer?`      |
+| `st/int?`        | `:long`      | `int?`          |
+| `st/double?`     | `:double`    | `double?`       |
+| `st/keyword?`    | `:keyword`   | `keyword?`      |
+| `st/boolean?`    | `:boolean`   | `boolean?`      |
+| `st/uuid?`       | `:uuid`      | `uuid?`         |
+| `st/inst?`       | `:date`      | `inst?`         |
 
 **TODO**: support all common common specs & `clojure.core` predicates.
 
@@ -243,6 +243,6 @@ WIP: https://github.com/metosin/spec-tools/blob/master/test/spec_tools/json_sche
 
 ## License
 
-Copyright © 2016 [Metosin Oy](http://www.metosin.fi)
+Copyright © 2016-2017 [Metosin Oy](http://www.metosin.fi)
 
 Distributed under the Eclipse Public License, the same as Clojure.
