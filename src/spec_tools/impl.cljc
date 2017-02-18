@@ -14,6 +14,12 @@
     (:name x)
     x))
 
+(defn clojure-core-symbol-or-any [x]
+  (if (and (clojure.core/symbol? x)
+           (= "cljs.core" (namespace x)))
+    (symbol "clojure.core" (name x))
+    x))
+
 (defn- clj-sym [x]
   (if (var? x)
     (let [^Var v x]
