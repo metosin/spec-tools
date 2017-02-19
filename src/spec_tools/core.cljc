@@ -95,7 +95,7 @@
 (defn- extra-spec-map [t]
   (dissoc t :form :pred :gfn))
 
-(defrecord Spec [hint form pred gfn]
+(defrecord Spec [type form pred gfn]
   #?@(:clj
       [s/Specize
        (specize* [s] s)
@@ -107,7 +107,7 @@
     (if (and (fn? pred) (pred x))
       x
       ;; there is a dynamic conformer
-      (if-let [conformer (get *conformers* hint)]
+      (if-let [conformer (get *conformers* type)]
         (conformer this x)
         ;; spec predicate
         (if (s/spec? pred)
@@ -138,7 +138,7 @@
      (.write w (str "#Spec"
                     (merge
                       {:pred (:form t)}
-                      (if (:hint t) (select-keys t [:hint]))
+                      (if (:type t) (select-keys t [:type]))
                       (extra-spec-map t))))))
 
 
@@ -169,14 +169,14 @@
                        '~(or (and (clojure.core/symbol? pred) (some->> pred (impl/cljs-resolve &env) impl/->sym)) pred)
                        (s/form ~pred))]
            (create-spec
-             {:hint (types/resolve-type form#)
+             {:type (types/resolve-type form#)
               :pred ~pred
               :form form#}))
         `(let [form# (if (clojure.core/symbol? '~pred)
                        '~(or (and (clojure.core/symbol? pred) (some->> pred resolve impl/->sym)) pred)
                        (s/form ~pred))]
            (create-spec
-             {:hint (types/resolve-type form#)
+             {:type (types/resolve-type form#)
               :pred ~pred
               :form form#}))))
      ([pred info]
@@ -189,8 +189,8 @@
            (create-spec
              (merge
                ~info
-               (if-not (contains? info# :hint)
-                 {:hint (types/resolve-type form#)})
+               (if-not (contains? info# :type)
+                 {:type (types/resolve-type form#)})
                {:form form#
                 :pred ~pred})))
         `(let [info# ~info
@@ -201,21 +201,21 @@
            (create-spec
              (merge
                ~info
-               (if-not (contains? info# :hint)
-                 {:hint (types/resolve-type form#)})
+               (if-not (contains? info# :type)
+                 {:type (types/resolve-type form#)})
                {:form form#
                 :pred ~pred})))))))
 
 #?(:clj
    (defmacro doc [pred info]
-     `(spec ~pred (merge ~info {:hint nil}))))
+     `(spec ~pred (merge ~info {:type nil}))))
 
 #?(:clj
    (defmacro typed-spec
-     ([hint pred]
-      `(spec ~pred {:hint ~hint}))
-     ([hint pred info]
-      `(spec ~pred (merge ~info {:hint ~hint})))))
+     ([type pred]
+      `(spec ~pred {:type ~type}))
+     ([type pred info]
+      `(spec ~pred (merge ~info {:type ~type})))))
 
 ;;
 ;; Map Spec

@@ -23,10 +23,10 @@ Clojure Spec is implemented using reified protocols. This makes extending curren
 (require '[clojure.spec :as s])
 (require '[spec-tools.core :as st])
 
-(def my-integer? (st/spec integer? {:hint :long}))
+(def my-integer? (st/spec integer? {:type :long}))
 
 my-integer?
-; #Spec{:hint :long
+; #Spec{:type :long
 ;       :pred clojure.core/integer?}
 
 (my-integer? 1)
@@ -36,12 +36,12 @@ my-integer?
 ; true
 
 (assoc my-integer? :info {:description "It's a int"})
-; #Spec{:hint :long
+; #Spec{:type :long
 ;       :pred clojure.core/integer?
 ;       :info {:description "It's a int"}}
 
 (eval (s/form (st/spec ::st/long integer? {:description "It's a int"})))
-; #Spec{:hint :long
+; #Spec{:type :long
 ;       :pred clojure.core/integer?
 ;       :info {:description "It's a int"}}
 ```

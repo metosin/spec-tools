@@ -44,17 +44,17 @@
         (is (= ['spec-tools.core/spec
                 #?(:clj  'clojure.core/integer?
                    :cljs 'cljs.core/integer?)
-                {:hint :long}] (s/form my-integer?)))
-        (is (= ['spec 'integer? {:hint :long}] (s/describe my-integer?))))
+                {:type :long}] (s/form my-integer?)))
+        (is (= ['spec 'integer? {:type :long}] (s/describe my-integer?))))
 
       (testing "type resolution"
         (is (= (st/spec integer?)
-               (st/spec integer? {:hint :long})
+               (st/spec integer? {:type :long})
                (st/typed-spec :long integer?))))
 
       (testing "serialization"
-        (let [spec (st/spec integer? {:description "cool", :hint ::integer})]
-          (is (= `(st/spec integer? {:description "cool", :hint ::integer})
+        (let [spec (st/spec integer? {:description "cool", :type ::integer})]
+          (is (= `(st/spec integer? {:description "cool", :type ::integer})
                  (s/form spec)
                  (st/deserialize (st/serialize spec))))))
 
@@ -67,7 +67,7 @@
       (is (= "kikka" (:description spec)))
       (is (true? (s/valid? spec 1)))
       (is (false? (s/valid? spec "1")))
-      (is (= `(st/spec integer? {:description "kikka", :hint nil})
+      (is (= `(st/spec integer? {:description "kikka", :type nil})
              (st/deserialize (st/serialize spec))
              (s/form spec))))))
 
@@ -132,7 +132,7 @@
       (is (= {:height 200, :weight 80}
              (st/conform ::person person {:map conform/map->strip-extra-keys}))))))
 
-(s/def ::human (st/spec (s/keys :req-un [::height ::weight]) {:hint ::human}))
+(s/def ::human (st/spec (s/keys :req-un [::height ::weight]) {:type ::human}))
 
 (defn bmi [{:keys [height weight]}]
   (let [h (/ height 100)]
