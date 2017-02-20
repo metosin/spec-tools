@@ -22,7 +22,7 @@
                    :req-un [::uuid]
                    :opt-un [::truth]))]
       (is (= #{::age ::lat :uuid :truth}
-             (:keys spec))))))
+             (:spec/keys spec))))))
 
 (deftest specs-test
   (let [my-integer? (st/spec integer?)]
@@ -44,17 +44,17 @@
         (is (= ['spec-tools.core/spec
                 #?(:clj  'clojure.core/integer?
                    :cljs 'cljs.core/integer?)
-                {:type :long}] (s/form my-integer?)))
-        (is (= ['spec 'integer? {:type :long}] (s/describe my-integer?))))
+                {:spec/type :long}] (s/form my-integer?)))
+        (is (= ['spec 'integer? {:spec/type :long}] (s/describe my-integer?))))
 
       (testing "type resolution"
         (is (= (st/spec integer?)
-               (st/spec integer? {:type :long})
+               (st/spec integer? {:spec/type :long})
                (st/typed-spec :long integer?))))
 
       (testing "serialization"
-        (let [spec (st/spec integer? {:description "cool", :type ::integer})]
-          (is (= `(st/spec integer? {:description "cool", :type ::integer})
+        (let [spec (st/spec integer? {:description "cool", :spec/type ::integer})]
+          (is (= `(st/spec integer? {:description "cool", :spec/type ::integer})
                  (s/form spec)
                  (st/deserialize (st/serialize spec))))))
 
@@ -67,7 +67,7 @@
       (is (= "kikka" (:description spec)))
       (is (true? (s/valid? spec 1)))
       (is (false? (s/valid? spec "1")))
-      (is (= `(st/spec integer? {:description "kikka", :type nil})
+      (is (= `(st/spec integer? {:description "kikka", :spec/type nil})
              (st/deserialize (st/serialize spec))
              (s/form spec))))))
 
@@ -132,7 +132,7 @@
       (is (= {:height 200, :weight 80}
              (st/conform ::person person {:map conform/strip-extra-keys}))))))
 
-(s/def ::human (st/spec (s/keys :req-un [::height ::weight]) {:type ::human}))
+(s/def ::human (st/spec (s/keys :req-un [::height ::weight]) {:spec/type ::human}))
 
 (defn bmi [{:keys [height weight]}]
   (let [h (/ height 100)]

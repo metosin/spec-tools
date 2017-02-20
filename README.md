@@ -17,16 +17,26 @@ No dependencies, but requires Java 1.8, Clojure `1.9.0-alpha14` and ClojureScrip
 
 ### Spec Records
 
-Clojure Spec is implemented using reified protocols. This makes extending current specs non-trivial. Spec-tools introduces Spec Records that both satisfy the Spec protocols (`clojure.spec.Spec` & `clojure.spec.Specize`) and implement the `clojure.lang.IFn`, so they can act as normal 1-arity functions. Spec Records contain a type-hint, a spec predicate and optionally an extra info map for documentation purposes.
+Clojure Spec is implemented using reified protocols. This makes extending current specs non-trivial. Spec-tools introduces Spec Records that wrap the spec predicates and are easy to modify and extend. They satisfy the Spec protocols (`clojure.spec.Spec` & `clojure.spec.Specize`) and implement the `clojure.lang.IFn` so they can be used a normal arity1 function predicates. Specs allow arbitrary extra data to be set to them, with the following keys having special meaning:
+
+| Key           | Description                                                                         |
+| --------------|-------------------------------------------------------------------------------------|
+| :spec/type    | Type hint of the Spec. Should be a keyword. Used in runtime conformation            |
+| :spec/keys    | Set of map keys that the spec defines. Extracted from `s/keys` Specs                |
+| :title        | Name of the spec. Contributes to openapi-docs                                       |
+| :description  | Description of the spec. Contributes to openapi-docs                                |
+| :openapi/...  | Extra data that is merged with unqualifed keys into opeapi-docs                     |
+
+#### Example usage
 
 ```clj
 (require '[clojure.spec :as s])
 (require '[spec-tools.core :as st])
 
-(def my-integer? (st/spec integer? {:type :long}))
+(def my-integer? (st/spec integer? {:spec/type :long}))
 
 my-integer?
-; #Spec{:type :long
+; #Spec{:spec/type :long
 ;       :pred clojure.core/integer?}
 
 (my-integer? 1)
@@ -36,48 +46,74 @@ my-integer?
 ; true
 
 (assoc my-integer? :info {:description "It's a int"})
-; #Spec{:type :long
+; #Spec{:spec/type :long
 ;       :pred clojure.core/integer?
-;       :info {:description "It's a int"}}
+;       :description "It's a int"}
 
 (eval (s/form (st/spec ::st/long integer? {:description "It's a int"})))
-; #Spec{:type :long
+; #Spec{:spec/type :long
 ;       :pred clojure.core/integer?
-;       :info {:description "It's a int"}}
+;       :description "It's a int"}
 ```
 
-Spec records also support [dynamic conforming](#dynamic-conforming), making them great for runtime system border validation.
+For most cases, the `:spec/type` can be resolved automatically using `spec-tools.types/resolve-type`
+multimethod:
+
+```clj
+(st/spec integer?)
+; #Spec{:spec/type :long
+;       :pred clojure.core/integer?}
+```
+
+The `:spec/type` enabled the [dynamic conforming](#dynamic-conforming), making Specs great for
+runtime system border validation.
 
 ## Out-of-the-box Spec Records
 
-| spec             | type hint        | predicate       |
-| -----------------|------------------|-----------------|
-| `st/string?`     | `:string`    | `string?`       |
-| `st/integer?`    | `:long`      | `integer?`      |
-| `st/int?`        | `:long`      | `int?`          |
-| `st/double?`     | `:double`    | `double?`       |
-| `st/keyword?`    | `:keyword`   | `keyword?`      |
-| `st/boolean?`    | `:boolean`   | `boolean?`      |
-| `st/uuid?`       | `:uuid`      | `uuid?`         |
-| `st/inst?`       | `:date`      | `inst?`         |
+To save typing, most/all `clojure.core` predicates have a Spec-wrapped (with `:spec/type`) version in the `schema-tools.core`. These include:
+`any?`, `some?`, `number?`, `integer?`, `int?`, `pos-int?`, `neg-int?`, `nat-int?`,
+`float?`, `double?`, `boolean?`, `string?`, `ident?`, `simple-ident?`, `qualified-ident?`,
+`keyword?`, `simple-keyword?`, `qualified-keyword?`, `symbol?`, `simple-symbol?`,
+`qualified-symbol?`, `uuid?`, `uri?`, `bigdec?`, `inst?`, `seqable?`, `indexed?`,
+`map?`, `vector?`, `list?`, `seq?`, `char?`, `set?`, `nil?`, `false?`, `true?`, `zero?`
+`rational?`, `coll?`, `empty?`, `associative?`, `sequential?`, `ratio?` and `bytes?`.
 
-**TODO**: support all common common specs & `clojure.core` predicates.
+```clj
+st/integer?
+; #Spec{:spec/type :long
+;       :pred clojure.core/integer?}
 
-### Dynamic Conforming
+(st/integer? 1)
+; true
 
-[Schema](https://github.com/plumatic/schema) supports runtime-defined schema coercions. Spec does not. Runtime conforming of the specs is needed to use specs effectively with less capable wire formats like JSON.
+(assoc st/integer? :description "it's an int")
+; #Spec{:spec/type :long
+;       :pred clojure.core/integer?
+;       :description "It's a int"}
+```
 
-Spec Records are attached with dynamic conformers. By default, no conforming is done. Binding a dynamic var `spec-tools.core/*conformers*` with a function of `type-hint => conformer` will cause the Spec to be conformed with the matching conformer.
+### Dynamic conforming
 
-#### Out-of-the-box conformers
+To use specs over different wire formats (like JSON), spec values need to conformed selectively
+at runtime. Spec Records always have an dynamic conformer attached to it. By default, it does
+nothing extra. Binding a dynamic var `spec-tools.core/*conformers*` with a function of
+`spec/type => spec-conformer` will cause the Spec to be conformed at runtime with the selected
+spec-conformer.
 
-| Name                                | Description                                                                             |
-| ------------------------------------|-----------------------------------------------------------------------------------------|
-| `spec-tools.core/string-conformers` | Conforms all specs from strings (`:query`, `:header` & `:path` -parameters).            |
-| `spec-tools.core/json-conformers`   | [JSON](http://json.org/) Conforming (maps, arrays, numbers and booleans not conformed). |
-| `nil`                               | No conforming (for [EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format)). |
+Spec-conformers are arity2 functions taking the Spec Records and the value and should
+return either conformed value of `:clojure.spec/invalid`.
 
-In `spec-tools.core` there is a modified `conform` supporting setting the conformers as optional third parameter.
+The following conformers are supported out of the box:
+
+| Name                | Description                                                                             |
+| --------------------|-----------------------------------------------------------------------------------------|
+| `string-conformers` | Conforms all specs from strings (for `:query`, `:header` & `:path` -parameters).        |
+| `json-conformers`   | [JSON](http://json.org/) Conforming (maps, arrays, numbers and booleans not conformed). |
+| `nil`               | No conforming (for [EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format)). |
+
+For maps, there are special spec-matchers in `spec-tools.conform`:
+* `strip-extra-keys`: strip keys from `s/keys` specs that are not defined
+* `fail-on-extra-keys`: TODO
 
 #### Conforming examples
 
@@ -125,11 +161,11 @@ In `spec-tools.core` there is a modified `conform` supporting setting the confor
 (st/conform ::user data)
 ; ::s/invalid
 
-;; doesn't conform numbers
+;; json-conformers doesn't conform numbers
 (st/conform ::user data st/json-conformers)
 ; ::s/invalid
 
-;; all good
+;; string-conformers for the rescue
 (st/conform ::user data st/string-conformers)
 ; {:name "Ilona"
 ;  :age 48
@@ -137,15 +173,15 @@ In `spec-tools.core` there is a modified `conform` supporting setting the confor
 ;  :birthdate #inst"1968-01-02T15:04:05.000-00:00"}
 ```
 
-#### Extending
+#### Custom conformers
 
 Default conformers are just data, so extending them is easy:
 
 ```clj
-(def my-conformers
+(def my-string-conformers
   (-> st/string-conformers
       (assoc
-        ::st/keyword
+        :keyword
         (fn [_ value]
           (-> value
               str/upper-case
@@ -158,13 +194,13 @@ Default conformers are just data, so extending them is easy:
 (st/conform st/keyword? "kikka" st/string-conformers)
 ; :kikka
 
-(st/conform st/keyword? "kikka" my-conformers)
+(st/conform st/keyword? "kikka" my-string-conformers)
 ; :AKKIK
 ```
 
 ### Simple Collection Specs
 
-Creating nested anonymous collection specs with Clojure Spec is quite verbose as all leaf specs have to be registered forehand. Spec-tools enables simple, Schema-like nested collection syntax for specs. `spec-tools.core/coll-spec` takes a qualified spec name (for nested qualified key generation) and a vanilla Clojure `map`, `vector` or `set` as a value. Collection specs are recursive.
+Spec-tools enables simple, Schema-like nested collection syntax for specs. `spec-tools.core/coll-spec` takes a qualified spec name (for nested qualified key generation) and a vanilla Clojure `map`, `vector` or `set` as a value. Collection specs are recursive. The following rules apply:
 
 * Vectors and Sets are homogeneous, and must contains exactly one spec
 * Maps have either a single spec key (homogeneous keys) or any number keyword keys.
@@ -213,11 +249,15 @@ Creating nested anonymous collection specs with Clojure Spec is quite verbose as
 ```
 
 * **TODO**: Support optional values via `st/maybe`
-* **TODO**: create via `st/spec` to allow type-hinted map-conformations like `disallow-extra-keys` etc.
+* **TODO**: create via `st/spec` to allow type-hinted map-conformations
 
 ### Generating JSON Schemas
 
-Targeting to generate JSON Schemas from arbitrary specs (not just Spec Records).
+**WIP**
+
+Targeting to generate JSON Schemas from arbitrary specs (and Spec Records).
+
+Status: waiting for next (current: alpha-14) `clojure.spec` version for the form bugs to be fixed before finalizing. Also the upcoming [Spec of Specs](http://dev.clojure.org/jira/browse/CLJ-2112) helps.
 
 ```clj
 (require '[spec-tools.json-schema :as jsc])
@@ -239,7 +279,6 @@ Targeting to generate JSON Schemas from arbitrary specs (not just Spec Records).
 
 Related: https://github.com/metosin/ring-swagger/issues/95
 
-WIP: https://github.com/metosin/spec-tools/blob/master/test/spec_tools/json_schema_test.clj
 
 ## License
 

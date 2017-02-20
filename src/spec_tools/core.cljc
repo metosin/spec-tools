@@ -102,7 +102,7 @@
 (defn- extra-spec-map [t]
   (dissoc t :form :pred :gfn))
 
-(defrecord Spec [type form pred gfn]
+(defrecord Spec [form pred gfn]
   #?@(:clj
       [s/Specize
        (specize* [s] s)
@@ -114,7 +114,7 @@
     (if (and (fn? pred) (pred x))
       x
       ;; there is a dynamic conformer
-      (if-let [conformer (get *conformers* type)]
+      (if-let [conformer (get *conformers* (:spec/type this))]
         (conformer this x)
         ;; spec predicate
         (if (s/spec? pred)
@@ -145,11 +145,11 @@
      (.write w (str "#Spec"
                     (merge
                       {:pred (:form t)}
-                      (if (:type t) (select-keys t [:type]))
+                      (if (:spec/type t) (select-keys t [:spec/type]))
                       (extra-spec-map t))))))
 
 
-;; TODO: use specs of specs here
+;; TODO: use http://dev.clojure.org/jira/browse/CLJ-2112
 (defn- extract-extra-info [form]
   (if (and
         (clojure.core/seq? form)
@@ -157,12 +157,12 @@
     (if-let [m (some->> form
                         (rest)
                         (apply hash-map))]
-      {:keys (set
-               (concat
-                 (:req m)
-                 (:opt m)
-                 (map (comp keyword name) (:req-un m))
-                 (map (comp keyword name) (:opt-un m))))})))
+      {:spec/keys (set
+                    (concat
+                      (:req m)
+                      (:opt m)
+                      (map (comp keyword name) (:req-un m))
+                      (map (comp keyword name) (:opt-un m))))})))
 
 (defn create-spec [m]
   (let [info (extract-extra-info (:form m))]
@@ -176,14 +176,14 @@
                        '~(or (and (clojure.core/symbol? pred) (some->> pred (impl/cljs-resolve &env) impl/->sym)) pred)
                        (s/form ~pred))]
            (create-spec
-             {:type (types/resolve-type form#)
+             {:spec/type (types/resolve-type form#)
               :pred ~pred
               :form form#}))
         `(let [form# (if (clojure.core/symbol? '~pred)
                        '~(or (and (clojure.core/symbol? pred) (some->> pred resolve impl/->sym)) pred)
                        (s/form ~pred))]
            (create-spec
-             {:type (types/resolve-type form#)
+             {:spec/type (types/resolve-type form#)
               :pred ~pred
               :form form#}))))
      ([pred info]
@@ -196,8 +196,8 @@
            (create-spec
              (merge
                ~info
-               (if-not (contains? info# :type)
-                 {:type (types/resolve-type form#)})
+               (if-not (contains? info# :spec/type)
+                 {:spec/type (types/resolve-type form#)})
                {:form form#
                 :pred ~pred})))
         `(let [info# ~info
@@ -208,21 +208,21 @@
            (create-spec
              (merge
                ~info
-               (if-not (contains? info# :type)
-                 {:type (types/resolve-type form#)})
+               (if-not (contains? info# :spec/type)
+                 {:spec/type (types/resolve-type form#)})
                {:form form#
                 :pred ~pred})))))))
 
 #?(:clj
    (defmacro doc [pred info]
-     `(spec ~pred (merge ~info {:type nil}))))
+     `(spec ~pred (merge ~info {:spec/type nil}))))
 
 #?(:clj
    (defmacro typed-spec
      ([type pred]
-      `(spec ~pred {:type ~type}))
+      `(spec ~pred {:spec/type ~type}))
      ([type pred info]
-      `(spec ~pred (merge ~info {:type ~type})))))
+      `(spec ~pred (merge ~info {:spec/type ~type})))))
 
 ;;
 ;; Map Spec
