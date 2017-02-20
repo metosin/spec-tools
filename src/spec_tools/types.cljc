@@ -33,7 +33,7 @@
 
 (defmethod resolve-type 'clojure.core/any? [_] nil)
 (defmethod resolve-type 'clojure.core/some? [_] nil)
-(defmethod resolve-type 'clojure.core/number? [_] nil)
+(defmethod resolve-type 'clojure.core/number? [_] :double)
 (defmethod resolve-type 'clojure.core/integer? [_] :long)
 (defmethod resolve-type 'clojure.core/int? [_] :long)
 (defmethod resolve-type 'clojure.core/pos-int? [_] :long)
