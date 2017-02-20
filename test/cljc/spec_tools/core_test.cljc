@@ -71,6 +71,15 @@
              (st/deserialize (st/serialize spec))
              (s/form spec))))))
 
+(deftest reason-test
+  (let [expected-problem {:path [] :pred 'pos-int?, :val -1, :via [], :in []}]
+    (testing "normal explain-data"
+      (is (= #:clojure.spec{:problems [expected-problem]}
+             (s/explain-data (st/spec pos-int?) -1))))
+    (testing "explain-data with reason"
+      (is (= #:clojure.spec{:problems [(assoc expected-problem :reason "positive")]}
+             (s/explain-data (st/spec pos-int? {:spec/reason "positive"}) -1))))))
+
 (deftest spec-tools-conform-test
   (testing "in default mode"
     (testing "nothing is conformed"

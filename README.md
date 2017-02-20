@@ -22,6 +22,7 @@ Clojure Spec is implemented using reified protocols. This makes extending curren
 | Key           | Description                                                                         |
 | --------------|-------------------------------------------------------------------------------------|
 | :spec/type    | Type hint of the Spec. Should be a keyword. Used in runtime conformation            |
+| :spec/reason  | Add the value under `:reason` to the output of `s/explain-data`                     |
 | :spec/keys    | Set of map keys that the spec defines. Extracted from `s/keys` Specs                |
 | :title        | Name of the spec. Contributes to openapi-docs                                       |
 | :description  | Description of the spec. Contributes to openapi-docs                                |

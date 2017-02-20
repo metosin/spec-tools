@@ -123,9 +123,16 @@
           '::s/invalid))))
   (unform* [_ x]
     x)
-  (explain* [_ path via in x]
+  (explain* [this path via in x]
     (when (= ::s/invalid (if (pred x) x ::s/invalid))
-      [{:path path :pred (s/abbrev form) :val x :via via :in in}]))
+      [(merge
+         {:path path
+          :pred (s/abbrev form)
+          :val x
+          :via via
+          :in in}
+         (if-let [reason (:spec/reason this)]
+           {:reason reason}))]))
   (gen* [_ _ _ _]
     (if gfn
       (gfn)
