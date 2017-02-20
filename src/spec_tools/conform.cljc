@@ -2,7 +2,8 @@
   #?(:cljs (:refer-clojure :exclude [Inst Keyword UUID]))
   (:require [clojure.spec :as s]
     #?@(:cljs [[goog.date.UtcDateTime]
-               [goog.date.Date]]))
+               [goog.date.Date]])
+            [clojure.string :as str])
   #?(:clj
      (:import (java.util Date UUID)
               (java.time Instant))))
@@ -58,6 +59,14 @@
       (catch #?(:clj  Exception
                 :cljs js/Error) _
         ::s/invalid))))
+
+(defn string->symbol [_ x]
+  (if (string? x)
+    (symbol x)))
+
+(defn string->nil [_ x]
+  (if-not (str/blank? x)
+    ::s/invalid))
 
 ;;
 ;; Maps
