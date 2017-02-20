@@ -26,7 +26,7 @@ Clojure Spec is implemented using reified protocols. This makes extending curren
 | `:spec/keys`    | Set of map keys that the spec defines. Extracted from `s/keys` Specs                |
 | `:title`        | Name of the spec. Contributes to openapi-docs                                       |
 | `:description`  | Description of the spec. Contributes to openapi-docs                                |
-| `:openapi/...`  | Extra data that is merged with unqualifed keys into opeapi-docs                     |
+| `:openapi/...`  | Extra data that is merged with unqualifed keys into openapi-docs                     |
 
 #### Example usage
 
