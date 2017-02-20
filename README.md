@@ -17,16 +17,16 @@ No dependencies, but requires Java 1.8, Clojure `1.9.0-alpha14` and ClojureScrip
 
 ### Spec Records
 
-Clojure Spec is implemented using reified protocols. This makes extending current specs non-trivial. Spec-tools introduces Spec Records that wrap the spec predicates and are easy to modify and extend. They satisfy the Spec protocols (`clojure.spec.Spec` & `clojure.spec.Specize`) and implement the `clojure.lang.IFn` so they can be used a normal arity1 function predicates. Specs allow arbitrary extra data to be set to them, with the following keys having special meaning:
+Clojure Spec is implemented using reified protocols. This makes extending current specs non-trivial. Spec-tools introduces Spec Records that wrap the spec predicates and are easy to modify and extend. They satisfy the Spec protocols (`clojure.spec.Spec` & `clojure.spec.Specize`) and implement the `clojure.lang.IFn` so they can be used a normal function predicates. Extra data can be easily added to Specs, with following map keys having a special meaning:
 
 | Key             | Description                                                                         |
 | ----------------|-------------------------------------------------------------------------------------|
-| `:spec/type`    | Type hint of the Spec. Should be a keyword. Used in runtime conformation            |
-| `:spec/reason`  | Add the value under `:reason` to the output of `s/explain-data`                     |
+| `:spec/type`    | Type hint of the Spec, mostly auto-resolved. Used in runtime conformation           |
+| `:spec/reason`  | Value is added to `s/explain-data` problems under key `:reason`                     |
 | `:spec/keys`    | Set of map keys that the spec defines. Extracted from `s/keys` Specs                |
-| `:title`        | Name of the spec. Contributes to openapi-docs                                       |
-| `:description`  | Description of the spec. Contributes to openapi-docs                                |
-| `:openapi/...`  | Extra data that is merged with unqualifed keys into openapi-docs                     |
+| `:name`         | Name of the spec. Contributes to (openapi-)docs                                     |
+| `:description`  | Description of the spec. Contributes to (openapi-)docs                              |
+| `:openapi/...`  | Extra data that is merged with unqualifed keys into openapi-docs                    |
 
 #### Example usage
 
@@ -70,7 +70,7 @@ runtime system border validation.
 
 ### Out-of-the-box Spec Records
 
-Most/all `clojure.core` predicates have a Spec-wrapped (with `:spec/type`) version in the `schema-tools.core`. These include:
+Most/all `clojure.core` predicates have a Spec-wrapped version in the `spec-tools.core`:
 * `any?`, `some?`, `number?`, `integer?`, `int?`, `pos-int?`, `neg-int?`, `nat-int?`,
 `float?`, `double?`, `boolean?`, `string?`, `ident?`, `simple-ident?`, `qualified-ident?`,
 `keyword?`, `simple-keyword?`, `qualified-keyword?`, `symbol?`, `simple-symbol?`,
@@ -94,7 +94,7 @@ st/integer?
 
 ### Custom errors
 
-Via `:spec/reason`:
+Can be added via `:spec/reason`:
 
 ```clj
 (s/explain (st/spec pos-int? {:spec/reason "positive"}) -1)
@@ -125,7 +125,7 @@ The following conformers are supported out of the box:
 
 For maps, there are special spec-matchers in `spec-tools.conform`:
 * `strip-extra-keys`: strip keys from `s/keys` specs that are not defined
-* `fail-on-extra-keys`: TODO
+* `fail-on-extra-keys`: **TODO**
 
 #### Conforming examples
 
@@ -190,9 +190,9 @@ For maps, there are special spec-matchers in `spec-tools.conform`:
 ```clj
 (st/conform
   (st/spec (s/keys :req-un [::name]))
-  {:name "Annikki", :age 100}
+  {:name "Inkeri", :age 102}
   {:map conform/strip-extra-keys})
-; {:name "Annikki"}
+; {:name "Inkeri"}
 ```
 
 #### Custom conformers
