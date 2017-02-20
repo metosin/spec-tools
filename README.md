@@ -69,7 +69,7 @@ multimethod:
 The `:spec/type` enabled the [dynamic conforming](#dynamic-conforming), making Specs great for
 runtime system border validation.
 
-## Out-of-the-box Spec Records
+### Out-of-the-box Spec Records
 
 To save typing, most/all `clojure.core` predicates have a Spec-wrapped (with `:spec/type`) version in the `schema-tools.core`. These include:
 `any?`, `some?`, `number?`, `integer?`, `int?`, `pos-int?`, `neg-int?`, `nat-int?`,
@@ -93,7 +93,19 @@ st/integer?
 ;       :description "It's a int"}
 ```
 
-### Dynamic conforming
+### Custom errors
+
+via Spec key `:spec/reason`:
+
+```clj
+(s/explain (st/spec pos-int? {:spec/reason "positive"}) -1)
+; val: -1 fails predicate: pos-int?,  positive
+
+(s/explain-data (st/spec pos-int? {:spec/reason "positive"}) -1)
+; #:clojure.spec{:problems [{:path [], :pred pos-int?, :val -1, :via [], :in [], :reason "positive"}]}
+```
+
+## Dynamic conforming
 
 To use specs over different wire formats (like JSON), spec values need to conformed selectively
 at runtime. Spec Records always have an dynamic conformer attached to it. By default, it does
