@@ -63,7 +63,7 @@
 ;; Maps
 ;;
 
-(defn map->strip-extra-keys [{:keys [keys pred]} x]
+(defn strip-extra-keys [{:keys [keys pred]} x]
   (if (map? x)
     (s/conform pred (select-keys x keys))
     x))
