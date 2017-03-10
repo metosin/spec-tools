@@ -100,9 +100,9 @@
 ;;
 
 (defn- extra-spec-map [t]
-  (dissoc t :form :pred :gfn))
+  (dissoc t :form :pred))
 
-(defrecord Spec [form pred gfn]
+(defrecord Spec [form pred]
   #?@(:clj
       [s/Specize
        (specize* [s] s)
@@ -133,12 +133,12 @@
           :in in}
          (if-let [reason (:spec/reason this)]
            {:reason reason}))]))
-  (gen* [_ _ _ _]
-    (if gfn
-      (gfn)
+  (gen* [this _ _ _]
+    (if-let [gen (:spec/gen this)]
+      (gen)
       (gen/gen-for-pred pred)))
   (with-gen* [this gfn]
-    (assoc this :gfn gfn))
+    (assoc this :spec/gen gfn))
   (describe* [this]
     (let [info (extra-spec-map this)]
       `(spec ~form ~info)))
