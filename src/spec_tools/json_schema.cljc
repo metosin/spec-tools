@@ -26,13 +26,13 @@
 ;;
 
 ; any? (one-of [(return nil) (any-printable)])
-(defmethod accept-spec 'clojure.core/any? [_ _ _] {:type "object"})
+(defmethod accept-spec 'clojure.core/any? [_ _ _] {})
 
 ; some? (such-that some? (any-printable))
-(defmethod accept-spec 'clojure.core/some? [_ _ _] {:type "object"})
+(defmethod accept-spec 'clojure.core/some? [_ _ _] {})
 
 ; number? (one-of [(large-integer) (double)])
-(defmethod accept-spec 'clojure.core/number? [_ _ _] {:type "double"})
+(defmethod accept-spec 'clojure.core/number? [_ _ _] {:type "number" :format "double"})
 
 ; integer? (large-integer)
 (defmethod accept-spec 'clojure.core/integer? [_ _ _] {:type "integer"})
@@ -47,7 +47,7 @@
 (defmethod accept-spec 'clojure.core/neg-int? [_ _ _] {:type "integer", :format "int64", :maximum -1})
 
 ; nat-int? (large-integer* {:min 0})
-(defmethod accept-spec 'clojure.core/nat-int? [_ _ _] {:type "integer",, :format "int64" :minimum 0})
+(defmethod accept-spec 'clojure.core/nat-int? [_ _ _] {:type "integer", :format "int64" :minimum 0})
 
 ; float? (double)
 (defmethod accept-spec 'clojure.core/float? [_ _ _] {:type "number"})
@@ -154,7 +154,7 @@
 (defmethod accept-spec 'clojure.core/coll? [_ _ _] {:type "object"})
 
 ; empty? (elements [nil '() [] {} #{}])
-(defmethod accept-spec 'clojure.core/coll? [_ _ _] {:type "array" :maxItems 0 :minItems 0})
+(defmethod accept-spec 'clojure.core/empty? [_ _ _] {:type "array" :maxItems 0 :minItems 0})
 
 ; associative? (one-of [(map simple simple) (vector simple)])
 (defmethod accept-spec 'clojure.core/associative? [_ _ _] {:type "object"})
