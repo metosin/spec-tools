@@ -21,21 +21,33 @@
 (defn- spec-dispatch [dispatch spec children] dispatch)
 (defmulti accept-spec spec-dispatch :default ::default)
 
+;;
 ;; predicate list taken from https://github.com/clojure/clojure/blob/master/src/clj/clojure/spec/gen.clj
+;;
 
 ; any? (one-of [(return nil) (any-printable)])
+(defmethod accept-spec 'clojure.core/any? [_ _ _] {})
+
 ; some? (such-that some? (any-printable))
+(defmethod accept-spec 'clojure.core/some? [_ _ _] {})
+
 ; number? (one-of [(large-integer) (double)])
+(defmethod accept-spec 'clojure.core/number? [_ _ _] {:type "number" :format "double"})
 
 ; integer? (large-integer)
 (defmethod accept-spec 'clojure.core/integer? [_ _ _] {:type "integer"})
 
 ; int? (large-integer)
-(defmethod accept-spec 'clojure.core/int? [_ _ _] {:type "integer"})
+(defmethod accept-spec 'clojure.core/int? [_ _ _] {:type "integer" :format "int64"})
 
 ; pos-int? (large-integer* {:min 1})
+(defmethod accept-spec 'clojure.core/pos-int? [_ _ _] {:type "integer", :format "int64", :minimum 1})
+
 ; neg-int? (large-integer* {:max -1})
+(defmethod accept-spec 'clojure.core/neg-int? [_ _ _] {:type "integer", :format "int64", :maximum -1})
+
 ; nat-int? (large-integer* {:min 0})
+(defmethod accept-spec 'clojure.core/nat-int? [_ _ _] {:type "integer", :format "int64" :minimum 0})
 
 ; float? (double)
 (defmethod accept-spec 'clojure.core/float? [_ _ _] {:type "number"})
@@ -50,53 +62,111 @@
 (defmethod accept-spec 'clojure.core/string? [_ _ _] {:type "string"})
 
 ; ident? (one-of [(keyword-ns) (symbol-ns)])
+(defmethod accept-spec 'clojure.core/ident? [_ _ _] {:type "string"})
+
 ; simple-ident? (one-of [(keyword) (symbol)])
+(defmethod accept-spec 'clojure.core/simple-ident? [_ _ _] {:type "string"})
+
 ; qualified-ident? (such-that qualified? (one-of [(keyword-ns) (symbol-ns)]))
+(defmethod accept-spec 'clojure.core/qualified-ident? [_ _ _] {:type "string"})
 
 ; keyword? (keyword-ns)
 (defmethod accept-spec 'clojure.core/keyword? [_ _ _] {:type "string"})
 
 ; simple-keyword? (keyword)
+(defmethod accept-spec 'clojure.core/simple-keyword? [_ _ _] {:type "string"})
+
 ; qualified-keyword? (such-that qualified? (keyword-ns))
+(defmethod accept-spec 'clojure.core/qualified-keyword? [_ _ _] {:type "string"})
+
 ; symbol? (symbol-ns)
+(defmethod accept-spec 'clojure.core/symbol? [_ _ _] {:type "string"})
+
 ; simple-symbol? (symbol)
+(defmethod accept-spec 'clojure.core/simple-symbol? [_ _ _] {:type "string"})
+
 ; qualified-symbol? (such-that qualified? (symbol-ns))
+(defmethod accept-spec 'clojure.core/qualified-symbol? [_ _ _] {:type "string"})
+
 ; uuid? (uuid)
+(defmethod accept-spec 'clojure.core/uuid? [_ _ _] {:type "string" :format "uuid"})
+
 ; uri? (fmap #(java.net.URI/create (str "http://" % ".com")) (uuid))
+(defmethod accept-spec 'clojure.core/uri? [_ _ _] {:type "string" :format "uri"})
+
 ; bigdec? (fmap #(BigDecimal/valueOf %)
 ;               (double* {:infinite? false :NaN? false}))
+(defmethod accept-spec 'clojure.core/bigdec? [_ _ _] {:type "number" :format "double"})
+
+
 ; inst? (fmap #(java.util.Date. %)
 ;             (large-integer))
+(defmethod accept-spec 'clojure.core/bigdec? [_ _ _] {:type "number" :format "double"})
+
 ; seqable? (one-of [(return nil)
 ;                   (list simple)
 ;                   (vector simple)
 ;                   (map simple simple)
 ;                   (set simple)
 ;                   (string-alphanumeric)])
+(defmethod accept-spec 'clojure.core/seqable? [_ _ _] {:type "array"})
+
 ; indexed? (vector simple)
+(defmethod accept-spec 'clojure.core/map? [_ _ _] {:type "array"})
+
 ; map? (map simple simple)
+(defmethod accept-spec 'clojure.core/map? [_ _ _] {:type "object"})
+
 ; vector? (vector simple)
+(defmethod accept-spec 'clojure.core/vector? [_ _ _] {:type "array"})
+
 ; list? (list simple)
+(defmethod accept-spec 'clojure.core/list? [_ _ _] {:type "array"})
+
 ; seq? (list simple)
+(defmethod accept-spec 'clojure.core/seq? [_ _ _] {:type "array"})
+
 ; char? (char)
+(defmethod accept-spec 'clojure.core/char? [_ _ _] {:type "string"})
+
 ; set? (set simple)
+(defmethod accept-spec 'clojure.core/set? [_ _ _] {:type "array" :uniqueItems true})
 
 ; nil? (return nil)
 (defmethod accept-spec 'clojure.core/nil? [_ _ _] {:type "null"})
 
 ; false? (return false)
+(defmethod accept-spec 'clojure.core/false? [_ _ _] {:type "boolean"})
+
 ; true? (return true)
+(defmethod accept-spec 'clojure.core/true? [_ _ _] {:type "boolean"})
+
 ; zero? (return 0)
+(defmethod accept-spec 'clojure.core/zero? [_ _ _] {:type "integer"})
+
 ; rational? (one-of [(large-integer) (ratio)])
+(defmethod accept-spec 'clojure.core/coll? [_ _ _] {:type "double"})
+
 ; coll? (one-of [(map simple simple)
 ;                (list simple)
 ;                (vector simple)
 ;                (set simple)])
+(defmethod accept-spec 'clojure.core/coll? [_ _ _] {:type "object"})
+
 ; empty? (elements [nil '() [] {} #{}])
+(defmethod accept-spec 'clojure.core/empty? [_ _ _] {:type "array" :maxItems 0 :minItems 0})
+
 ; associative? (one-of [(map simple simple) (vector simple)])
+(defmethod accept-spec 'clojure.core/associative? [_ _ _] {:type "object"})
+
 ; sequential? (one-of [(list simple) (vector simple)])
+(defmethod accept-spec 'clojure.core/sequential? [_ _ _] {:type "array"})
+
 ; ratio? (such-that ratio? (ratio))
+(defmethod accept-spec 'clojure.core/ratio? [_ _ _] {:type "integer"})
+
 ; bytes? (bytes)
+(defmethod accept-spec 'clojure.core/ratio? [_ _ _] {:type "string" :format "byte"})
 
 (defmethod accept-spec 'clojure.core/pos? [_ _ _] {:minimum 0 :exclusiveMinimum true})
 (defmethod accept-spec 'clojure.core/neg? [_ _ _] {:maximum 0 :exclusiveMaximum true})

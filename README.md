@@ -23,6 +23,7 @@ Clojure Spec is implemented using reified protocols. This makes extending curren
 | ----------------|-------------------------------------------------------------------------------------|
 | `:spec/type`    | Type hint of the Spec, mostly auto-resolved. Used in runtime conformation           |
 | `:spec/reason`  | Value is added to `s/explain-data` problems under key `:reason`                     |
+| `:spec/gen`     | Generator function for the Spec (set via `s/with-gen`)                              |
 | `:spec/keys`    | Set of map keys that the spec defines. Extracted from `s/keys` Specs                |
 | `:name`         | Name of the spec. Contributes to (openapi-)docs                                     |
 | `:description`  | Description of the spec. Contributes to (openapi-)docs                              |
