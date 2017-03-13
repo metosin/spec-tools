@@ -96,12 +96,12 @@
 
 ; bigdec? (fmap #(BigDecimal/valueOf %)
 ;               (double* {:infinite? false :NaN? false}))
-(defmethod accept-spec 'clojure.core/bigdec? [_ _ _] {:type "double"})
+(defmethod accept-spec 'clojure.core/bigdec? [_ _ _] {:type "number" :format "double"})
 
 
 ; inst? (fmap #(java.util.Date. %)
 ;             (large-integer))
-(defmethod accept-spec 'clojure.core/bigdec? [_ _ _] {:type "double"})
+(defmethod accept-spec 'clojure.core/bigdec? [_ _ _] {:type "number" :format "double"})
 
 ; seqable? (one-of [(return nil)
 ;                   (list simple)
