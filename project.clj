@@ -17,10 +17,10 @@
                              [lein-cloverage "1.0.9"]]
                    :jvm-opts ^:replace ["-server"]
                    ;:global-vars {*warn-on-reflection* true}
-                   :dependencies [[org.clojure/clojure "1.9.0-alpha14"]
+                   :dependencies [[org.clojure/clojure "1.9.0-alpha15"]
                                   [org.clojure/clojurescript "1.9.456"]
                                   [criterium "0.4.4"]
-                                  [prismatic/schema "1.1.3"]
+                                  [prismatic/schema "1.1.4"]
                                   [org.clojure/test.check "0.9.0"]
                                   [org.clojure/tools.namespace "0.2.11"]
                                   [com.gfredericks/test.chuck "0.2.7"]
@@ -44,5 +44,5 @@
                         :compiler {:output-to "target/node_out/test.js"
                                    :output-dir "target/node_out"
                                    :main spec-tools.doo-runner
-                                   :optimizations :none 
+                                   :optimizations :none
                                    :target :nodejs}}]})
