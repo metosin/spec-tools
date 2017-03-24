@@ -49,8 +49,7 @@
 
       (testing "type resolution"
         (is (= (st/spec integer?)
-               (st/spec integer? {:spec/type :long})
-               (st/typed-spec :long integer?))))
+               (st/spec integer? {:spec/type :long}))))
 
       (testing "serialization"
         (let [spec (st/spec integer? {:description "cool", :spec/type ::integer})]

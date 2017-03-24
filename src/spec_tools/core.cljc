@@ -224,13 +224,6 @@
    (defmacro doc [pred info]
      `(spec ~pred (merge ~info {:spec/type nil}))))
 
-#?(:clj
-   (defmacro typed-spec
-     ([type pred]
-      `(spec ~pred {:spec/type ~type}))
-     ([type pred info]
-      `(spec ~pred (merge ~info {:spec/type ~type})))))
-
 ;;
 ;; Map Spec
 ;;
