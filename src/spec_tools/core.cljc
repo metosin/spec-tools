@@ -172,51 +172,35 @@
                       (map (comp keyword name) (:opt-un m))))})))
 
 (defn create-spec [m]
-  (let [info (extract-extra-info (:spec/form m))]
-    (map->Spec (merge m info))))
+  (let [form (or (:spec/form m) (s/form (:pred m)))
+        info (extract-extra-info form)
+        type (if-not (contains? m :spec/type)
+               (types/resolve-type form)
+               (:spec/type m))]
+    (map->Spec (merge m info {:spec/form form, :spec/type type}))))
 
 #?(:clj
    (defmacro spec
      ([pred]
-      (if (impl/in-cljs? &env)
-        `(let [form# (if (clojure.core/symbol? '~pred)
-                       '~(or (and (clojure.core/symbol? pred) (some->> pred (impl/cljs-resolve &env) impl/->sym)) pred)
-                       (s/form ~pred))]
-           (create-spec
-             {:spec/type (types/resolve-type form#)
-              :pred ~pred
-              :spec/form form#}))
-        `(let [form# (if (clojure.core/symbol? '~pred)
-                       '~(or (and (clojure.core/symbol? pred) (some->> pred resolve impl/->sym)) pred)
-                       (s/form ~pred))]
-           (create-spec
-             {:spec/type (types/resolve-type form#)
-              :pred ~pred
-              :spec/form form#}))))
+      `(spec ~pred {}))
      ([pred info]
       (if (impl/in-cljs? &env)
         `(let [info# ~info
                form# (if (clojure.core/symbol? '~pred)
-                       '~(or (and (clojure.core/symbol? pred) (some->> pred (impl/cljs-resolve &env) impl/->sym)) pred)
-                       (s/form ~pred))]
+                       '~(or (and (clojure.core/symbol? pred) (some->> pred (impl/cljs-resolve &env) impl/->sym)) pred))]
            (assert (clojure.core/map? info#) (str "spec info should be a map, was: " info#))
            (create-spec
              (merge
                ~info
-               (if-not (contains? info# :spec/type)
-                 {:spec/type (types/resolve-type form#)})
                {:spec/form form#
                 :pred ~pred})))
         `(let [info# ~info
                form# (if (clojure.core/symbol? '~pred)
-                       '~(or (and (clojure.core/symbol? pred) (some->> pred resolve impl/->sym)) pred)
-                       (s/form ~pred))]
+                       '~(or (and (clojure.core/symbol? pred) (some->> pred resolve impl/->sym)) pred))]
            (assert (clojure.core/map? info#) (str "spec info should be a map, was: " info#))
            (create-spec
              (merge
                ~info
-               (if-not (contains? info# :spec/type)
-                 {:spec/type (types/resolve-type form#)})
                {:spec/form form#
                 :pred ~pred})))))))
 
