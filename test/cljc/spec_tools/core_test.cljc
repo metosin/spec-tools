@@ -76,13 +76,15 @@
 
 (deftest reason-test
   (let [expected-problem {:path [] :pred 'pos-int?, :val -1, :via [], :in []}]
-    (testing "normal explain-data"
+    (testing "explain-data"
       (is (= #?(:clj  #:clojure.spec{:problems [expected-problem]}
                 :cljs #:cljs.spec{:problems [expected-problem]})
+             (st/explain-data (st/spec pos-int?) -1)
              (s/explain-data (st/spec pos-int?) -1))))
     (testing "explain-data with reason"
       (is (= #?(:clj  #:clojure.spec{:problems [(assoc expected-problem :reason "positive")]}
                 :cljs #:cljs.spec{:problems [(assoc expected-problem :reason "positive")]})
+             (st/explain-data (st/spec pos-int? {:spec/reason "positive"}) -1)
              (s/explain-data (st/spec pos-int? {:spec/reason "positive"}) -1))))))
 
 (deftest spec-tools-conform-test
@@ -127,6 +129,18 @@
                (conform ::birthdate "2014-02-18T18:25:37.456Z")))
         (is (= #inst "2014-02-18T18:25:37Z"
                (conform ::birthdate "2014-02-18T18:25:37Z")))))))
+
+(st/explain-data st/int? "12")
+
+(deftest explain-tests
+  (testing "without conforming"
+    (is (= st/invalid (st/conform st/int? "12")))
+    (is (= {::s/problems [{:path [], :pred int?, :val "12", :via [], :in []}]}
+           (st/explain-data st/int? "12"))))
+  (testing "with conforming"
+    (is (= 12 (st/conform st/int? "12" st/string-conformers)))
+    (is (= nil
+           (st/explain-data st/int? "12" st/string-conformers)))))
 
 (s/def ::height integer?)
 (s/def ::weight integer?)

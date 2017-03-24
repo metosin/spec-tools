@@ -95,6 +95,22 @@
    (binding [*conformers* conformers]
      (s/conform spec value))))
 
+(defn explain
+  ([spec value]
+   (binding [*conformers* nil]
+     (s/explain spec value)))
+  ([spec value conformers]
+   (binding [*conformers* conformers]
+     (s/explain spec value))))
+
+(defn explain-data
+  ([spec value]
+   (binding [*conformers* nil]
+     (s/explain-data spec value)))
+  ([spec value conformers]
+   (binding [*conformers* conformers]
+     (s/explain-data spec value))))
+
 ;;
 ;; Spec Record
 ;;
@@ -135,9 +151,9 @@
                      (s/explain* pred path via in x)
                      (when (= invalid (if (and (fn? pred) (pred x)) x invalid))
                        [{:path path
-          :pred (s/abbrev (:spec/form this))
-          :val x
-          :via via
+                         :pred (s/abbrev (:spec/form this))
+                         :val x
+                         :via via
                          :in in}]))
           spec-reason (:spec/reason this)
           with-reason (fn [{:keys [reason] :as problem}]
