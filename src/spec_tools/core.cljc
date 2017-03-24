@@ -100,9 +100,9 @@
 ;;
 
 (defn- extra-spec-map [t]
-  (dissoc t :form :pred))
+  (dissoc t :spec/form :pred))
 
-(defrecord Spec [form pred]
+(defrecord Spec [pred]
   #?@(:clj
       [s/Specize
        (specize* [s] s)
@@ -127,7 +127,7 @@
     (when (= ::s/invalid (if (pred x) x ::s/invalid))
       [(merge
          {:path path
-          :pred (s/abbrev form)
+          :pred (s/abbrev (:spec/form this))
           :val x
           :via via
           :in in}
@@ -141,7 +141,7 @@
     (assoc this :spec/gen gfn))
   (describe* [this]
     (let [info (extra-spec-map this)]
-      `(spec ~form ~info)))
+      `(spec ~(:spec/form this) ~info)))
   IFn
   #?(:clj  (invoke [_ x] (pred x))
      :cljs (-invoke [_ x] (pred x))))
@@ -151,7 +151,7 @@
      [^Spec t ^Writer w]
      (.write w (str "#Spec"
                     (merge
-                      {:pred (:form t)}
+                      (select-keys t [:spec/form])
                       (if (:spec/type t) (select-keys t [:spec/type]))
                       (extra-spec-map t))))))
 
@@ -172,7 +172,7 @@
                       (map (comp keyword name) (:opt-un m))))})))
 
 (defn create-spec [m]
-  (let [info (extract-extra-info (:form m))]
+  (let [info (extract-extra-info (:spec/form m))]
     (map->Spec (merge m info))))
 
 #?(:clj
@@ -185,14 +185,14 @@
            (create-spec
              {:spec/type (types/resolve-type form#)
               :pred ~pred
-              :form form#}))
+              :spec/form form#}))
         `(let [form# (if (clojure.core/symbol? '~pred)
                        '~(or (and (clojure.core/symbol? pred) (some->> pred resolve impl/->sym)) pred)
                        (s/form ~pred))]
            (create-spec
              {:spec/type (types/resolve-type form#)
               :pred ~pred
-              :form form#}))))
+              :spec/form form#}))))
      ([pred info]
       (if (impl/in-cljs? &env)
         `(let [info# ~info
@@ -205,7 +205,7 @@
                ~info
                (if-not (contains? info# :spec/type)
                  {:spec/type (types/resolve-type form#)})
-               {:form form#
+               {:spec/form form#
                 :pred ~pred})))
         `(let [info# ~info
                form# (if (clojure.core/symbol? '~pred)
@@ -217,7 +217,7 @@
                ~info
                (if-not (contains? info# :spec/type)
                  {:spec/type (types/resolve-type form#)})
-               {:form form#
+               {:spec/form form#
                 :pred ~pred})))))))
 
 #?(:clj
