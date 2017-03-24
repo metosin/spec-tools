@@ -27,9 +27,13 @@
 (deftest specs-test
   (let [my-integer? (st/spec integer?)]
 
-    (testing "work as predicates"
+    (testing "wrapped predicate work as a predicate"
       (is (true? (my-integer? 1)))
       (is (false? (my-integer? "1"))))
+
+    (testing "wrapped spec does not work as a predicate"
+      (let [my-spec (st/spec (s/keys :req [::age]))]
+        (is (thrown? RuntimeException (my-spec {::age 20})))))
 
     (testing "adding info"
       (let [info {:description "desc"

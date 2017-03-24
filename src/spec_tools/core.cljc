@@ -102,6 +102,13 @@
 (defn- extra-spec-map [t]
   (dissoc t :spec/form :pred))
 
+(defn- fail-on-invoke [spec]
+  (throw
+    (ex-info
+      (str
+        "Can't invoke spec with a non-function predicate: " spec)
+      {:spec spec})))
+
 (defrecord Spec [pred]
   #?@(:clj
       [s/Specize
@@ -149,8 +156,8 @@
     (let [info (extra-spec-map this)]
       `(spec ~(:spec/form this) ~info)))
   IFn
-  #?(:clj  (invoke [_ x] (pred x))
-     :cljs (-invoke [_ x] (pred x))))
+  #?(:clj  (invoke [this x] (if (fn? pred) (pred x) (fail-on-invoke this)))
+     :cljs (-invoke [this x] (if (fn? pred) (pred x) (fail-on-invoke this)))))
 
 #?(:clj
    (defmethod print-method Spec
