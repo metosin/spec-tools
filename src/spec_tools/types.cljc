@@ -77,3 +77,12 @@
 (defmethod resolve-type 'clojure.core/bytes? [_] nil)
 
 (defmethod resolve-type 'clojure.spec/keys [_] :map)
+(defmethod resolve-type 'clojure.spec/map-of [_] :map)
+
+(defmethod resolve-type 'clojure.spec/coll-of [x]
+  (let [{:keys [into]} (apply hash-map (drop 2 x))]
+    (cond
+      (map? into) :map
+      (set? into) :set
+      :else :vector)))
+

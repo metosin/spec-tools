@@ -226,7 +226,7 @@
       (ex-info
         "only single maps allowed in nested vectors"
         {:k n :v v}))
-    `(s/coll-of ~(coll-spec-fn env n (first v)) :into [])))
+    `(spec (s/coll-of ~(coll-spec-fn env n (first v)) :into []))))
 
 (defn- -set [env n v]
   (if-not (= 1 (count v))
@@ -234,7 +234,7 @@
       (ex-info
         "only single maps allowed in nested sets"
         {:k n :v v}))
-    `(s/coll-of ~(coll-spec-fn env n (first v)) :into #{})))
+    `(spec (s/coll-of ~(coll-spec-fn env n (first v)) :into #{}))))
 
 #?(:clj
    (defn- -map [env n m]
@@ -252,7 +252,7 @@
                                              (let [resolved (resolve (first k))]
                                                (#{resolved-opt resolved-req} resolved)))))
                                   k)))]
-         `(s/map-of ~key-spec ~(coll-spec-fn env n (first (vals m))))
+         `(spec (s/map-of ~key-spec ~(coll-spec-fn env n (first (vals m)))))
          ;; keyword keys
          (let [m (reduce-kv
                    (fn [acc k v]
@@ -285,6 +285,7 @@
                   (clojure.core/set? m) -set)]
        (f env n m)
        `~m)))
+
 #?(:clj
    (defmacro coll-spec [n m]
      (coll-spec-fn &env n m)))
