@@ -205,16 +205,17 @@
                               :description string?}]
                     :address {:street string?
                               :zip string?}})
-          s-keys (s/keys
+          s-keys (st/spec
+                   (s/keys
                    :req [::id ::age]
                    :req-un [:spec-tools.core-test$my-map/boss
                             :spec-tools.core-test$my-map/name
                             :spec-tools.core-test$my-map/languages
                             :spec-tools.core-test$my-map/orders
                             :spec-tools.core-test$my-map/address]
-                   :opt-un [:spec-tools.core-test$my-map/description])]
+                     :opt-un [:spec-tools.core-test$my-map/description]))]
 
-      (testing "vanilla keys-spec is generated"
+      (testing "normal keys-spec-spec is generated"
         (is (= (s/form s-keys) (s/form st-map))))
       (testing "nested keys are in the registry"
         (let [generated-keys (->> (st/registry #"spec-tools.core-test\$my-map.*") (map first) set)]

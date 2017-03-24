@@ -275,7 +275,7 @@
            `(do
               ~@(for [[k v] defs]
                   `(s/def ~k ~v))
-              (s/keys ~@margs)))))))
+              (spec (s/keys ~@margs))))))))
 
 #?(:clj
    (defn- coll-spec-fn [env n m]

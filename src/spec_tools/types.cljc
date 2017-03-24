@@ -31,6 +31,22 @@
     (resolve-type x)
     (throw (ex-info (error-message x) {:spec x}))))
 
+(defn- all-types []
+  {:long
+   :double
+   :boolean
+   :string
+   :keyword
+   :symbol
+   :uuid
+   :uri
+   :bigdec
+   :date
+   :ratio
+   :map
+   :set
+   :vector})
+
 (defmethod resolve-type 'clojure.core/any? [_] nil)
 (defmethod resolve-type 'clojure.core/some? [_] nil)
 (defmethod resolve-type 'clojure.core/number? [_] :double)
