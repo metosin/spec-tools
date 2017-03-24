@@ -244,8 +244,17 @@
                               {:id 2, :description "kebab"}]
                      :description "Liisa is a valid boss"
                      :address {:street "Amurinkatu 2"
-                               :zip "33210"}}]
-          (is (true? (s/valid? st-map value)))))))
+                               :zip "33210"}}
+              bloated (-> value
+                          (assoc-in [:KIKKA] true)
+                          (assoc-in [:address :KIKKA] true))]
+
+          (testing "data can be validated"
+            (is (true? (s/valid? st-map value))))
+
+          (testing "map-conforming works recursively"
+            (is (= value
+                   (st/conform st-map bloated {:map conform/strip-extra-keys}))))))))
 
   (testing "top-level vector"
     (is (true?
