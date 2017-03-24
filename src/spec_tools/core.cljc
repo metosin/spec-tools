@@ -120,19 +120,25 @@
         (if (s/spec? pred)
           (s/conform pred x)
           ;; invalid
-          '::s/invalid))))
+          invalid))))
   (unform* [_ x]
     x)
   (explain* [this path via in x]
-    (when (= ::s/invalid (if (pred x) x ::s/invalid))
-      [(merge
-         {:path path
+    (let [problems (if (s/spec? pred)
+                     (s/explain* pred path via in x)
+                     (when (= invalid (if (and (fn? pred) (pred x)) x invalid))
+                       [{:path path
           :pred (s/abbrev (:spec/form this))
           :val x
           :via via
-          :in in}
-         (if-let [reason (:spec/reason this)]
-           {:reason reason}))]))
+                         :in in}]))
+          spec-reason (:spec/reason this)
+          with-reason (fn [{:keys [reason] :as problem}]
+                        (cond-> problem
+                                (and spec-reason (not reason))
+                                (assoc :reason spec-reason)))]
+      (if problems
+        (map with-reason problems))))
   (gen* [this _ _ _]
     (if-let [gen (:spec/gen this)]
       (gen)
