@@ -148,8 +148,8 @@
     x)
   (explain* [this path via in x]
     (let [problems (if (s/spec? pred)
-                     (s/explain* pred path via in x)
-                     (when (= invalid (if (and (fn? pred) (pred x)) x invalid))
+                     (s/explain* pred path via in (s/conform* this x))
+                     (when (= invalid (if (and (fn? pred) (pred (s/conform* this x))) x invalid))
                        [{:path path
                          :pred (s/abbrev (:spec/form this))
                          :val x
