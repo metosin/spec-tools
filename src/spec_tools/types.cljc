@@ -102,3 +102,4 @@
       (set? into) :set
       :else :vector)))
 
+(defmethod resolve-type 'clojure.spec/and [x] nil)
