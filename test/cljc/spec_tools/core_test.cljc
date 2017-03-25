@@ -145,7 +145,7 @@
 (deftest explain-tests
   (testing "without conforming"
     (is (= st/invalid (st/conform st/int? "12")))
-    (is (= {::s/problems [{:path [], :pred int?, :val "12", :via [], :in []}]}
+    (is (= {::s/problems [{:path [], :pred 'int?, :val "12", :via [], :in []}]}
            (st/explain-data st/int? "12"))))
   (testing "with conforming"
     (is (= 12 (st/conform st/int? "12" st/string-conformers)))
