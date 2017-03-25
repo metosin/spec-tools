@@ -24,6 +24,16 @@
       (is (= #{::age ::lat :uuid :truth}
              (:spec/keys spec))))))
 
+(deftest spec?-test
+  (testing "spec"
+    (let [spec (s/spec integer?)]
+      (is (= spec (s/spec? spec)))
+      (is (nil? (st/spec? spec)))))
+  (testing "Spec"
+    (let [spec (st/spec integer?)]
+      (is (= spec (s/spec? spec)))
+      (is (= spec (st/spec? spec))))))
+
 (deftest specs-test
   (let [my-integer? (st/spec integer?)]
 

@@ -184,6 +184,8 @@
                       (if (:spec/type t) (select-keys t [:spec/type]))
                       (extra-spec-map t))))))
 
+(defn spec? [x]
+  (if (instance? Spec x) x))
 
 ;; TODO: use http://dev.clojure.org/jira/browse/CLJ-2112
 (defn- extract-extra-info [form]
