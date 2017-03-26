@@ -266,21 +266,23 @@
 
 #?(:clj (declare ^:private coll-spec-fn))
 
-(defn- -vector [env n v]
-  (if-not (= 1 (count v))
-    (throw
-      (ex-info
-        "only single maps allowed in nested vectors"
-        {:k n :v v}))
-    `(spec (s/coll-of ~(coll-spec-fn env n (first v)) :into []))))
+#?(:clj
+   (defn- -vector [env n v]
+     (if-not (= 1 (count v))
+       (throw
+         (ex-info
+           "only single maps allowed in nested vectors"
+           {:k n :v v}))
+       `(spec (s/coll-of ~(coll-spec-fn env n (first v)) :into [])))))
 
-(defn- -set [env n v]
-  (if-not (= 1 (count v))
-    (throw
-      (ex-info
-        "only single maps allowed in nested sets"
-        {:k n :v v}))
-    `(spec (s/coll-of ~(coll-spec-fn env n (first v)) :into #{}))))
+#?(:clj
+   (defn- -set [env n v]
+     (if-not (= 1 (count v))
+       (throw
+         (ex-info
+           "only single maps allowed in nested sets"
+           {:k n :v v}))
+       `(spec (s/coll-of ~(coll-spec-fn env n (first v)) :into #{})))))
 
 #?(:clj
    (defn- -map [env n m]
