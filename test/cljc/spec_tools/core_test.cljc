@@ -43,7 +43,7 @@
 
     (testing "wrapped spec does not work as a predicate"
       (let [my-spec (st/spec (s/keys :req [::age]))]
-        (is (thrown? RuntimeException (my-spec {::age 20})))))
+        (is (thrown? #?(:clj Exception, :cljs js/Error) (my-spec {::age 20})))))
 
     (testing "adding info"
       (let [info {:description "desc"
@@ -144,10 +144,10 @@
   (testing "suceess"
     (is (= 12 (st/conform! ::age "12" st/string-conformers))))
   (testing "failing"
-    (is (thrown? RuntimeException (st/conform! ::age "12")))
+    (is (thrown? #?(:clj Exception, :cljs js/Error) (st/conform! ::age "12")))
     (try
       (st/conform! ::age "12")
-      (catch Exception e
+      (catch #?(:clj Exception, :cljs js/Error) e
         (let [data (ex-data e)]
           (is (= {:type :spec/problems
                   :clojure.spec/problems [{:path [], :pred 'integer?, :val "12", :via [::age], :in []}]
