@@ -248,12 +248,12 @@
                               :zip string?}})
           s-keys (st/spec
                    (s/keys
-                   :req [::id ::age]
-                   :req-un [:spec-tools.core-test$my-map/boss
-                            :spec-tools.core-test$my-map/name
-                            :spec-tools.core-test$my-map/languages
-                            :spec-tools.core-test$my-map/orders
-                            :spec-tools.core-test$my-map/address]
+                     :req [::id ::age]
+                     :req-un [:spec-tools.core-test$my-map/boss
+                              :spec-tools.core-test$my-map/name
+                              :spec-tools.core-test$my-map/languages
+                              :spec-tools.core-test$my-map/orders
+                              :spec-tools.core-test$my-map/address]
                      :opt-un [:spec-tools.core-test$my-map/description]))]
 
       (testing "normal keys-spec-spec is generated"
