@@ -87,29 +87,26 @@
      :nil conform/string->nil
      :string nil}))
 
-(defn conform
-  ([spec value]
-   (binding [*conformers* nil]
-     (s/conform spec value)))
-  ([spec value conformers]
-   (binding [*conformers* conformers]
-     (s/conform spec value))))
-
 (defn explain
   ([spec value]
-   (binding [*conformers* nil]
-     (s/explain spec value)))
+   (explain spec value nil))
   ([spec value conformers]
    (binding [*conformers* conformers]
      (s/explain spec value))))
 
 (defn explain-data
   ([spec value]
-   (binding [*conformers* nil]
-     (s/explain-data spec value)))
+   (explain-data spec value nil))
   ([spec value conformers]
    (binding [*conformers* conformers]
      (s/explain-data spec value))))
+
+(defn conform
+  ([spec value]
+   (conform spec value nil))
+  ([spec value conformers]
+   (binding [*conformers* conformers]
+     (s/conform spec value))))
 
 ;;
 ;; Spec Record
