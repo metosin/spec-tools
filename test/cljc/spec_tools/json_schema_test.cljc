@@ -91,7 +91,7 @@
            "age" {:type "integer"}  ; not supporting > yet
            "name" {:type "string"}
            "likes" {:type "object" :additionalProperties {:type "boolean"}}
-           "languages" {:type "array", :items {:type "string"}}
+           "languages" {:type "array", :items {:type "string"}, :uniqueItems true}
            "address" {:type "object"
                       :required ["street" "zip"]
                       :properties {"street" {:type "string"}

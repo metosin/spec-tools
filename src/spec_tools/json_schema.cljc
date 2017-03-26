@@ -1,7 +1,8 @@
 (ns spec-tools.json-schema
   "Tools for converting specs into JSON Schemata."
   (:require [clojure.spec :as s]
-            [spec-tools.visitor :as visitor :refer [visit]]))
+            [spec-tools.visitor :as visitor :refer [visit]]
+            [spec-tools.types :as types]))
 
 (defn- only-entry? [key a-map] (= [key] (keys a-map)))
 
@@ -19,7 +20,10 @@
   (first coll))
 
 (defn- spec-dispatch [dispatch spec children] dispatch)
+
 (defmulti accept-spec spec-dispatch :default ::default)
+
+(defn to-json [spec] (visit spec accept-spec))
 
 ;;
 ;; predicate list taken from https://github.com/clojure/clojure/blob/master/src/clj/clojure/spec/gen.clj
@@ -210,8 +214,21 @@
     {:type "array" :items (unwrap children)}))
 
 ; every-ks
-; coll-of
+
+; TODO: coll-of
+(defmethod accept-spec 'clojure.spec/coll-of [dispatch spec children]
+  (let [form (s/form spec)
+        pred (second form)
+        type (types/resolve-type form)]
+    (case type
+      :map {:type "object", :additionalProperties (to-json pred)}
+      :set {:type "array", :uniqueItems true, :items (to-json pred)}
+      :vector {:type "array", :items (to-json pred)})))
+
 ; map-of
+(defmethod accept-spec 'clojure.spec/map-of [dispatch spec children]
+  (let [[_ _ v] (s/form spec)]
+    {:type "object" :additionalProperties (to-json v)}))
 
 ; *
 (defmethod accept-spec 'clojure.spec/* [dispatch spec children]
@@ -244,5 +261,3 @@
 
 (defmethod accept-spec ::default [dispatch spec children]
   {})
-
-(defn to-json [spec] (visit spec accept-spec))
