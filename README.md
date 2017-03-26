@@ -71,7 +71,7 @@ For most clojure core predicates, the `:spec/type` can be resolved automatically
 The `:spec/type` enabled the [dynamic conforming](#dynamic-conforming), making Specs great for
 runtime system border validation.
 
-### Out-of-the-box Spec Records
+### Predefined Spec Records
 
 Most/all `clojure.core` predicates have a Spec-wrapped version in the `spec-tools.core`:
 * `any?`, `some?`, `number?`, `integer?`, `int?`, `pos-int?`, `neg-int?`, `nat-int?`,
@@ -111,7 +111,7 @@ Can be added via `:spec/reason`:
 
 To use specs over different wire formats (like JSON), spec values need to conformed selectively
 at runtime. Spec Records always have an dynamic conformer attached to it. By default, it does
-nothing extra. Binding a dynamic var `spec-tools.core/*conformers*` with a function of
+nothing. Binding a dynamic var `spec-tools.core/*conformers*` with a function of
 `spec/type => spec-conformer` will cause the Spec to be conformed at runtime with the selected
 spec-conformer.
 
@@ -294,7 +294,7 @@ Status: waiting for next (current: alpha-14) `clojure.spec` version for the form
 ;               "name" {:type "string"},
 ;               "likes" {:type "object"
 ;                        :additionalProperties {:type "boolean"}},
-;               "languages" {:type "array", :items {:type "string"}},
+;               "languages" {:type "array", :items {:type "string"}, :uniqueItems true},
 ;               "address" {:type "object",
 ;                          :properties {"street" {:type "string"}
 ;                                       "zip" {:type "string"}},
