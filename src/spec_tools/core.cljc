@@ -108,6 +108,24 @@
    (binding [*conformers* conformers]
      (s/conform spec value))))
 
+(defn conform!
+  ([spec value]
+   (conform! spec value nil))
+  ([spec value conformers]
+   (binding [*conformers* conformers]
+     (let [conformed (s/conform spec value)]
+       (if-not (= conformed invalid)
+         conformed
+         (let [problems (s/explain-data spec value)]
+           (throw
+             (ex-info
+               "Spec conform error"
+               (merge
+                 problems
+                 {:type :spec/problems
+                  :spec spec
+                  :value value})))))))))
+
 ;;
 ;; Spec Record
 ;;

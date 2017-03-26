@@ -140,7 +140,20 @@
         (is (= #inst "2014-02-18T18:25:37Z"
                (conform ::birthdate "2014-02-18T18:25:37Z")))))))
 
-(st/explain-data st/int? "12")
+(deftest conform!-test
+  (testing "suceess"
+    (is (= 12 (st/conform! ::age "12" st/string-conformers))))
+  (testing "failing"
+    (is (thrown? RuntimeException (st/conform! ::age "12")))
+    (try
+      (st/conform! ::age "12")
+      (catch Exception e
+        (let [data (ex-data e)]
+          (is (= {:type :spec/problems
+                  :clojure.spec/problems [{:path [], :pred 'integer?, :val "12", :via [::age], :in []}]
+                  :spec :spec-tools.core-test/age
+                  :value "12"}
+                 data)))))))
 
 (deftest explain-tests
   (testing "without conforming"
