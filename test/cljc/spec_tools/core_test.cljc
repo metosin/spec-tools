@@ -100,14 +100,14 @@
 (deftest spec-tools-conform-test
   (testing "in default mode"
     (testing "nothing is conformed"
-      (is (= st/invalid (st/conform ::age "12")))
-      (is (= st/invalid (st/conform ::over-a-million "1234567")))
-      (is (= st/invalid (st/conform ::lat "23.1234")))
-      (is (= st/invalid (st/conform ::language "clojure")))
-      (is (= st/invalid (st/conform ::truth "false")))
-      (is (= st/invalid (st/conform ::uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e")))
-      (is (= st/invalid (st/conform ::birthdate "2014-02-18T18:25:37.456Z")))
-      (is (= st/invalid (st/conform ::birthdate "2014-02-18T18:25:37Z")))))
+      (is (= st/+invalid+ (st/conform ::age "12")))
+      (is (= st/+invalid+ (st/conform ::over-a-million "1234567")))
+      (is (= st/+invalid+ (st/conform ::lat "23.1234")))
+      (is (= st/+invalid+ (st/conform ::language "clojure")))
+      (is (= st/+invalid+ (st/conform ::truth "false")))
+      (is (= st/+invalid+ (st/conform ::uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e")))
+      (is (= st/+invalid+ (st/conform ::birthdate "2014-02-18T18:25:37.456Z")))
+      (is (= st/+invalid+ (st/conform ::birthdate "2014-02-18T18:25:37Z")))))
 
   (testing "string-conformers"
     (let [conform #(st/conform %1 %2 st/string-conformers)]
@@ -127,10 +127,10 @@
   (testing "json-conformers"
     (let [conform #(st/conform %1 %2 st/json-conformers)]
       (testing "some are not conformed"
-        (is (= st/invalid (conform ::age "12")))
-        (is (= st/invalid (conform ::over-a-million "1234567")))
-        (is (= st/invalid (conform ::lat "23.1234")))
-        (is (= st/invalid (conform ::truth "false"))))
+        (is (= st/+invalid+ (conform ::age "12")))
+        (is (= st/+invalid+ (conform ::over-a-million "1234567")))
+        (is (= st/+invalid+ (conform ::lat "23.1234")))
+        (is (= st/+invalid+ (conform ::truth "false"))))
       (testing "some are conformed"
         (is (= :clojure (conform ::language "clojure")))
         (is (= #uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e"
@@ -150,14 +150,14 @@
       (catch #?(:clj Exception, :cljs js/Error) e
         (let [data (ex-data e)]
           (is (= {:type :spec/problems
-                  :clojure.spec/problems [{:path [], :pred 'integer?, :val "12", :via [::age], :in []}]
+                  :problems [{:path [], :pred 'integer?, :val "12", :via [::age], :in []}]
                   :spec :spec-tools.core-test/age
                   :value "12"}
                  data)))))))
 
 (deftest explain-tests
   (testing "without conforming"
-    (is (= st/invalid (st/conform st/int? "12")))
+    (is (= st/+invalid+ (st/conform st/int? "12")))
     (is (= {::s/problems [{:path [], :pred 'int?, :val "12", :via [], :in []}]}
            (st/explain-data st/int? "12"))))
   (testing "with conforming"

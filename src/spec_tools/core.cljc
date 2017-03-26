@@ -60,7 +60,8 @@
   #?(:clj  (clojure.edn/read-string s)
      :cljs (cljs.reader/read-string s)))
 
-(def invalid '::s/invalid)
+(def +invalid+ '::s/invalid)
+(def +problems+ #?(:clj :clojure.spec/problems, :cljs :cljs.spec/problems))
 
 ;;
 ;; Dynamic conforming
@@ -114,17 +115,16 @@
   ([spec value conformers]
    (binding [*conformers* conformers]
      (let [conformed (s/conform spec value)]
-       (if-not (= conformed invalid)
+       (if-not (= conformed +invalid+)
          conformed
          (let [problems (s/explain-data spec value)]
            (throw
              (ex-info
                "Spec conform error"
-               (merge
-                 problems
-                 {:type :spec/problems
-                  :spec spec
-                  :value value})))))))))
+               {:type :spec/problems
+                :problems (+problems+ problems)
+                :spec spec
+                :value value}))))))))
 
 ;;
 ;; Spec Record
@@ -158,13 +158,13 @@
         (if (s/spec? pred)
           (s/conform pred x)
           ;; invalid
-          invalid))))
+          +invalid+))))
   (unform* [_ x]
     x)
   (explain* [this path via in x]
     (let [problems (if (s/spec? pred)
                      (s/explain* pred path via in (s/conform* this x))
-                     (when (= invalid (if (and (fn? pred) (pred (s/conform* this x))) x invalid))
+                     (when (= +invalid+ (if (and (fn? pred) (pred (s/conform* this x))) x +invalid+))
                        [{:path path
                          :pred (s/abbrev (:spec/form this))
                          :val x
