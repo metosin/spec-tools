@@ -225,10 +225,16 @@
                (:spec/type m))]
     (map->Spec (merge m info {:spec/form form, :spec/type type}))))
 
+(defn- extract-pred-and-info [x]
+  (if (clojure.core/map? x)
+    [(:pred x) (dissoc x :pred)]
+    [x {}]))
+
 #?(:clj
    (defmacro spec
-     ([pred]
-      `(spec ~pred {}))
+     ([pred-or-info]
+      (let [[pred info] (extract-pred-and-info pred-or-info)]
+        `(spec ~pred ~info)))
      ([pred info]
       (if (impl/in-cljs? &env)
         `(let [info# ~info
@@ -251,8 +257,12 @@
                 :pred ~pred})))))))
 
 #?(:clj
-   (defmacro doc [pred info]
-     `(spec ~pred (merge ~info {:spec/type nil}))))
+   (defmacro doc
+     ([pred-or-info]
+      (let [[pred info] (extract-pred-and-info pred-or-info)]
+        `(doc ~pred ~info)))
+     ([pred info]
+      `(spec ~pred (merge ~info {:spec/type nil})))))
 
 ;;
 ;; Map Spec

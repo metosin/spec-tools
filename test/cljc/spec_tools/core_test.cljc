@@ -37,6 +37,10 @@
 (deftest specs-test
   (let [my-integer? (st/spec integer?)]
 
+    (testing "creation"
+      (is (= (st/spec integer?)
+             (st/spec {:pred integer?}))))
+
     (testing "wrapped predicate work as a predicate"
       (is (true? (my-integer? 1)))
       (is (false? (my-integer? "1"))))
@@ -75,6 +79,12 @@
         (is (seq? (s/exercise my-integer?)))))))
 
 (deftest doc-test
+
+  (testing "creation"
+    (is (= (st/doc integer? {:description "kikka"})
+           (st/doc {:pred integer?, :description "kikka"})
+           (st/spec {:pred integer?, :description "kikka", :spec/type nil}))))
+
   (testing "just docs, #12"
     (let [spec (st/doc integer? {:description "kikka"})]
       (is (= "kikka" (:description spec)))
