@@ -208,14 +208,20 @@
 
 ; every
 (defmethod accept-spec 'clojure.spec/every [dispatch spec children]
-  ;; Special case handling of s/map-of, which expands to s/every
-  (if (is-map-of? spec)
-    {:type "object" :additionalProperties (get-in (unwrap children) [:items 1])}
-    {:type "array" :items (unwrap children)}))
+  (let [form (s/form spec)
+        pred (second form)
+        type (types/resolve-type form)]
+    ;; Special case handling of s/map-of, which expands to s/every
+    (if (is-map-of? spec)
+      {:type "object" :additionalProperties (get-in (unwrap children) [:items 1])}
+      (case type
+        :map {:type "object", :additionalProperties (to-json pred)}
+        :set {:type "array", :uniqueItems true, :items (to-json pred)}
+        :vector {:type "array", :items (to-json pred)}))))
 
 ; every-ks
 
-; TODO: coll-of
+; coll-of
 (defmethod accept-spec 'clojure.spec/coll-of [dispatch spec children]
   (let [form (s/form spec)
         pred (second form)
