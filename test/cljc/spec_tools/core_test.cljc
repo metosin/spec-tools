@@ -2,17 +2,18 @@
   (:require [clojure.test :refer [deftest testing is]]
             [clojure.spec :as s]
             [spec-tools.core :as st]
+            [spec-tools.specs :as sts]
             [spec-tools.conform :as stc]
             [clojure.string :as str]
             [spec-tools.conform :as conform]))
 
-(s/def ::age (s/and st/integer? #(> % 10)))
-(s/def ::over-a-million (s/and st/int? #(> % 1000000)))
-(s/def ::lat st/double?)
-(s/def ::language (s/and st/keyword? #{:clojure :clojurescript}))
-(s/def ::truth st/boolean?)
-(s/def ::uuid st/uuid?)
-(s/def ::birthdate st/inst?)
+(s/def ::age (s/and sts/integer? #(> % 10)))
+(s/def ::over-a-million (s/and sts/int? #(> % 1000000)))
+(s/def ::lat sts/double?)
+(s/def ::language (s/and sts/keyword? #{:clojure :clojurescript}))
+(s/def ::truth sts/boolean?)
+(s/def ::uuid sts/uuid?)
+(s/def ::birthdate sts/inst?)
 
 (deftest extract-extra-info-test
   (testing "keys are extracted from keys-specs"
@@ -170,13 +171,13 @@
 
 (deftest explain-tests
   (testing "without conforming"
-    (is (= st/+invalid+ (st/conform st/int? "12")))
+    (is (= st/+invalid+ (st/conform sts/int? "12")))
     (is (= {::s/problems [{:path [], :pred 'int?, :val "12", :via [], :in []}]}
-           (st/explain-data st/int? "12"))))
+           (st/explain-data sts/int? "12"))))
   (testing "with conforming"
-    (is (= 12 (st/conform st/int? "12" stc/string-conformers)))
+    (is (= 12 (st/conform sts/int? "12" stc/string-conformers)))
     (is (= nil
-           (st/explain-data st/int? "12" stc/string-conformers)))))
+           (st/explain-data sts/int? "12" stc/string-conformers)))))
 
 (s/def ::height integer?)
 (s/def ::weight integer?)
@@ -241,9 +242,9 @@
                                      str/reverse
                                      keyword))))]
     (testing "string-conformers"
-      (is (= :kikka (st/conform st/keyword? "kikka" stc/string-conformers))))
+      (is (= :kikka (st/conform sts/keyword? "kikka" stc/string-conformers))))
     (testing "my-conformers"
-      (is (= :AKKIK (st/conform st/keyword? "kikka" my-conformations))))))
+      (is (= :AKKIK (st/conform sts/keyword? "kikka" my-conformations))))))
 
 (deftest map-test
   (testing "nested map spec"
@@ -251,7 +252,7 @@
                    ::my-map
                    {::id integer?
                     ::age ::age
-                    :boss st/boolean?
+                    :boss sts/boolean?
                     (st/req :name) string?
                     (st/opt :description) string?
                     :languages #{keyword?}

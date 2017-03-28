@@ -73,7 +73,7 @@ runtime system border validation.
 
 ### Predefined Spec Records
 
-Most/all `clojure.core` predicates have a Spec-wrapped version in the `spec-tools.core`:
+Most/all `clojure.core` predicates have a Spec-wrapped version in the `spec-tools.specs`:
 * `any?`, `some?`, `number?`, `integer?`, `int?`, `pos-int?`, `neg-int?`, `nat-int?`,
 `float?`, `double?`, `boolean?`, `string?`, `ident?`, `simple-ident?`, `qualified-ident?`,
 `keyword?`, `simple-keyword?`, `qualified-keyword?`, `symbol?`, `simple-symbol?`,
@@ -82,14 +82,16 @@ Most/all `clojure.core` predicates have a Spec-wrapped version in the `spec-tool
 `rational?`, `coll?`, `empty?`, `associative?`, `sequential?`, `ratio?` and `bytes?`.
 
 ```clj
-st/integer?
+(require '[spec-tools.specs :as sts])
+
+sts/integer?
 ; #Spec{:spec/type :long
 ;       :pred clojure.core/integer?}
 
 (st/integer? 1)
 ; true
 
-(assoc st/integer? :description "it's an int")
+(assoc sts/integer? :description "it's an int")
 ; #Spec{:spec/type :long
 ;       :pred clojure.core/integer?
 ;       :description "It's a int"}
@@ -135,7 +137,7 @@ For maps, there are also special spec-matchers:
 ```clj
 (require '[spec-tools.conform :as stc])
 
-(s/def ::age (s/and st/integer? #(> % 18)))
+(s/def ::age (s/and sts/integer? #(> % 18)))
 
 ;; no conforming
 (s/conform ::age "20")
@@ -156,7 +158,7 @@ For maps, there are also special spec-matchers:
 
 ```clj
 (s/def ::name string?)
-(s/def ::birthdate st/inst?)
+(s/def ::birthdate sts/inst?)
 
 (s/def ::languages
   (s/coll-of

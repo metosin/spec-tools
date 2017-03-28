@@ -1,15 +1,7 @@
 (ns spec-tools.core
-  (:refer-clojure :exclude [any? some? number? integer? int? pos-int? neg-int? nat-int?
-                            float? double? boolean? string? ident? simple-ident? qualified-ident?
-                            keyword? simple-keyword? qualified-keyword? symbol? simple-symbol?
-                            qualified-symbol? uuid? uri? bigdec? inst? seqable? indexed?
-                            map? vector? list? seq? char? set? nil? false? true? zero?
-                            rational? coll? empty? associative? sequential? ratio? bytes?
-                            #?@(:cljs [Inst Keyword UUID])])
   #?(:cljs (:require-macros [spec-tools.core :refer [spec coll-spec]]))
   (:require [spec-tools.impl :as impl]
             [spec-tools.types :as types]
-            [spec-tools.conform :as conform]
             [clojure.spec :as s]
     #?@(:clj  [
             [clojure.spec.gen :as gen]
@@ -42,7 +34,7 @@
 (defn ^:skip-wiki set-of [value]
   (s/coll-of
     value
-    :kind clojure.core/set?))
+    :kind set?))
 
 (defn ^:skip-wiki enum [& values]
   (s/spec (set values)))
@@ -186,7 +178,7 @@
 ;; TODO: use http://dev.clojure.org/jira/browse/CLJ-2112
 (defn- extract-extra-info [form]
   (if (and
-        (clojure.core/seq? form)
+        (seq? form)
         (= 'clojure.spec/keys (impl/clojure-core-symbol-or-any (first form))))
     (if-let [m (some->> form
                         (rest)
@@ -207,7 +199,7 @@
     (map->Spec (merge m info {:spec/form form, :spec/type type}))))
 
 (defn- extract-pred-and-info [x]
-  (if (clojure.core/map? x)
+  (if (map? x)
     [(:pred x) (dissoc x :pred)]
     [x {}]))
 
@@ -219,18 +211,18 @@
      ([pred info]
       (if (impl/in-cljs? &env)
         `(let [info# ~info
-               form# (if (clojure.core/symbol? '~pred)
-                       '~(or (and (clojure.core/symbol? pred) (some->> pred (impl/cljs-resolve &env) impl/->sym)) pred))]
-           (assert (clojure.core/map? info#) (str "spec info should be a map, was: " info#))
+               form# (if (symbol? '~pred)
+                       '~(or (and (symbol? pred) (some->> pred (impl/cljs-resolve &env) impl/->sym)) pred))]
+           (assert (map? info#) (str "spec info should be a map, was: " info#))
            (create-spec
              (merge
                ~info
                {:spec/form form#
                 :pred ~pred})))
         `(let [info# ~info
-               form# (if (clojure.core/symbol? '~pred)
-                       '~(or (and (clojure.core/symbol? pred) (some->> pred resolve impl/->sym)) pred))]
-           (assert (clojure.core/map? info#) (str "spec info should be a map, was: " info#))
+               form# (if (symbol? '~pred)
+                       '~(or (and (symbol? pred) (some->> pred resolve impl/->sym)) pred))]
+           (assert (map? info#) (str "spec info should be a map, was: " info#))
            (create-spec
              (merge
                ~info
@@ -286,8 +278,8 @@
                               (let [k (first (keys m))]
                                 (and
                                   (not
-                                    (or (clojure.core/keyword? k)
-                                        (and (clojure.core/seq? k)
+                                    (or (keyword? k)
+                                        (and (seq? k)
                                              (let [resolved (resolve (first k))]
                                                (#{resolved-opt resolved-req} resolved)))))
                                   k)))]
@@ -295,14 +287,14 @@
          ;; keyword keys
          (let [m (reduce-kv
                    (fn [acc k v]
-                     (let [[req? kv] (if (clojure.core/seq? k) [(not= resolved-opt (resolve (first k))) (second k)] [true k])
+                     (let [[req? kv] (if (seq? k) [(not= resolved-opt (resolve (first k))) (second k)] [true k])
                            k1 (if req? "req" "opt")
-                           k2 (if-not (clojure.core/qualified-keyword? kv) "-un")
+                           k2 (if-not (qualified-keyword? kv) "-un")
                            ak (keyword (str k1 k2))
-                           [k' v'] (if (clojure.core/qualified-keyword? kv)
+                           [k' v'] (if (qualified-keyword? kv)
                                      [kv (if (not= kv v) v)]
                                      (let [k' (keyword (str (str (namespace n) "$" (name n)) "/" (name kv)))]
-                                       [k' (if (or (clojure.core/map? v) (clojure.core/vector? v) (clojure.core/set? v))
+                                       [k' (if (or (map? v) (vector? v) (set? v))
                                              (coll-spec-fn env k' v) v)]))]
                        (-> acc
                            (update ak (fnil conj []) k')
@@ -319,61 +311,12 @@
 #?(:clj
    (defn- coll-spec-fn [env n m]
      (if-let [f (cond
-                  (clojure.core/map? m) -map
-                  (clojure.core/vector? m) -vector
-                  (clojure.core/set? m) -set)]
+                  (map? m) -map
+                  (vector? m) -vector
+                  (set? m) -set)]
        (f env n m)
        `~m)))
 
 #?(:clj
    (defmacro coll-spec [n m]
      (coll-spec-fn &env n m)))
-
-;;
-;; clojure.core predicates as Specs
-;;
-
-(def any? (spec clojure.core/any?))
-(def some? (spec clojure.core/some?))
-(def number? (spec clojure.core/number?))
-(def integer? (spec clojure.core/integer?))
-(def int? (spec clojure.core/int?))
-(def pos-int? (spec clojure.core/pos-int?))
-(def neg-int? (spec clojure.core/neg-int?))
-(def nat-int? (spec clojure.core/nat-int?))
-(def float? (spec clojure.core/float?))
-(def double? (spec clojure.core/double?))
-(def boolean? (spec clojure.core/boolean?))
-(def string? (spec clojure.core/string?))
-(def ident? (spec clojure.core/ident?))
-(def simple-ident? (spec clojure.core/simple-ident?))
-(def qualified-ident? (spec clojure.core/qualified-ident?))
-(def keyword? (spec clojure.core/keyword?))
-(def simple-keyword? (spec clojure.core/simple-keyword?))
-(def qualified-keyword? (spec clojure.core/qualified-keyword?))
-(def symbol? (spec clojure.core/symbol?))
-(def simple-symbol? (spec clojure.core/simple-symbol?))
-(def qualified-symbol? (spec clojure.core/qualified-symbol?))
-(def uuid? (spec clojure.core/uuid?))
-#?(:clj (def uri? (spec clojure.core/uri?)))
-#?(:clj (def bigdec? (spec clojure.core/bigdec?)))
-(def inst? (spec clojure.core/inst?))
-(def seqable? (spec clojure.core/seqable?))
-(def indexed? (spec clojure.core/indexed?))
-(def map? (spec clojure.core/map?))
-(def vector? (spec clojure.core/vector?))
-(def list? (spec clojure.core/list?))
-(def seq? (spec clojure.core/seq?))
-(def char? (spec clojure.core/char?))
-(def set? (spec clojure.core/set?))
-(def nil? (spec clojure.core/nil?))
-(def false? (spec clojure.core/false?))
-(def true? (spec clojure.core/true?))
-(def zero? (spec clojure.core/zero?))
-#?(:clj (def rational? (spec clojure.core/rational?)))
-(def coll? (spec clojure.core/coll?))
-(def empty? (spec clojure.core/empty?))
-(def associative? (spec clojure.core/associative?))
-(def sequential? (spec clojure.core/sequential?))
-#?(:clj (def ratio? (spec clojure.core/ratio?)))
-#?(:clj (def bytes? (spec clojure.core/bytes?)))
