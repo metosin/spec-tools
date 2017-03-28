@@ -215,26 +215,22 @@
     (if (is-map-of? spec)
       {:type "object" :additionalProperties (get-in (unwrap children) [:items 1])}
       (case type
-        :map {:type "object", :additionalProperties (to-json pred)}
-        :set {:type "array", :uniqueItems true, :items (to-json pred)}
-        :vector {:type "array", :items (to-json pred)}))))
+        :map {:type "object", :additionalProperties (unwrap children)}
+        :set {:type "array", :uniqueItems true, :items (unwrap children)}
+        :vector {:type "array", :items (unwrap children)}))))
 
 ; every-ks
 
 ; coll-of
-(defmethod accept-spec 'clojure.spec/coll-of [dispatch spec children]
-  (let [form (s/form spec)
-        pred (second form)
-        type (types/resolve-type form)]
-    (case type
-      :map {:type "object", :additionalProperties (to-json pred)}
-      :set {:type "array", :uniqueItems true, :items (to-json pred)}
-      :vector {:type "array", :items (to-json pred)})))
-
 ; map-of
-(defmethod accept-spec 'clojure.spec/map-of [dispatch spec children]
-  (let [[_ _ v] (s/form spec)]
-    {:type "object" :additionalProperties (to-json v)}))
+(defmethod accept-spec :map-of [dispatch spec children]
+  {:type "object", :additionalProperties (unwrap children)})
+
+(defmethod accept-spec :set-of [dispatch spec children]
+  {:type "array", :items (unwrap children), :uniqueItems true})
+
+(defmethod accept-spec :vector-of [dispatch spec children]
+  {:type "array", :items (unwrap children)})
 
 ; *
 (defmethod accept-spec 'clojure.spec/* [dispatch spec children]
