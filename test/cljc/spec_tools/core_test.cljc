@@ -24,7 +24,7 @@
                    :req-un [::uuid]
                    :opt-un [::truth]))]
       (is (= #{::age ::lat :uuid :truth}
-             (:spec/keys spec))))))
+             (:keys spec))))))
 
 (deftest spec?-test
   (testing "spec"
@@ -65,16 +65,16 @@
         (is (= ['spec-tools.core/spec
                 #?(:clj  'clojure.core/integer?
                    :cljs 'cljs.core/integer?)
-                {:spec/type :long}] (s/form my-integer?)))
-        (is (= ['spec 'integer? {:spec/type :long}] (s/describe my-integer?))))
+                {:type :long}] (s/form my-integer?)))
+        (is (= ['spec 'integer? {:type :long}] (s/describe my-integer?))))
 
       (testing "type resolution"
         (is (= (st/spec integer?)
-               (st/spec integer? {:spec/type :long}))))
+               (st/spec integer? {:type :long}))))
 
       (testing "serialization"
-        (let [spec (st/spec integer? {:description "cool", :spec/type ::integer})]
-          (is (= `(st/spec integer? {:description "cool", :spec/type ::integer})
+        (let [spec (st/spec integer? {:description "cool", :type ::integer})]
+          (is (= `(st/spec integer? {:description "cool", :type ::integer})
                  (s/form spec)
                  (st/deserialize (st/serialize spec))))))
 
@@ -87,14 +87,14 @@
     (is (= (st/doc integer? {:description "kikka"})
            (st/doc {:pred integer?, :description "kikka"})
            (st/doc integer? {:description "kikka"})
-           (st/spec {:pred integer?, :description "kikka", :spec/type nil}))))
+           (st/spec {:pred integer?, :description "kikka", :type nil}))))
 
   (testing "just docs, #12"
     (let [spec (st/doc integer? {:description "kikka"})]
       (is (= "kikka" (:description spec)))
       (is (true? (s/valid? spec 1)))
       (is (false? (s/valid? spec "1")))
-      (is (= `(st/spec integer? {:description "kikka", :spec/type nil})
+      (is (= `(st/spec integer? {:description "kikka", :type nil})
              (st/deserialize (st/serialize spec))
              (s/form spec))))))
 
@@ -108,8 +108,8 @@
     (testing "explain-data with reason"
       (is (= #?(:clj  #:clojure.spec{:problems [(assoc expected-problem :reason "positive")]}
                 :cljs #:cljs.spec{:problems [(assoc expected-problem :reason "positive")]})
-             (st/explain-data (st/spec pos-int? {:spec/reason "positive"}) -1)
-             (s/explain-data (st/spec pos-int? {:spec/reason "positive"}) -1))))))
+             (st/explain-data (st/spec pos-int? {:reason "positive"}) -1)
+             (s/explain-data (st/spec pos-int? {:reason "positive"}) -1))))))
 
 (deftest spec-tools-conform-test
   (testing "in default mode"
@@ -163,7 +163,7 @@
       (st/conform! ::age "12")
       (catch #?(:clj Exception, :cljs js/Error) e
         (let [data (ex-data e)]
-          (is (= {:type :spec/problems
+          (is (= {:type ::st/problems
                   :problems [{:path [], :pred 'integer?, :val "12", :via [::age], :in []}]
                   :spec :spec-tools.core-test/age
                   :value "12"}
@@ -197,7 +197,7 @@
       (is (= {:height 200, :weight 80}
              (st/conform ::person person {:map conform/strip-extra-keys}))))))
 
-(s/def ::human (st/spec (s/keys :req-un [::height ::weight]) {:spec/type ::human}))
+(s/def ::human (st/spec (s/keys :req-un [::height ::weight]) {:type ::human}))
 
 (defn bmi [{:keys [height weight]}]
   (let [h (/ height 100)]

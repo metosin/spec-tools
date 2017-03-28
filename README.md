@@ -21,13 +21,13 @@ Clojure Spec is implemented using reified protocols. This makes extending curren
 
 | Key             | Description                                                                         |
 | ----------------|-------------------------------------------------------------------------------------|
-| `:spec/type`    | Type hint of the Spec, mostly auto-resolved. Used in runtime conformation           |
-| `:spec/reason`  | Value is added to `s/explain-data` problems under key `:reason`                     |
-| `:spec/gen`     | Generator function for the Spec (set via `s/with-gen`)                              |
-| `:spec/keys`    | Set of map keys that the spec defines. Extracted from `s/keys` Specs.               |
-| `:spec/form`    | The underlying spec form.                                                              |
 | `:pred`         | The underlying spec predicate.                                                      |
+| `:form`    | The underlying spec form.                                                              |
+| `:type`    | Type hint of the Spec, mostly auto-resolved. Used in runtime conformation           |
 | `:name`         | Name of the spec. Contributes to (openapi-)docs                                     |
+| `:gen`     | Generator function for the Spec (set via `s/with-gen`)                              |
+| `:keys`    | Set of map keys that the spec defines. Extracted from `s/keys` Specs.               |
+| `:reason`  | Value is added to `s/explain-data` problems under key `:reason`                     |
 | `:description`  | Description of the spec. Contributes to (openapi-)docs                              |
 | `:openapi/...`  | Extra data that is merged with unqualifed keys into openapi-docs                    |
 
@@ -37,10 +37,10 @@ Clojure Spec is implemented using reified protocols. This makes extending curren
 (require '[clojure.spec :as s])
 (require '[spec-tools.core :as st])
 
-(def my-integer? (st/spec integer? {:spec/type :long}))
+(def my-integer? (st/spec integer? {:type :long}))
 
 my-integer?
-; #Spec{:spec/type :long
+; #Spec{:type :long
 ;       :pred clojure.core/integer?}
 
 (my-integer? 1)
@@ -50,25 +50,25 @@ my-integer?
 ; true
 
 (assoc my-integer? :info {:description "It's a int"})
-; #Spec{:spec/type :long
+; #Spec{:type :long
 ;       :pred clojure.core/integer?
 ;       :description "It's a int"}
 
 (eval (s/form (st/spec ::st/long integer? {:description "It's a int"})))
-; #Spec{:spec/type :long
+; #Spec{:type :long
 ;       :pred clojure.core/integer?
 ;       :description "It's a int"}
 ```
 
-For most clojure core predicates, the `:spec/type` can be resolved automatically with a help of the `spec-tools.types/resolve-type` multimethod:
+For most clojure core predicates, the `:type` can be resolved automatically with a help of the `spec-tools.types/resolve-type` multimethod:
 
 ```clj
 (st/spec integer?)
-; #Spec{:spec/type :long
+; #Spec{:type :long
 ;       :pred clojure.core/integer?}
 ```
 
-The `:spec/type` enabled the [dynamic conforming](#dynamic-conforming), making Specs great for
+The `:type` enabled the [dynamic conforming](#dynamic-conforming), making Specs great for
 runtime system border validation.
 
 ### Predefined Spec Records
@@ -85,27 +85,27 @@ Most/all `clojure.core` predicates have a Spec-wrapped version in the `spec-tool
 (require '[spec-tools.specs :as sts])
 
 sts/integer?
-; #Spec{:spec/type :long
+; #Spec{:type :long
 ;       :pred clojure.core/integer?}
 
 (st/integer? 1)
 ; true
 
 (assoc sts/integer? :description "it's an int")
-; #Spec{:spec/type :long
+; #Spec{:type :long
 ;       :pred clojure.core/integer?
 ;       :description "It's a int"}
 ```
 
 ### Custom errors
 
-Can be added via `:spec/reason`:
+Can be added via `:reason`:
 
 ```clj
-(s/explain (st/spec pos-int? {:spec/reason "positive"}) -1)
+(s/explain (st/spec pos-int? {:reason "positive"}) -1)
 ; val: -1 fails predicate: pos-int?,  positive
 
-(s/explain-data (st/spec pos-int? {:spec/reason "positive"}) -1)
+(s/explain-data (st/spec pos-int? {:reason "positive"}) -1)
 ; #:clojure.spec{:problems [{:path [], :pred pos-int?, :val -1, :via [], :in [], :reason "positive"}]}
 ```
 

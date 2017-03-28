@@ -94,7 +94,7 @@
            (throw
              (ex-info
                "Spec conform error"
-               {:type :spec/problems
+               {:type ::problems
                 :problems (+problems+ problems)
                 :spec spec
                 :value value}))))))))
@@ -104,7 +104,7 @@
 ;;
 
 (defn- extra-spec-map [t]
-  (dissoc t :spec/form :pred))
+  (dissoc t :form :pred))
 
 (defn- fail-on-invoke [spec]
   (throw
@@ -113,7 +113,7 @@
         "Can't invoke spec with a non-function predicate: " spec)
       {:spec spec})))
 
-(defrecord Spec [pred]
+(defrecord Spec [pred form type]
   #?@(:clj
       [s/Specize
        (specize* [s] s)
@@ -125,7 +125,7 @@
     (if (and (fn? pred) (pred x))
       x
       ;; there is a dynamic conformer
-      (if-let [conformer (get *conformers* (:spec/type this))]
+      (if-let [conformer (get *conformers* type)]
         (conformer this x)
         ;; spec predicate
         (if (s/spec? pred)
@@ -139,11 +139,11 @@
                      (s/explain* pred path via in (s/conform* this x))
                      (when (= +invalid+ (if (and (fn? pred) (pred (s/conform* this x))) x +invalid+))
                        [{:path path
-                         :pred (s/abbrev (:spec/form this))
+                         :pred (s/abbrev form)
                          :val x
                          :via via
                          :in in}]))
-          spec-reason (:spec/reason this)
+          spec-reason (:reason this)
           with-reason (fn [{:keys [reason] :as problem}]
                         (cond-> problem
                                 (and spec-reason (not reason))
@@ -151,14 +151,14 @@
       (if problems
         (map with-reason problems))))
   (gen* [this _ _ _]
-    (if-let [gen (:spec/gen this)]
+    (if-let [gen (:gen this)]
       (gen)
       (gen/gen-for-pred pred)))
   (with-gen* [this gfn]
-    (assoc this :spec/gen gfn))
+    (assoc this :gen gfn))
   (describe* [this]
     (let [info (extra-spec-map this)]
-      `(spec ~(:spec/form this) ~info)))
+      `(spec ~form ~info)))
   IFn
   #?(:clj  (invoke [this x] (if (fn? pred) (pred x) (fail-on-invoke this)))
      :cljs (-invoke [this x] (if (fn? pred) (pred x) (fail-on-invoke this)))))
@@ -168,8 +168,8 @@
      [^Spec t ^Writer w]
      (.write w (str "#Spec"
                     (merge
-                      (select-keys t [:spec/form])
-                      (if (:spec/type t) (select-keys t [:spec/type]))
+                      (select-keys t [:form])
+                      (if (:type t) (select-keys t [:type]))
                       (extra-spec-map t))))))
 
 (defn spec? [x]
@@ -183,20 +183,20 @@
     (if-let [m (some->> form
                         (rest)
                         (apply hash-map))]
-      {:spec/keys (set
-                    (concat
-                      (:req m)
-                      (:opt m)
-                      (map (comp keyword name) (:req-un m))
-                      (map (comp keyword name) (:opt-un m))))})))
+      {:keys (set
+               (concat
+                 (:req m)
+                 (:opt m)
+                 (map (comp keyword name) (:req-un m))
+                 (map (comp keyword name) (:opt-un m))))})))
 
 (defn create-spec [m]
-  (let [form (or (:spec/form m) (s/form (:pred m)))
+  (let [form (or (:form m) (s/form (:pred m)))
         info (extract-extra-info form)
-        type (if-not (contains? m :spec/type)
+        type (if-not (contains? m :type)
                (types/resolve-type form)
-               (:spec/type m))]
-    (map->Spec (merge m info {:spec/form form, :spec/type type}))))
+               (:type m))]
+    (map->Spec (merge m info {:form form, :type type}))))
 
 (defn- extract-pred-and-info [x]
   (if (map? x)
@@ -217,7 +217,7 @@
            (create-spec
              (merge
                ~info
-               {:spec/form form#
+               {:form form#
                 :pred ~pred})))
         `(let [info# ~info
                form# (if (symbol? '~pred)
@@ -226,7 +226,7 @@
            (create-spec
              (merge
                ~info
-               {:spec/form form#
+               {:form form#
                 :pred ~pred})))))))
 
 #?(:clj
@@ -235,7 +235,7 @@
       (let [[pred info] (extract-pred-and-info pred-or-info)]
         `(doc ~pred ~info)))
      ([pred info]
-      `(spec ~pred (merge ~info {:spec/type nil})))))
+      `(spec ~pred (merge ~info {:type nil})))))
 
 ;;
 ;; Map Spec
