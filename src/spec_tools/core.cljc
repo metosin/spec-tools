@@ -69,25 +69,6 @@
 
 (def ^:dynamic ^:private *conformers* nil)
 
-(def json-conformers
-  {:keyword conform/string->keyword
-   :uuid conform/string->uuid
-   :date conform/string->date
-   :symbol conform/string->symbol
-   ;; TODO: implement
-   :uri nil
-   :bigdec nil
-   :ratio nil})
-
-(def string-conformers
-  (merge
-    json-conformers
-    {:long conform/string->long
-     :double conform/string->double
-     :boolean conform/string->boolean
-     :nil conform/string->nil
-     :string nil}))
-
 (defn explain
   ([spec value]
    (explain spec value nil))

@@ -118,7 +118,7 @@ spec-conformer.
 Spec-conformers are arity2 functions taking the Spec Records and the value and should
 return either conformed value of `:clojure.spec/invalid`.
 
-The following conformers are supported out of the box:
+The following conformers are found in `spec-tools.conform`:
 
 | Name                | Description                                                                             |
 | --------------------|-----------------------------------------------------------------------------------------|
@@ -126,13 +126,15 @@ The following conformers are supported out of the box:
 | `json-conformers`   | [JSON](http://json.org/) Conforming (maps, arrays, numbers and booleans not conformed). |
 | `nil`               | No conforming (for [EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format)). |
 
-For maps, there are special spec-matchers in `spec-tools.conform`:
+For maps, there are also special spec-matchers:
 * `strip-extra-keys`: strip keys from `s/keys` specs that are not defined
 * `fail-on-extra-keys`: **TODO**
 
 #### Conforming examples
 
 ```clj
+(require '[spec-tools.conform :as stc])
+
 (s/def ::age (s/and st/integer? #(> % 18)))
 
 ;; no conforming
@@ -142,11 +144,11 @@ For maps, there are special spec-matchers in `spec-tools.conform`:
 ; ::s/invalid
 
 ;; json-conforming
-(st/conform ::age "20" st/json-conformers)
+(st/conform ::age "20" stc/json-conformers)
 ; ::s/invalid
 
 ;; string-conforming
-(st/conform ::age "20" st/string-conformers)
+(st/conform ::age "20" stc/string-conformers)
 ; 20
 ```
 
@@ -177,11 +179,11 @@ For maps, there are special spec-matchers in `spec-tools.conform`:
 ; ::s/invalid
 
 ;; json-conformers doesn't conform numbers
-(st/conform ::user data st/json-conformers)
+(st/conform ::user data stc/json-conformers)
 ; ::s/invalid
 
 ;; string-conformers for the rescue
-(st/conform ::user data st/string-conformers)
+(st/conform ::user data stc/string-conformers)
 ; {:name "Ilona"
 ;  :age 48
 ;  :languages #{:clj :cljs}
@@ -194,7 +196,7 @@ For maps, there are special spec-matchers in `spec-tools.conform`:
 (st/conform
   (st/spec (s/keys :req-un [::name]))
   {:name "Inkeri", :age 102}
-  {:map conform/strip-extra-keys})
+  {:map stc/strip-extra-keys})
 ; {:name "Inkeri"}
 ```
 
@@ -204,7 +206,7 @@ Default conformers are just data, so extending them is easy:
 
 ```clj
 (def my-string-conformers
-  (-> st/string-conformers
+  (-> stc/string-conformers
       (assoc
         :keyword
         (fn [_ value]
@@ -216,7 +218,7 @@ Default conformers are just data, so extending them is easy:
 (st/conform st/keyword? "kikka")
 ; ::s/invalid
 
-(st/conform st/keyword? "kikka" st/string-conformers)
+(st/conform st/keyword? "kikka" stc/string-conformers)
 ; :kikka
 
 (st/conform st/keyword? "kikka" my-string-conformers)

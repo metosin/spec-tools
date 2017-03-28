@@ -2,6 +2,7 @@
   (:require [clojure.test :refer [deftest testing is]]
             [clojure.spec :as s]
             [spec-tools.core :as st]
+            [spec-tools.conform :as stc]
             [clojure.string :as str]
             [spec-tools.conform :as conform]))
 
@@ -122,7 +123,7 @@
       (is (= st/+invalid+ (st/conform ::birthdate "2014-02-18T18:25:37Z")))))
 
   (testing "string-conformers"
-    (let [conform #(st/conform %1 %2 st/string-conformers)]
+    (let [conform #(st/conform %1 %2 stc/string-conformers)]
       (testing "everything gets conformed"
         (is (= 12 (conform ::age "12")))
         (is (= 1234567 (conform ::over-a-million "1234567")))
@@ -137,7 +138,7 @@
                (conform ::birthdate "2014-02-18T18:25:37Z"))))))
 
   (testing "json-conformers"
-    (let [conform #(st/conform %1 %2 st/json-conformers)]
+    (let [conform #(st/conform %1 %2 stc/json-conformers)]
       (testing "some are not conformed"
         (is (= st/+invalid+ (conform ::age "12")))
         (is (= st/+invalid+ (conform ::over-a-million "1234567")))
@@ -154,7 +155,7 @@
 
 (deftest conform!-test
   (testing "suceess"
-    (is (= 12 (st/conform! ::age "12" st/string-conformers))))
+    (is (= 12 (st/conform! ::age "12" stc/string-conformers))))
   (testing "failing"
     (is (thrown? #?(:clj Exception, :cljs js/Error) (st/conform! ::age "12")))
     (try
@@ -173,9 +174,9 @@
     (is (= {::s/problems [{:path [], :pred 'int?, :val "12", :via [], :in []}]}
            (st/explain-data st/int? "12"))))
   (testing "with conforming"
-    (is (= 12 (st/conform st/int? "12" st/string-conformers)))
+    (is (= 12 (st/conform st/int? "12" stc/string-conformers)))
     (is (= nil
-           (st/explain-data st/int? "12" st/string-conformers)))))
+           (st/explain-data st/int? "12" stc/string-conformers)))))
 
 (s/def ::height integer?)
 (s/def ::weight integer?)
@@ -216,7 +217,7 @@
              (st/conform ::human person {::human bmi-conformer}))))))
 
 (deftest unform-test
-  (let [unform-conform #(s/unform %1 (st/conform %1 %2 st/string-conformers))]
+  (let [unform-conform #(s/unform %1 (st/conform %1 %2 stc/string-conformers))]
     (testing "conformed values can be unformed"
       (is (= 12 (unform-conform ::age "12")))
       (is (= 1234567 (unform-conform ::age "1234567")))
@@ -231,7 +232,7 @@
              (unform-conform ::birthdate "2014-02-18T18:25:37.456Z"))))))
 
 (deftest extending-test
-  (let [my-conformations (-> st/string-conformers
+  (let [my-conformations (-> stc/string-conformers
                              (assoc
                                :keyword
                                (fn [_ value]
@@ -240,7 +241,7 @@
                                      str/reverse
                                      keyword))))]
     (testing "string-conformers"
-      (is (= :kikka (st/conform st/keyword? "kikka" st/string-conformers))))
+      (is (= :kikka (st/conform st/keyword? "kikka" stc/string-conformers))))
     (testing "my-conformers"
       (is (= :AKKIK (st/conform st/keyword? "kikka" my-conformations))))))
 
