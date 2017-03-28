@@ -1,7 +1,7 @@
 (ns spec-tools.visitor
   "Tools for walking spec definitions."
   (:require [clojure.spec :as s]
-            [clojure.set :as set]))
+            [spec-tools.types :as types]))
 
 (defn strip-fn-if-needed [form]
   (let [head (first form)]
@@ -84,6 +84,25 @@
 (defmethod visit 'clojure.spec/nilable [spec accept]
   (let [[_ inner-spec] (s/form spec)]
     (accept 'clojure.spec/nilable spec [(visit inner-spec accept)])))
+
+(defmethod visit 'clojure.spec/map-of [spec accept]
+  (let [[_ _ v] (s/form spec)]
+    (accept ::map-of spec [(visit v accept)])))
+
+(defmethod visit 'clojure.spec/coll-of [spec accept]
+  (let [form (s/form spec)
+        pred (second form)
+        type (types/resolve-type form)
+        dispatch (case type
+                   :map ::map-of
+                   :set ::set-of
+                   :vector ::vector-of)]
+    (accept dispatch spec [(visit pred accept)])))
+
+(defmethod visit 'spec-tools.core/spec [spec accept]
+  ;; TODO: we might get a reference to a spec (why?)
+  (let [spec (or (s/get-spec spec) spec)]
+    (visit (:pred spec) accept)))
 
 (defmethod visit ::default [spec accept]
   (accept (spec-dispatch spec accept) spec nil))

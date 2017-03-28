@@ -60,7 +60,8 @@
   #?(:clj  (clojure.edn/read-string s)
      :cljs (cljs.reader/read-string s)))
 
-(def invalid '::s/invalid)
+(def +invalid+ '::s/invalid)
+(def +problems+ #?(:clj :clojure.spec/problems, :cljs :cljs.spec/problems))
 
 ;;
 ;; Dynamic conforming
@@ -87,22 +88,59 @@
      :nil conform/string->nil
      :string nil}))
 
+(defn explain
+  ([spec value]
+   (explain spec value nil))
+  ([spec value conformers]
+   (binding [*conformers* conformers]
+     (s/explain spec value))))
+
+(defn explain-data
+  ([spec value]
+   (explain-data spec value nil))
+  ([spec value conformers]
+   (binding [*conformers* conformers]
+     (s/explain-data spec value))))
+
 (defn conform
   ([spec value]
-   (binding [*conformers* nil]
-     (s/conform spec value)))
+   (conform spec value nil))
   ([spec value conformers]
    (binding [*conformers* conformers]
      (s/conform spec value))))
+
+(defn conform!
+  ([spec value]
+   (conform! spec value nil))
+  ([spec value conformers]
+   (binding [*conformers* conformers]
+     (let [conformed (s/conform spec value)]
+       (if-not (= conformed +invalid+)
+         conformed
+         (let [problems (s/explain-data spec value)]
+           (throw
+             (ex-info
+               "Spec conform error"
+               {:type :spec/problems
+                :problems (+problems+ problems)
+                :spec spec
+                :value value}))))))))
 
 ;;
 ;; Spec Record
 ;;
 
 (defn- extra-spec-map [t]
-  (dissoc t :form :pred))
+  (dissoc t :spec/form :pred))
 
-(defrecord Spec [form pred]
+(defn- fail-on-invoke [spec]
+  (throw
+    (ex-info
+      (str
+        "Can't invoke spec with a non-function predicate: " spec)
+      {:spec spec})))
+
+(defrecord Spec [pred]
   #?@(:clj
       [s/Specize
        (specize* [s] s)
@@ -120,19 +158,25 @@
         (if (s/spec? pred)
           (s/conform pred x)
           ;; invalid
-          '::s/invalid))))
+          +invalid+))))
   (unform* [_ x]
     x)
   (explain* [this path via in x]
-    (when (= ::s/invalid (if (pred x) x ::s/invalid))
-      [(merge
-         {:path path
-          :pred (s/abbrev form)
-          :val x
-          :via via
-          :in in}
-         (if-let [reason (:spec/reason this)]
-           {:reason reason}))]))
+    (let [problems (if (s/spec? pred)
+                     (s/explain* pred path via in (s/conform* this x))
+                     (when (= +invalid+ (if (and (fn? pred) (pred (s/conform* this x))) x +invalid+))
+                       [{:path path
+                         :pred (s/abbrev (:spec/form this))
+                         :val x
+                         :via via
+                         :in in}]))
+          spec-reason (:spec/reason this)
+          with-reason (fn [{:keys [reason] :as problem}]
+                        (cond-> problem
+                                (and spec-reason (not reason))
+                                (assoc :reason spec-reason)))]
+      (if problems
+        (map with-reason problems))))
   (gen* [this _ _ _]
     (if-let [gen (:spec/gen this)]
       (gen)
@@ -141,20 +185,22 @@
     (assoc this :spec/gen gfn))
   (describe* [this]
     (let [info (extra-spec-map this)]
-      `(spec ~form ~info)))
+      `(spec ~(:spec/form this) ~info)))
   IFn
-  #?(:clj  (invoke [_ x] (pred x))
-     :cljs (-invoke [_ x] (pred x))))
+  #?(:clj  (invoke [this x] (if (fn? pred) (pred x) (fail-on-invoke this)))
+     :cljs (-invoke [this x] (if (fn? pred) (pred x) (fail-on-invoke this)))))
 
 #?(:clj
    (defmethod print-method Spec
      [^Spec t ^Writer w]
      (.write w (str "#Spec"
                     (merge
-                      {:pred (:form t)}
+                      (select-keys t [:spec/form])
                       (if (:spec/type t) (select-keys t [:spec/type]))
                       (extra-spec-map t))))))
 
+(defn spec? [x]
+  (if (instance? Spec x) x))
 
 ;; TODO: use http://dev.clojure.org/jira/browse/CLJ-2112
 (defn- extract-extra-info [form]
@@ -172,64 +218,51 @@
                       (map (comp keyword name) (:opt-un m))))})))
 
 (defn create-spec [m]
-  (let [info (extract-extra-info (:form m))]
-    (map->Spec (merge m info))))
+  (let [form (or (:spec/form m) (s/form (:pred m)))
+        info (extract-extra-info form)
+        type (if-not (contains? m :spec/type)
+               (types/resolve-type form)
+               (:spec/type m))]
+    (map->Spec (merge m info {:spec/form form, :spec/type type}))))
+
+(defn- extract-pred-and-info [x]
+  (if (clojure.core/map? x)
+    [(:pred x) (dissoc x :pred)]
+    [x {}]))
 
 #?(:clj
    (defmacro spec
-     ([pred]
-      (if (impl/in-cljs? &env)
-        `(let [form# (if (clojure.core/symbol? '~pred)
-                       '~(or (and (clojure.core/symbol? pred) (some->> pred (impl/cljs-resolve &env) impl/->sym)) pred)
-                       (s/form ~pred))]
-           (create-spec
-             {:spec/type (types/resolve-type form#)
-              :pred ~pred
-              :form form#}))
-        `(let [form# (if (clojure.core/symbol? '~pred)
-                       '~(or (and (clojure.core/symbol? pred) (some->> pred resolve impl/->sym)) pred)
-                       (s/form ~pred))]
-           (create-spec
-             {:spec/type (types/resolve-type form#)
-              :pred ~pred
-              :form form#}))))
+     ([pred-or-info]
+      (let [[pred info] (extract-pred-and-info pred-or-info)]
+        `(spec ~pred ~info)))
      ([pred info]
       (if (impl/in-cljs? &env)
         `(let [info# ~info
                form# (if (clojure.core/symbol? '~pred)
-                       '~(or (and (clojure.core/symbol? pred) (some->> pred (impl/cljs-resolve &env) impl/->sym)) pred)
-                       (s/form ~pred))]
+                       '~(or (and (clojure.core/symbol? pred) (some->> pred (impl/cljs-resolve &env) impl/->sym)) pred))]
            (assert (clojure.core/map? info#) (str "spec info should be a map, was: " info#))
            (create-spec
              (merge
                ~info
-               (if-not (contains? info# :spec/type)
-                 {:spec/type (types/resolve-type form#)})
-               {:form form#
+               {:spec/form form#
                 :pred ~pred})))
         `(let [info# ~info
                form# (if (clojure.core/symbol? '~pred)
-                       '~(or (and (clojure.core/symbol? pred) (some->> pred resolve impl/->sym)) pred)
-                       (s/form ~pred))]
+                       '~(or (and (clojure.core/symbol? pred) (some->> pred resolve impl/->sym)) pred))]
            (assert (clojure.core/map? info#) (str "spec info should be a map, was: " info#))
            (create-spec
              (merge
                ~info
-               (if-not (contains? info# :spec/type)
-                 {:spec/type (types/resolve-type form#)})
-               {:form form#
+               {:spec/form form#
                 :pred ~pred})))))))
 
 #?(:clj
-   (defmacro doc [pred info]
-     `(spec ~pred (merge ~info {:spec/type nil}))))
-
-#?(:clj
-   (defmacro typed-spec
-     ([type pred]
-      `(spec ~pred {:spec/type ~type}))
-     ([type pred info]
-      `(spec ~pred (merge ~info {:spec/type ~type})))))
+   (defmacro doc
+     ([pred-or-info]
+      (let [[pred info] (extract-pred-and-info pred-or-info)]
+        `(doc ~pred ~info)))
+     ([pred info]
+      `(spec ~pred (merge ~info {:spec/type nil})))))
 
 ;;
 ;; Map Spec
@@ -243,21 +276,23 @@
 
 #?(:clj (declare ^:private coll-spec-fn))
 
-(defn- -vector [env n v]
-  (if-not (= 1 (count v))
-    (throw
-      (ex-info
-        "only single maps allowed in nested vectors"
-        {:k n :v v}))
-    `(s/coll-of ~(coll-spec-fn env n (first v)) :into [])))
+#?(:clj
+   (defn- -vector [env n v]
+     (if-not (= 1 (count v))
+       (throw
+         (ex-info
+           "only single maps allowed in nested vectors"
+           {:k n :v v}))
+       `(spec (s/coll-of ~(coll-spec-fn env n (first v)) :into [])))))
 
-(defn- -set [env n v]
-  (if-not (= 1 (count v))
-    (throw
-      (ex-info
-        "only single maps allowed in nested sets"
-        {:k n :v v}))
-    `(s/coll-of ~(coll-spec-fn env n (first v)) :into #{})))
+#?(:clj
+   (defn- -set [env n v]
+     (if-not (= 1 (count v))
+       (throw
+         (ex-info
+           "only single maps allowed in nested sets"
+           {:k n :v v}))
+       `(spec (s/coll-of ~(coll-spec-fn env n (first v)) :into #{})))))
 
 #?(:clj
    (defn- -map [env n m]
@@ -275,7 +310,7 @@
                                              (let [resolved (resolve (first k))]
                                                (#{resolved-opt resolved-req} resolved)))))
                                   k)))]
-         `(s/map-of ~key-spec ~(coll-spec-fn env n (first (vals m))))
+         `(spec (s/map-of ~key-spec ~(coll-spec-fn env n (first (vals m)))))
          ;; keyword keys
          (let [m (reduce-kv
                    (fn [acc k v]
@@ -298,7 +333,7 @@
            `(do
               ~@(for [[k v] defs]
                   `(s/def ~k ~v))
-              (s/keys ~@margs)))))))
+              (spec (s/keys ~@margs))))))))
 
 #?(:clj
    (defn- coll-spec-fn [env n m]
@@ -308,6 +343,7 @@
                   (clojure.core/set? m) -set)]
        (f env n m)
        `~m)))
+
 #?(:clj
    (defmacro coll-spec [n m]
      (coll-spec-fn &env n m)))

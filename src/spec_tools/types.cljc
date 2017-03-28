@@ -1,11 +1,6 @@
 (ns spec-tools.types
-  (:require [spec-tools.impl :as impl]))
-
-(defn- error-message [x]
-  (str
-    "Can't resolve type of a spec: '" x "'. "
-    "You need to provide a `:hint` for the spec or "
-    "add a dispatch function for `spec-tools.types/resolve-type`."))
+  (:require [spec-tools.impl :as impl]
+            [clojure.string :as str]))
 
 (defn- dispatch [x]
   (cond
@@ -21,6 +16,13 @@
     ;; default
     :else x))
 
+(defn- error-message [x]
+  (str
+    "Can't resolve type for dispatch value `" (dispatch x) "`. "
+    "Provide a `:hint` for the spec or add a dispatch "
+    "function for `spec-tools.types/resolve-type`. Spec: "
+    (str/replace (str x) #"\n" " ") "\n"))
+
 (defmulti resolve-type #'dispatch :default ::default)
 
 (defmethod resolve-type ::default [x]
@@ -30,6 +32,22 @@
   (if (contains? (methods resolve-type) x)
     (resolve-type x)
     (throw (ex-info (error-message x) {:spec x}))))
+
+(defn- all-types []
+  {:long
+   :double
+   :boolean
+   :string
+   :keyword
+   :symbol
+   :uuid
+   :uri
+   :bigdec
+   :date
+   :ratio
+   :map
+   :set
+   :vector})
 
 (defmethod resolve-type 'clojure.core/any? [_] nil)
 (defmethod resolve-type 'clojure.core/some? [_] nil)
@@ -76,4 +94,44 @@
 (defmethod resolve-type 'clojure.core/ratio? [_] :ratio)
 (defmethod resolve-type 'clojure.core/bytes? [_] nil)
 
+; keys
 (defmethod resolve-type 'clojure.spec/keys [_] :map)
+
+; or
+(defmethod resolve-type 'clojure.spec/or [x] nil)
+
+; and
+(defmethod resolve-type 'clojure.spec/and [x] nil)
+
+; merge
+
+; every
+(defmethod resolve-type 'clojure.spec/every [x]
+  (let [{:keys [into]} (apply hash-map (drop 2 x))]
+    (cond
+      (map? into) :map
+      (set? into) :set
+      :else :vector)))
+
+; every-ks
+
+; coll-of
+(defmethod resolve-type 'clojure.spec/coll-of [x]
+  (let [{:keys [into]} (apply hash-map (drop 2 x))]
+    (cond
+      (map? into) :map
+      (set? into) :set
+      :else :vector)))
+
+; map-of
+(defmethod resolve-type 'clojure.spec/map-of [_] :map)
+
+; *
+; +
+; ?
+; alt
+; cat
+; &
+; tuple
+; keys*
+; nilable
