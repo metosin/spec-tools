@@ -87,16 +87,16 @@
 
 (defmethod visit 'clojure.spec/map-of [spec accept]
   (let [[_ _ v] (s/form spec)]
-    (accept :map-of spec [(visit v accept)])))
+    (accept ::map-of spec [(visit v accept)])))
 
 (defmethod visit 'clojure.spec/coll-of [spec accept]
   (let [form (s/form spec)
         pred (second form)
         type (types/resolve-type form)
         dispatch (case type
-                   :map :map-of
-                   :set :set-of
-                   :vector :vector-of)]
+                   :map ::map-of
+                   :set ::set-of
+                   :vector ::vector-of)]
     (accept dispatch spec [(visit pred accept)])))
 
 (defmethod visit 'spec-tools.core/spec [spec accept]
