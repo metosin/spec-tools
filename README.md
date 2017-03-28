@@ -19,34 +19,37 @@ No dependencies, but requires Java 1.8, Clojure `1.9.0-alpha15` and ClojureScrip
 
 Clojure Spec is implemented using reified protocols. This makes extending current specs non-trivial. Spec-tools introduces Spec Records that wrap the spec predicates and are easy to modify and extend. They satisfy the Spec protocols (`clojure.spec.Spec` & `clojure.spec.Specize`) and implement the `clojure.lang.IFn` so they can be used a normal function predicates. Specs are created with `spec-tools.core/spec`. The following keys having a special meaning:
 
-| Key             | Description                                                                         |
-| ----------------|-------------------------------------------------------------------------------------|
-| `:pred`         | The wrapped spec predicate.                                                         |
-| `:form`         | The wrapped spec form.                                                              |
-| `:type`         | Type hint of the Spec, mostly auto-resolved. Used in runtime conformation           |
-| `:name`         | Name of the spec. Contributes to (openapi-)docs                                     |
-| `:gen`          | Generator function for the Spec (set via `s/with-gen`)                              |
-| `:keys`         | Set of map keys that the spec defines. Extracted from `s/keys` Specs.               |
-| `:reason`       | Value is added to `s/explain-data` problems under key `:reason`                     |
-| `:description`  | Description of the spec. Contributes to (openapi-)docs                              |
-| `:openapi/...`  | Extra data that is merged with unqualifed keys into openapi-docs                    |
+| Key                | Description                                                                         |
+| -------------------|-------------------------------------------------------------------------------------|
+| `:pred`            | The wrapped spec predicate.                                                         |
+| `:form`            | The wrapped spec form.                                                              |
+| `:type`            | Type hint of the Spec, mostly auto-resolved. Used in runtime conformation           |
+| `:name`            | Name of the spec. Contributes to (openapi-)docs                                     |
+| `:gen`             | Generator function for the Spec (set via `s/with-gen`)                              |
+| `:keys`            | Set of map keys that the spec defines. Extracted from `s/keys` Specs.               |
+| `:reason`          | Value is added to `s/explain-data` problems under key `:reason`                     |
+| `:description`     | Description of the spec. Contributes to (openapi-)docs                              |
+| `:json-schema/...` | Extra data that is merged with unqualifed keys into json-schema (TODO)              |
 
 #### Creating Specs
 
 The following are all equivalent:
 
-```
+```clj
 (require '[clojure.spec :as s])
 (require '[spec-tools.core :as st])
 
-;; type inference
+;; using type inference
 (st/spec integer?)
 
-;; explicit type
+;; with explicit type
 (st/spec integer? {:type :long})
 
 ;; map form
 (st/spec {:pred integer?, :type :long})
+
+; #Spec{:type :long,
+;       :pred clojure.core/integer?}
 ```
 
 #### Example usage
@@ -80,7 +83,7 @@ For most clojure core predicates, the `:type` can be resolved automatically with
 
 ### Predefined Spec Records
 
-Most/all `clojure.core` predicates have a Spec-wrapped version in the `spec-tools.specs`:
+The following `clojure.core` predicates have a Spec-wrapped version in `spec-tools.specs`:
 * `any?`, `some?`, `number?`, `integer?`, `int?`, `pos-int?`, `neg-int?`, `nat-int?`,
 `float?`, `double?`, `boolean?`, `string?`, `ident?`, `simple-ident?`, `qualified-ident?`,
 `keyword?`, `simple-keyword?`, `qualified-keyword?`, `symbol?`, `simple-symbol?`,
@@ -106,7 +109,7 @@ sts/boolean?
 
 ### Custom errors
 
-Can be added to a Spec via the key `:reason`:
+Can be added to a Spec via the key `:reason`
 
 ```clj
 (s/explain (st/spec pos-int? {:reason "positive"}) -1)
@@ -118,7 +121,7 @@ Can be added to a Spec via the key `:reason`:
 
 ## Dynamic conforming
 
-Spec-tools loans from the awesome [Schema](https://github.com/plumatic/schema) by separating specs ("what") from conformers ("how"). The Spec Records contains a dynamical conformer, which can be instructed at runtime to select a suitable conforming function for the given type. Same specs can conform differently, e.g. when sending data over JSON vs Transit.
+Spec-tools loans from the awesome [Schema](https://github.com/plumatic/schema) by separating specs (what) from conformers (how). The Spec Records contains a dynamical conformer, which can be instructed at runtime to select a suitable conforming function for the given type. Same specs can conform differently, e.g. when sending data over JSON vs Transit.
 
 By default, Specs conform is a no-op. Binding a dynamic var `spec-tools.core/*conformers*` with a function of `spec/type => spec-conformer` will cause the Spec to be conformed at runtime with the selected conformer.
 
@@ -235,7 +238,7 @@ Default conformers are just data, so overriding or extending them is easy:
 
 ### Simple Collection Specs
 
-Spec-tools enables simple, Schema-like nested collection syntax for specs. `spec-tools.core/coll-spec` takes a qualified spec name (for nested qualified key generation) and a Clojure `map`, `vector` or `set` form as a value. Collection specs are recursive. The following rules apply:
+Spec-tools enables simple, Schema-like nested collection syntax for specs. `spec-tools.core/coll-spec` takes a qualified spec name (for nested qualified key generation) and a Clojure `map`, `vector` or `set` form as a value. Collection specs are recursive and return `Spec` instances. The following rules apply:
 
 * Vectors and Sets are homogeneous, and must contains exactly one spec
 * Maps have either a single spec key (homogeneous keys) or any number keyword keys.
