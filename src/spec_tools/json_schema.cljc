@@ -223,13 +223,13 @@
 
 ; coll-of
 ; map-of
-(defmethod accept-spec :map-of [dispatch spec children]
+(defmethod accept-spec ::visitor/map-of [dispatch spec children]
   {:type "object", :additionalProperties (unwrap children)})
 
-(defmethod accept-spec :set-of [dispatch spec children]
+(defmethod accept-spec ::visitor/set-of [dispatch spec children]
   {:type "array", :items (unwrap children), :uniqueItems true})
 
-(defmethod accept-spec :vector-of [dispatch spec children]
+(defmethod accept-spec ::visitor/vector-of [dispatch spec children]
   {:type "array", :items (unwrap children)})
 
 ; *
