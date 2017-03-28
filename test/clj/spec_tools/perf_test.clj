@@ -3,8 +3,10 @@
             [schema.core :as schema]
             [schema.coerce :as coerce]
             [spec-tools.core :as st]
+            [spec-tools.specs :as sts]
             [criterium.core :as cc]
-            [clojure.spec :as s]))
+            [clojure.spec :as s]
+            [spec-tools.conform :as stc]))
 
 ;;
 ;; start repl with `lein perf repl`
@@ -22,7 +24,7 @@
 ;;
 
 (spec/def ::age (spec/and integer? #(> % 10)))
-(spec/def ::x-age (spec/and st/integer? #(> % 10)))
+(spec/def ::x-age (spec/and sts/integer? #(> % 10)))
 
 (def age (schema/constrained schema/Int #(> % 10)))
 
@@ -114,14 +116,14 @@
 
   (suite "conforming set of keywords")
 
-  (let [sizes-spec (spec/coll-of (spec/and st/keyword? #{:L :M :S}) :into #{})
+  (let [sizes-spec (spec/coll-of (spec/and sts/keyword? #{:L :M :S}) :into #{})
         sizes-schema #{(schema/enum :L :M :S)}]
 
     ; 4300ns
     ; 1440ns (alpha12)
     ; 1160ns (alpha14)
     (title "spec: conform keyword enum")
-    (let [call #(st/conform sizes-spec ["L" "M"] st/string-conformers)]
+    (let [call #(st/conform sizes-spec ["L" "M"] stc/string-conformers)]
       (assert (= (call) #{:L :M}))
       (cc/quick-bench
         (call)))
@@ -130,7 +132,7 @@
     ; 990ns (alpha12)
     ; 990ns (alpha14)
     (title "spec: conform keyword enum - no-op")
-    (let [call #(st/conform sizes-spec #{:L :M} st/string-conformers)]
+    (let [call #(st/conform sizes-spec #{:L :M} stc/string-conformers)]
       (assert (= (call) #{:L :M}))
       (cc/quick-bench
         (call)))
@@ -151,15 +153,15 @@
       (cc/quick-bench
         (call)))))
 
-(s/def ::order-id st/integer?)
-(s/def ::product-id st/integer?)
-(s/def ::product-name st/string?)
-(s/def ::price st/double?)
-(s/def ::quantity st/integer?)
-(s/def ::name st/string?)
-(s/def ::zip st/integer?)
+(s/def ::order-id sts/integer?)
+(s/def ::product-id sts/integer?)
+(s/def ::product-name sts/string?)
+(s/def ::price sts/double?)
+(s/def ::quantity sts/integer?)
+(s/def ::name sts/string?)
+(s/def ::zip sts/integer?)
 (s/def ::street string?)
-(s/def ::country (s/and st/keyword? #{:fi :po}))
+(s/def ::country (s/and sts/keyword? #{:fi :po}))
 (s/def ::receiver (s/keys :req-un [::name ::street ::zip]
                           :opt-un [::country]))
 (s/def ::orderline (s/keys :req-un [::product-id ::price]
@@ -217,7 +219,7 @@
   ; 4.5µs (alpha12)
   ; 3.9µs (alpha14)
   (title "spec: conform")
-  (let [call #(st/conform ::order sample-order st/string-conformers)]
+  (let [call #(st/conform ::order sample-order stc/string-conformers)]
     (assert (= (call) sample-order-valid))
     (cc/quick-bench
       (call)))
@@ -225,7 +227,7 @@
   ; 2.8µs (alpha12)
   ; 2.7µs (alpha14)
   (title "spec: conform - no-op")
-  (let [call #(st/conform ::order sample-order-valid st/string-conformers)]
+  (let [call #(st/conform ::order sample-order-valid stc/string-conformers)]
     (assert (= (call) sample-order-valid))
     (cc/quick-bench
       (call)))

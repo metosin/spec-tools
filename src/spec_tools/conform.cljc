@@ -72,7 +72,30 @@
 ;; Maps
 ;;
 
-(defn strip-extra-keys [{:keys [:spec/keys pred]} x]
+(defn strip-extra-keys [{:keys [:keys pred]} x]
   (if (map? x)
     (s/conform pred (select-keys x keys))
     x))
+
+;;
+;; conformers
+;;
+
+(def json-conformers
+  {:keyword string->keyword
+   :uuid string->uuid
+   :date string->date
+   :symbol string->symbol
+   ;; TODO: implement
+   :uri nil
+   :bigdec nil
+   :ratio nil})
+
+(def string-conformers
+  (merge
+    json-conformers
+    {:long string->long
+     :double string->double
+     :boolean string->boolean
+     :nil string->nil
+     :string nil}))

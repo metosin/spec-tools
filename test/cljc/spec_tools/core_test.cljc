@@ -2,16 +2,18 @@
   (:require [clojure.test :refer [deftest testing is]]
             [clojure.spec :as s]
             [spec-tools.core :as st]
+            [spec-tools.specs :as sts]
+            [spec-tools.conform :as stc]
             [clojure.string :as str]
             [spec-tools.conform :as conform]))
 
-(s/def ::age (s/and st/integer? #(> % 10)))
-(s/def ::over-a-million (s/and st/int? #(> % 1000000)))
-(s/def ::lat st/double?)
-(s/def ::language (s/and st/keyword? #{:clojure :clojurescript}))
-(s/def ::truth st/boolean?)
-(s/def ::uuid st/uuid?)
-(s/def ::birthdate st/inst?)
+(s/def ::age (s/and sts/integer? #(> % 10)))
+(s/def ::over-a-million (s/and sts/int? #(> % 1000000)))
+(s/def ::lat sts/double?)
+(s/def ::language (s/and sts/keyword? #{:clojure :clojurescript}))
+(s/def ::truth sts/boolean?)
+(s/def ::uuid sts/uuid?)
+(s/def ::birthdate sts/inst?)
 
 (deftest extract-extra-info-test
   (testing "keys are extracted from keys-specs"
@@ -22,7 +24,7 @@
                    :req-un [::uuid]
                    :opt-un [::truth]))]
       (is (= #{::age ::lat :uuid :truth}
-             (:spec/keys spec))))))
+             (:keys spec))))))
 
 (deftest spec?-test
   (testing "spec"
@@ -63,16 +65,16 @@
         (is (= ['spec-tools.core/spec
                 #?(:clj  'clojure.core/integer?
                    :cljs 'cljs.core/integer?)
-                {:spec/type :long}] (s/form my-integer?)))
-        (is (= ['spec 'integer? {:spec/type :long}] (s/describe my-integer?))))
+                {:type :long}] (s/form my-integer?)))
+        (is (= ['spec 'integer? {:type :long}] (s/describe my-integer?))))
 
       (testing "type resolution"
         (is (= (st/spec integer?)
-               (st/spec integer? {:spec/type :long}))))
+               (st/spec integer? {:type :long}))))
 
       (testing "serialization"
-        (let [spec (st/spec integer? {:description "cool", :spec/type ::integer})]
-          (is (= `(st/spec integer? {:description "cool", :spec/type ::integer})
+        (let [spec (st/spec integer? {:description "cool", :type ::integer})]
+          (is (= `(st/spec integer? {:description "cool", :type ::integer})
                  (s/form spec)
                  (st/deserialize (st/serialize spec))))))
 
@@ -85,14 +87,14 @@
     (is (= (st/doc integer? {:description "kikka"})
            (st/doc {:pred integer?, :description "kikka"})
            (st/doc integer? {:description "kikka"})
-           (st/spec {:pred integer?, :description "kikka", :spec/type nil}))))
+           (st/spec {:pred integer?, :description "kikka", :type nil}))))
 
   (testing "just docs, #12"
     (let [spec (st/doc integer? {:description "kikka"})]
       (is (= "kikka" (:description spec)))
       (is (true? (s/valid? spec 1)))
       (is (false? (s/valid? spec "1")))
-      (is (= `(st/spec integer? {:description "kikka", :spec/type nil})
+      (is (= `(st/spec integer? {:description "kikka", :type nil})
              (st/deserialize (st/serialize spec))
              (s/form spec))))))
 
@@ -106,8 +108,8 @@
     (testing "explain-data with reason"
       (is (= #?(:clj  #:clojure.spec{:problems [(assoc expected-problem :reason "positive")]}
                 :cljs #:cljs.spec{:problems [(assoc expected-problem :reason "positive")]})
-             (st/explain-data (st/spec pos-int? {:spec/reason "positive"}) -1)
-             (s/explain-data (st/spec pos-int? {:spec/reason "positive"}) -1))))))
+             (st/explain-data (st/spec pos-int? {:reason "positive"}) -1)
+             (s/explain-data (st/spec pos-int? {:reason "positive"}) -1))))))
 
 (deftest spec-tools-conform-test
   (testing "in default mode"
@@ -122,7 +124,7 @@
       (is (= st/+invalid+ (st/conform ::birthdate "2014-02-18T18:25:37Z")))))
 
   (testing "string-conformers"
-    (let [conform #(st/conform %1 %2 st/string-conformers)]
+    (let [conform #(st/conform %1 %2 stc/string-conformers)]
       (testing "everything gets conformed"
         (is (= 12 (conform ::age "12")))
         (is (= 1234567 (conform ::over-a-million "1234567")))
@@ -137,7 +139,7 @@
                (conform ::birthdate "2014-02-18T18:25:37Z"))))))
 
   (testing "json-conformers"
-    (let [conform #(st/conform %1 %2 st/json-conformers)]
+    (let [conform #(st/conform %1 %2 stc/json-conformers)]
       (testing "some are not conformed"
         (is (= st/+invalid+ (conform ::age "12")))
         (is (= st/+invalid+ (conform ::over-a-million "1234567")))
@@ -154,14 +156,14 @@
 
 (deftest conform!-test
   (testing "suceess"
-    (is (= 12 (st/conform! ::age "12" st/string-conformers))))
+    (is (= 12 (st/conform! ::age "12" stc/string-conformers))))
   (testing "failing"
     (is (thrown? #?(:clj Exception, :cljs js/Error) (st/conform! ::age "12")))
     (try
       (st/conform! ::age "12")
       (catch #?(:clj Exception, :cljs js/Error) e
         (let [data (ex-data e)]
-          (is (= {:type :spec/problems
+          (is (= {:type ::st/problems
                   :problems [{:path [], :pred 'integer?, :val "12", :via [::age], :in []}]
                   :spec :spec-tools.core-test/age
                   :value "12"}
@@ -169,13 +171,13 @@
 
 (deftest explain-tests
   (testing "without conforming"
-    (is (= st/+invalid+ (st/conform st/int? "12")))
+    (is (= st/+invalid+ (st/conform sts/int? "12")))
     (is (= {::s/problems [{:path [], :pred 'int?, :val "12", :via [], :in []}]}
-           (st/explain-data st/int? "12"))))
+           (st/explain-data sts/int? "12"))))
   (testing "with conforming"
-    (is (= 12 (st/conform st/int? "12" st/string-conformers)))
+    (is (= 12 (st/conform sts/int? "12" stc/string-conformers)))
     (is (= nil
-           (st/explain-data st/int? "12" st/string-conformers)))))
+           (st/explain-data sts/int? "12" stc/string-conformers)))))
 
 (s/def ::height integer?)
 (s/def ::weight integer?)
@@ -195,7 +197,7 @@
       (is (= {:height 200, :weight 80}
              (st/conform ::person person {:map conform/strip-extra-keys}))))))
 
-(s/def ::human (st/spec (s/keys :req-un [::height ::weight]) {:spec/type ::human}))
+(s/def ::human (st/spec (s/keys :req-un [::height ::weight]) {:type ::human}))
 
 (defn bmi [{:keys [height weight]}]
   (let [h (/ height 100)]
@@ -216,7 +218,7 @@
              (st/conform ::human person {::human bmi-conformer}))))))
 
 (deftest unform-test
-  (let [unform-conform #(s/unform %1 (st/conform %1 %2 st/string-conformers))]
+  (let [unform-conform #(s/unform %1 (st/conform %1 %2 stc/string-conformers))]
     (testing "conformed values can be unformed"
       (is (= 12 (unform-conform ::age "12")))
       (is (= 1234567 (unform-conform ::age "1234567")))
@@ -231,7 +233,7 @@
              (unform-conform ::birthdate "2014-02-18T18:25:37.456Z"))))))
 
 (deftest extending-test
-  (let [my-conformations (-> st/string-conformers
+  (let [my-conformations (-> stc/string-conformers
                              (assoc
                                :keyword
                                (fn [_ value]
@@ -240,9 +242,9 @@
                                      str/reverse
                                      keyword))))]
     (testing "string-conformers"
-      (is (= :kikka (st/conform st/keyword? "kikka" st/string-conformers))))
+      (is (= :kikka (st/conform sts/keyword? "kikka" stc/string-conformers))))
     (testing "my-conformers"
-      (is (= :AKKIK (st/conform st/keyword? "kikka" my-conformations))))))
+      (is (= :AKKIK (st/conform sts/keyword? "kikka" my-conformations))))))
 
 (deftest map-test
   (testing "nested map spec"
@@ -250,7 +252,7 @@
                    ::my-map
                    {::id integer?
                     ::age ::age
-                    :boss st/boolean?
+                    :boss sts/boolean?
                     (st/req :name) string?
                     (st/opt :description) string?
                     :languages #{keyword?}
