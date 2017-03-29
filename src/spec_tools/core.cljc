@@ -83,6 +83,10 @@
      (s/conform spec value))))
 
 (defn conform!
+  "Given a spec and a value, returns the possibly destructured value
+   or fails with ex-info with :type of ::conform. ex-data also contains
+   :problems, :spec and :value. call s/unform on the result to get the
+   actual conformed value."
   ([spec value]
    (conform! spec value nil))
   ([spec value conformers]
@@ -94,7 +98,7 @@
            (throw
              (ex-info
                "Spec conform error"
-               {:type ::problems
+               {:type ::conform
                 :problems (+problems+ problems)
                 :spec spec
                 :value value}))))))))
@@ -146,7 +150,7 @@
           spec-reason (:reason this)
           with-reason (fn [{:keys [reason] :as problem}]
                         (cond-> problem
-                                (and spec-reason (not reason))
+                                spec-reason
                                 (assoc :reason spec-reason)))]
       (if problems
         (map with-reason problems))))
@@ -176,27 +180,47 @@
   (if (instance? Spec x) x))
 
 ;; TODO: use http://dev.clojure.org/jira/browse/CLJ-2112
-(defn- extract-extra-info [form]
-  (if (and
-        (seq? form)
-        (= 'clojure.spec/keys (impl/clojure-core-symbol-or-any (first form))))
-    (if-let [m (some->> form
-                        (rest)
-                        (apply hash-map))]
-      {:keys (set
-               (concat
-                 (:req m)
-                 (:opt m)
-                 (map (comp keyword name) (:req-un m))
-                 (map (comp keyword name) (:opt-un m))))})))
+(defmulti collect-info (fn [dispath _] dispath) :default ::default)
+(defmethod collect-info ::default [_ _] nil)
 
-(defn create-spec [m]
-  (let [form (or (:form m) (s/form (:pred m)))
+;; FIXME: read the or's and and's.
+(defmethod collect-info 'clojure.spec/keys [_ form]
+  (if-let [m (some->> form (rest) (apply hash-map))]
+    {:keys (set
+             (concat
+               (:req m)
+               (:opt m)
+               (map (comp keyword name) (:req-un m))
+               (map (comp keyword name) (:opt-un m))))}))
+
+(defn- extract-extra-info [form]
+  (if (seq? form)
+    (let [dispatch (impl/clojure-core-symbol-or-any (first form))]
+      (collect-info dispatch form))))
+
+(defn create-spec
+  "Creates a Spec intance from a map containing the following keys:
+
+           :pred  the wrapped spec predicate (mandatory)
+           :form  source code of the spec predicate, if :pred is a spec,
+                  :form is read with `s/form` out of it. For non-spec
+                  preds, this is mandatory (mandatory/optional)
+           :type  optional type for the spec. if not set, will be auto-
+                  resolved (optional)
+         :reason  optional reason to be added to problems with s/explain
+            :gen  generator function for the spec (optional)
+           :name  name of the spec (optional)
+    :description  description of the spec (optional)
+          :xx/yy  any qualified keys can be added (optional)"
+  [{:keys [pred type form] :as m}]
+  (assert pred "missing spec predicate")
+  (let [form (or form (s/form pred))
         info (extract-extra-info form)
         type (if-not (contains? m :type)
                (types/resolve-type form)
-               (:type m))]
-    (map->Spec (merge m info {:form form, :type type}))))
+               type)]
+    (map->Spec
+      (merge m info {:form form, :type type}))))
 
 (defn- extract-pred-and-info [x]
   (if (map? x)
@@ -205,6 +229,18 @@
 
 #?(:clj
    (defmacro spec
+     "Creates a Spec instance with one or two arguments:
+
+     ;; using type inference
+     (spec integer?)
+
+     ;; with explicit type
+     (spec integer? {:type :long})
+
+     ;; map form
+     (spec {:pred integer?, :type :long})
+
+     calls create-spec, see it for details."
      ([pred-or-info]
       (let [[pred info] (extract-pred-and-info pred-or-info)]
         `(spec ~pred ~info)))
@@ -231,6 +267,19 @@
 
 #?(:clj
    (defmacro doc
+     "Creates a Spec instance with one or two arguments,
+      setting the :type to nil (e.g. no dynamic conforming).
+
+      ;; using type inference
+      (doc integer?)
+
+      ;; with explicit type
+      (doc integer? {:name \"it's a integer\"})
+
+      ;; map form
+      (doc {:pred integer?, :name \"it's a integer\"}})
+
+      calls create-spec, see it for details."
      ([pred-or-info]
       (let [[pred info] (extract-pred-and-info pred-or-info)]
         `(doc ~pred ~info)))

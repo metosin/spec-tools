@@ -163,7 +163,7 @@
       (st/conform! ::age "12")
       (catch #?(:clj Exception, :cljs js/Error) e
         (let [data (ex-data e)]
-          (is (= {:type ::st/problems
+          (is (= {:type ::st/conform
                   :problems [{:path [], :pred 'integer?, :val "12", :via [::age], :in []}]
                   :spec :spec-tools.core-test/age
                   :value "12"}
