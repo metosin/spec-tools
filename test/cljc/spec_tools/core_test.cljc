@@ -351,3 +351,19 @@
         (s/valid?
           (st/coll-spec ::pred-keys {string? {keyword? [integer?]}})
           {"invalid spec" "is this"})))))
+
+(deftest extract-extra-info-test
+  (testing "all keys types are extracted"
+    (is (= {:keys #{::age :lat ::truth :uuid}}
+           (st/extract-extra-info
+             (s/form (s/keys
+                       :req [::age]
+                       :req-un [::lat]
+                       :opt [::truth]
+                       :opt-un [::uuid]))))))
+
+  (testing "ands and ors are flattened"
+    (is (= {:keys #{::age ::lat ::uuid}}
+           (st/extract-extra-info
+             (s/form (s/keys
+                       :req [(or ::age (and ::uuid ::lat))])))))))

@@ -183,17 +183,23 @@
 (defmulti collect-info (fn [dispath _] dispath) :default ::default)
 (defmethod collect-info ::default [_ _] nil)
 
-;; FIXME: read the or's and and's.
+;; and's and or's are just flattened
 (defmethod collect-info 'clojure.spec/keys [_ form]
-  (if-let [m (some->> form (rest) (apply hash-map))]
-    {:keys (set
-             (concat
-               (:req m)
-               (:opt m)
-               (map (comp keyword name) (:req-un m))
-               (map (comp keyword name) (:opt-un m))))}))
+  (if-let [{:keys [req opt req-un opt-un]} (some->> form (rest) (apply hash-map))]
+    (letfn [(polish [x]
+              (cond
+                (seq? x) (keep polish x)
+                (symbol? x) nil
+                :else x))]
+      {:keys (set
+               (flatten
+                 (concat
+                   (map polish req)
+                   (map polish opt)
+                   (map (comp keyword name) (map polish req-un))
+                   (map (comp keyword name) (map polish opt-un)))))})))
 
-(defn- extract-extra-info [form]
+(defn extract-extra-info [form]
   (if (seq? form)
     (let [dispatch (impl/clojure-core-symbol-or-any (first form))]
       (collect-info dispatch form))))
