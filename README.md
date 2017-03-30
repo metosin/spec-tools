@@ -98,7 +98,7 @@ sts/boolean?
 ; #Spec{:type :boolean
 ;       :pred clojure.core/boolean?}
 
-(st/boolean? true)
+(sts/boolean? true)
 ; true
 
 (assoc sts/boolean? :description "it's an bool")
