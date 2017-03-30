@@ -28,6 +28,14 @@
         (filter #(-> % first str (subs 1) (->> (re-matches re))))
         (into {}))))
 
+(defn ^:skip-wiki get-spec
+  "Finds recursively a spec implementation from the registry"
+  [name]
+  (if-let [spec (get (s/registry) name)]
+    (if (keyword? spec)
+      (get-spec spec)
+      spec)))
+
 (defn ^:skip-wiki eq [value]
   #{value})
 
@@ -76,6 +84,8 @@
      (s/explain-data spec value))))
 
 (defn conform
+  "Given a spec and a value, returns the possibly destructured value
+   or ::s/invalid"
   ([spec value]
    (conform spec value nil))
   ([spec value conformers]

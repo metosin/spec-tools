@@ -1,6 +1,7 @@
 (ns spec-tools.visitor
   "Tools for walking spec definitions."
   (:require [clojure.spec :as s]
+            [spec-tools.core :as st]
             [spec-tools.types :as types]))
 
 (defn strip-fn-if-needed [form]
@@ -18,6 +19,7 @@
     kw))
 
 (defn- formize [spec] (if (seq? spec) spec (s/form spec)))
+(defn- de-spec [{:keys [form pred]}] (if (seq? form) pred form))
 
 (defn- spec-dispatch
   [spec accept]
@@ -100,9 +102,8 @@
     (accept dispatch spec [(visit pred accept)])))
 
 (defmethod visit 'spec-tools.core/spec [spec accept]
-  ;; TODO: we might get a reference to a spec (why?)
-  (let [spec (or (s/get-spec spec) spec)]
-    (visit (:pred spec) accept)))
+  (let [spec (or (st/get-spec spec) spec)]
+    (accept ::spec spec (visit (de-spec spec) accept))))
 
 (defmethod visit ::default [spec accept]
   (accept (spec-dispatch spec accept) spec nil))

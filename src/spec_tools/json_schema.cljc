@@ -2,7 +2,8 @@
   "Tools for converting specs into JSON Schemata."
   (:require [clojure.spec :as s]
             [spec-tools.visitor :as visitor :refer [visit]]
-            [spec-tools.types :as types]))
+            [spec-tools.types :as types]
+            [clojure.set :as set]))
 
 (defn- only-entry? [key a-map] (= [key] (keys a-map)))
 
@@ -260,6 +261,19 @@
 (defmethod accept-spec 'clojure.spec/int-in-range? [dispatch spec children]
   (let [[_ minimum maximum _] (visitor/strip-fn-if-needed spec)]
     {:minimum minimum :maximum maximum}))
+
+(defmethod accept-spec ::visitor/spec [dispatch spec children]
+  (let [json-schema-meta (reduce-kv
+                           (fn [acc k v]
+                             (if (= "json-schema" (namespace k))
+                               (assoc acc (keyword (name k)) v)
+                               acc))
+                           {}
+                           spec)
+        extra-info (-> spec
+                       (select-keys [:name :description])
+                       (set/rename-keys {:name :title}))]
+    (merge children extra-info json-schema-meta)))
 
 (defmethod accept-spec ::default [dispatch spec children]
   {})

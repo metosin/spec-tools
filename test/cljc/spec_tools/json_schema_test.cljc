@@ -60,13 +60,13 @@
 (s/def ::compound (s/keys :req-un [::integer] :opt-un [::string]))
 
 #?(:clj
-    (deftest validating-test
-      (test-spec-conversion ::integer)
-      (test-spec-conversion ::string)
-      (test-spec-conversion ::set)
-      (test-spec-conversion ::compound)
-      (test-spec-conversion (s/nilable ::string))
-      (test-spec-conversion (s/int-in 0 100))))
+   (deftest validating-test
+     (test-spec-conversion ::integer)
+     (test-spec-conversion ::string)
+     (test-spec-conversion ::set)
+     (test-spec-conversion ::compound)
+     (test-spec-conversion (s/nilable ::string))
+     (test-spec-conversion (s/int-in 0 100))))
 
 ;; Test the example from README
 
@@ -75,20 +75,20 @@
 (def person-spec
   (st/coll-spec
     ::person
-    {::id clojure.core/integer?
+    {::id integer?
      :age ::age
-     :name clojure.core/string?
-     :likes {clojure.core/string? clojure.core/boolean?}
-     (st/req :languages) #{clojure.core/keyword?}
-     (st/opt :address) {:street clojure.core/string?
-                        :zip clojure.core/string?}}))
+     :name string?
+     :likes {string? boolean?}
+     (st/req :languages) #{keyword?}
+     (st/opt :address) {:street string?
+                        :zip string?}}))
 
 (deftest readme-test
   (is (= {:type "object"
           :required ["id" "age" "name" "likes" "languages"]
           :properties
           {"id" {:type "integer"}
-           "age" {:type "integer"}  ; not supporting > yet
+           "age" {:type "integer"}
            "name" {:type "string"}
            "likes" {:type "object" :additionalProperties {:type "boolean"}}
            "languages" {:type "array", :items {:type "string"}, :uniqueItems true}
@@ -97,3 +97,15 @@
                       :properties {"street" {:type "string"}
                                    "zip" {:type "string"}}}}}
          (jsc/to-json person-spec))))
+
+(deftest additional-json-schema-data-test
+  (is (= {:type "integer"
+          :title "integer"
+          :description "it's an int"
+          :default 42}
+         (jsc/to-json
+           (st/spec
+             {:pred integer?
+              :name "integer"
+              :description "it's an int"
+              :json-schema/default 42})))))
