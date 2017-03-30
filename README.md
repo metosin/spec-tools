@@ -68,12 +68,12 @@ my-integer?
 (s/valid? my-integer? 1)
 ; true
 
-(assoc my-integer? :info {:description "It's a int"})
+(assoc my-integer? :description "It's a int")
 ; #Spec{:type :long
 ;       :pred clojure.core/integer?
 ;       :description "It's a int"}
 
-(eval (s/form (st/spec ::st/long integer? {:description "It's a int"})))
+(eval (s/form (st/spec integer? {:description "It's a int"})))
 ; #Spec{:type :long
 ;       :pred clojure.core/integer?
 ;       :description "It's a int"}
