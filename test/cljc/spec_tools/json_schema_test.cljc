@@ -105,7 +105,7 @@
           :default 42}
          (jsc/to-json
            (st/spec
-             {:pred integer?
+             {:spec integer?
               :name "integer"
               :description "it's an int"
               :json-schema/default 42})))))

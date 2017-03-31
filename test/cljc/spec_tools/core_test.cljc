@@ -41,7 +41,7 @@
 
     (testing "creation"
       (is (= (st/spec integer?)
-             (st/spec {:pred integer?})
+             (st/spec {:spec integer?})
              (st/spec integer? {}))))
 
     (testing "wrapped predicate work as a predicate"
@@ -85,9 +85,9 @@
 
   (testing "creation"
     (is (= (st/doc integer? {:description "kikka"})
-           (st/doc {:pred integer?, :description "kikka"})
+           (st/doc {:spec integer?, :description "kikka"})
            (st/doc integer? {:description "kikka"})
-           (st/spec {:pred integer?, :description "kikka", :type nil}))))
+           (st/spec {:spec integer?, :description "kikka", :type nil}))))
 
   (testing "just docs, #12"
     (let [spec (st/doc integer? {:description "kikka"})]

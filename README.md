@@ -21,14 +21,14 @@ Clojure Spec is implemented using reified protocols. This makes extending curren
 
 | Key                | Description                                                                 |
 | -------------------|-----------------------------------------------------------------------------|
-| `:pred`            | The wrapped spec predicate.                                                 |
+| `:spec`            | The wrapped spec predicate.                                                 |
 | `:form`            | The wrapped spec form.                                                      |
 | `:type`            | Type hint of the Spec, mostly auto-resolved. Used in runtime conformation   |
-| `:name`            | Name of the spec. Contributes to (openapi-)docs                             |
+| `:name`            | Name of the spec. Maps to `title` to JSON Schema.                           |
+| `:description`     | Description of the spec. Maps to `description` in JSON Schema.              |
 | `:gen`             | Generator function for the Spec (set via `s/with-gen`)                      |
 | `:keys`            | Set of map keys that the spec defines. Extracted from `s/keys` Specs.       |
 | `:reason`          | Value is added to `s/explain-data` problems under key `:reason`             |
-| `:description`     | Description of the spec. Contributes to (openapi-)docs                      |
 | `:json-schema/...` | Extra data that is merged with unqualifed keys into json-schema             |
 
 #### Creating Specs
@@ -46,10 +46,16 @@ The following are all equivalent:
 (st/spec integer? {:type :long})
 
 ;; map form
-(st/spec {:pred integer?, :type :long})
+(st/spec {:spec integer?})
+(st/spec {:spec integer?, :type :long})
 
+;; a function
+(st/create-spec {:spec integer?, :form `integer?})
+(st/create-spec {:spec integer?, :form `integer?, :type :long})
+
+;; ... resulting in:
 ; #Spec{:type :long,
-;       :pred clojure.core/integer?}
+;       :form clojure.core/integer?}
 ```
 
 #### Example usage
@@ -60,7 +66,7 @@ The following are all equivalent:
 
 my-integer?
 ; #Spec{:type :long
-;       :pred clojure.core/integer?}
+;       :form clojure.core/integer?}
 
 (my-integer? 1)
 ; true
@@ -70,12 +76,12 @@ my-integer?
 
 (assoc my-integer? :description "It's a int")
 ; #Spec{:type :long
-;       :pred clojure.core/integer?
+;       :form clojure.core/integer?
 ;       :description "It's a int"}
 
 (eval (s/form (st/spec integer? {:description "It's a int"})))
 ; #Spec{:type :long
-;       :pred clojure.core/integer?
+;       :form clojure.core/integer?
 ;       :description "It's a int"}
 ```
 
@@ -96,14 +102,14 @@ The following `clojure.core` predicates have a Spec-wrapped version in `spec-too
 
 sts/boolean?
 ; #Spec{:type :boolean
-;       :pred clojure.core/boolean?}
+;       :form clojure.core/boolean?}
 
 (sts/boolean? true)
 ; true
 
 (assoc sts/boolean? :description "it's an bool")
 ; #Spec{:type :boolean
-;       :pred clojure.core/boolean?
+;       :form clojure.core/boolean?
 ;       :description "It's a bool"}
 ```
 
@@ -321,7 +327,7 @@ Meta-data from Spec records is used to populate the data:
 ```clj
 (jsc/to-json
   (st/spec
-    {:pred integer?
+    {:spec integer?
      :name "integer"
      :description "it's an int"
      :json-schema/default 42}))

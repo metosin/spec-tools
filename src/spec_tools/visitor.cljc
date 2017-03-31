@@ -19,7 +19,7 @@
     kw))
 
 (defn- formize [spec] (if (seq? spec) spec (s/form spec)))
-(defn- de-spec [{:keys [form pred]}] (if (seq? form) pred form))
+(defn- de-spec [{:keys [form spec]}] (if (seq? form) spec form))
 
 (defn- spec-dispatch
   [spec accept]
