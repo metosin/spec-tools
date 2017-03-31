@@ -18,7 +18,7 @@
                    :jvm-opts ^:replace ["-server"]
                    ;:global-vars {*warn-on-reflection* true}
                    :dependencies [[org.clojure/clojure "1.9.0-alpha15"]
-                                  [org.clojure/clojurescript "1.9.456"]
+                                  [org.clojure/clojurescript "1.9.494"]
                                   [criterium "0.4.4"]
                                   [prismatic/schema "1.1.4"]
                                   [org.clojure/test.check "0.9.0"]
