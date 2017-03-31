@@ -50,6 +50,8 @@ The following are all equivalent:
 (st/spec {:spec integer?, :type :long})
 
 ;; a function
+(st/create-spec {:spec integer?})
+(st/create-spec {:spec integer?, :type :long})
 (st/create-spec {:spec integer?, :form `integer?})
 (st/create-spec {:spec integer?, :form `integer?, :type :long})
 
@@ -86,6 +88,8 @@ my-integer?
 ```
 
 For most clojure core predicates, the `:type` can be resolved automatically with a help of the `spec-tools.types/resolve-type` multimethod.
+
+For most clojure core predicates, the `:form` can be resolved automatically with a help of the `spec-tools.forms/resolve-form` multimethod.
 
 ### Predefined Spec Records
 

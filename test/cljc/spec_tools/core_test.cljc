@@ -5,7 +5,8 @@
             [spec-tools.specs :as sts]
             [spec-tools.conform :as stc]
             [clojure.string :as str]
-            [spec-tools.conform :as conform]))
+            [spec-tools.conform :as conform]
+            [spec-tools.forms :as forms]))
 
 (s/def ::age (s/and sts/integer? #(> % 10)))
 (s/def ::over-a-million (s/and sts/int? #(> % 1000000)))
@@ -40,9 +41,30 @@
   (let [my-integer? (st/spec integer?)]
 
     (testing "creation"
-      (is (= (st/spec integer?)
-             (st/spec {:spec integer?})
-             (st/spec integer? {}))))
+      (testing "succeeds"
+        (is (= (st/spec integer?)
+               (st/spec {:spec integer?})
+               (st/spec {:spec integer?, :type :long})
+               (st/spec integer? {:type :long})
+               (st/create-spec {:spec integer?})
+               (st/create-spec {:spec integer? :type :long})
+               (st/create-spec {:spec integer?, :form `integer?})
+               (st/create-spec {:spec integer?, :form `integer?, :type :long}))))
+
+      (testing "anonymous functions"
+        (testing "fails without :form"
+          (is (thrown?
+                #?(:clj Exception, :cljs js/Error)
+                (st/create-spec
+                  {:spec (fn [x] (inc x))}))))
+        (testing ":form and :type can be provided"
+          (is (not
+                (nil?
+                  (st/spec?
+                    (st/create-spec
+                      {:spec (fn [x] (inc x))
+                       :type :long
+                       :form `(fn [x] (inc x))}))))))))
 
     (testing "wrapped predicate work as a predicate"
       (is (true? (my-integer? 1)))
@@ -367,3 +389,9 @@
            (st/extract-extra-info
              (s/form (s/keys
                        :req [(or ::age (and ::uuid ::lat))])))))))
+
+(deftest form-inference-test
+  (testing "for core predicates"
+    (is (= `integer? (forms/resolve-form integer?))))
+  (testing "nil for unknowns"
+    (is (= nil (forms/resolve-form #(> % 2))))))

@@ -2,6 +2,7 @@
   #?(:cljs (:require-macros [spec-tools.core :refer [spec coll-spec]]))
   (:require [spec-tools.impl :as impl]
             [spec-tools.types :as types]
+            [spec-tools.forms :as forms]
             [clojure.spec :as s]
     #?@(:clj  [
             [clojure.spec.gen :as gen]
@@ -222,9 +223,10 @@
            :spec  the wrapped spec predicate (mandatory)
            :form  source code of the spec predicate, if :spec is a spec,
                   :form is read with `s/form` out of it. For non-spec
-                  preds, this is mandatory (mandatory/optional)
+                  preds, spec-tools.forms/resolve-form is called, if still
+                  not available, spec-creation will fail.
            :type  optional type for the spec. if not set, will be auto-
-                  resolved (optional)
+                  resolved via spec-tools.forms/resolve-type (optional)
          :reason  optional reason to be added to problems with s/explain
             :gen  generator function for the spec (optional)
            :name  name of the spec (optional)
@@ -232,7 +234,11 @@
           :xx/yy  any qualified keys can be added (optional)"
   [{:keys [spec type form] :as m}]
   (assert spec "missing spec predicate")
-  (let [form (or form (s/form spec))
+  (let [form (or form
+                 (let [form (s/form spec)]
+                   (if-not (= form ::s/unknown) form))
+                 (forms/resolve-form spec)
+                 (throw (ex-info "No :form for spec" m)))
         info (extract-extra-info form)
         type (if-not (contains? m :type)
                (types/resolve-type form)
