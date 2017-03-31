@@ -1,6 +1,7 @@
 (ns spec-tools.visitor
   "Tools for walking spec definitions."
   (:require [clojure.spec :as s]
+            [spec-tools.core :as st]
             [spec-tools.types :as types]))
 
 (defn strip-fn-if-needed [form]
@@ -18,6 +19,7 @@
     kw))
 
 (defn- formize [spec] (if (seq? spec) spec (s/form spec)))
+(defn- de-spec [{:keys [form spec]}] (if (seq? form) spec form))
 
 (defn- spec-dispatch
   [spec accept]
@@ -32,6 +34,17 @@
     (set? spec) ::set
     (seq? spec) (normalize-symbol (first (strip-fn-if-needed spec)))
     :else (normalize-symbol spec)))
+
+(defn- expand-spec-ns [x]
+  (if-not (namespace x) (symbol "clojure.core" (name x)) x))
+
+(defn- ++expand-every-cljs-spec-bug++ [x]
+  (if (seq? x)
+    (let [[k & rest] x]
+      (cons k (if (= k 'cljs.spec/tuple)
+                (map expand-spec-ns rest)
+                rest)))
+    (expand-spec-ns x)))
 
 (defmulti visit
   "Walk a spec definition. Takes two arguments, the spec and the accept
@@ -55,7 +68,7 @@
 
 (defmethod visit 'clojure.spec/every [spec accept]
   (let [[_ inner-spec & kwargs] (formize spec)]
-    (accept 'clojure.spec/every spec [(visit inner-spec accept)])))
+    (accept 'clojure.spec/every spec [(visit (++expand-every-cljs-spec-bug++ inner-spec) accept)])))
 
 (defmethod visit 'clojure.spec/tuple [spec accept]
   (let [[_ & inner-specs] (formize spec)]
@@ -100,9 +113,8 @@
     (accept dispatch spec [(visit pred accept)])))
 
 (defmethod visit 'spec-tools.core/spec [spec accept]
-  ;; TODO: we might get a reference to a spec (why?)
-  (let [spec (or (s/get-spec spec) spec)]
-    (visit (:pred spec) accept)))
+  (let [spec (or (st/get-spec spec) spec)]
+    (accept ::spec spec (visit (de-spec spec) accept))))
 
 (defmethod visit ::default [spec accept]
   (accept (spec-dispatch spec accept) spec nil))

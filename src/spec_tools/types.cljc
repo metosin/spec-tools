@@ -19,7 +19,7 @@
 (defn- error-message [x]
   (str
     "Can't resolve type for dispatch value `" (dispatch x) "`. "
-    "Provide a `:hint` for the spec or add a dispatch "
+    "Provide a `:type` for the spec or add a dispatch "
     "function for `spec-tools.types/resolve-type`. Spec: "
     (str/replace (str x) #"\n" " ") "\n"))
 
@@ -27,11 +27,6 @@
 
 (defmethod resolve-type ::default [x]
   (println (error-message x)))
-
-(defn resolve-type-or-fail [x]
-  (if (contains? (methods resolve-type) x)
-    (resolve-type x)
-    (throw (ex-info (error-message x) {:spec x}))))
 
 (defn- all-types []
   {:long

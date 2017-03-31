@@ -2,6 +2,7 @@
   #?(:cljs (:require-macros [spec-tools.core :refer [spec coll-spec]]))
   (:require [spec-tools.impl :as impl]
             [spec-tools.types :as types]
+            [spec-tools.forms :as forms]
             [clojure.spec :as s]
     #?@(:clj  [
             [clojure.spec.gen :as gen]
@@ -27,6 +28,14 @@
    (->> (s/registry)
         (filter #(-> % first str (subs 1) (->> (re-matches re))))
         (into {}))))
+
+(defn ^:skip-wiki get-spec
+  "Finds recursively a spec implementation from the registry"
+  [name]
+  (if-let [spec (get (s/registry) name)]
+    (if (keyword? spec)
+      (get-spec spec)
+      spec)))
 
 (defn ^:skip-wiki eq [value]
   #{value})
@@ -76,6 +85,8 @@
      (s/explain-data spec value))))
 
 (defn conform
+  "Given a spec and a value, returns the possibly destructured value
+   or ::s/invalid"
   ([spec value]
    (conform spec value nil))
   ([spec value conformers]
@@ -108,7 +119,7 @@
 ;;
 
 (defn- extra-spec-map [t]
-  (dissoc t :form :pred))
+  (dissoc t :form :spec))
 
 (defn- fail-on-invoke [spec]
   (throw
@@ -117,7 +128,7 @@
         "Can't invoke spec with a non-function predicate: " spec)
       {:spec spec})))
 
-(defrecord Spec [pred form type]
+(defrecord Spec [spec form type]
   #?@(:clj
       [s/Specize
        (specize* [s] s)
@@ -126,29 +137,29 @@
   s/Spec
   (conform* [this x]
     ;; function predicate
-    (if (and (fn? pred) (pred x))
+    (if (and (fn? spec) (spec x))
       x
       ;; there is a dynamic conformer
       (if-let [conformer (get *conformers* type)]
         (conformer this x)
         ;; spec predicate
-        (if (s/spec? pred)
-          (s/conform pred x)
+        (if (s/spec? spec)
+          (s/conform spec x)
           ;; invalid
           +invalid+))))
   (unform* [_ x]
     x)
   (explain* [this path via in x]
-    (let [problems (if (s/spec? pred)
-                     (s/explain* pred path via in (s/conform* this x))
-                     (when (= +invalid+ (if (and (fn? pred) (pred (s/conform* this x))) x +invalid+))
+    (let [problems (if (s/spec? spec)
+                     (s/explain* spec path via in (s/conform* this x))
+                     (when (= +invalid+ (if (and (fn? spec) (spec (s/conform* this x))) x +invalid+))
                        [{:path path
                          :pred (s/abbrev form)
                          :val x
                          :via via
                          :in in}]))
           spec-reason (:reason this)
-          with-reason (fn [{:keys [reason] :as problem}]
+          with-reason (fn [problem]
                         (cond-> problem
                                 spec-reason
                                 (assoc :reason spec-reason)))]
@@ -157,15 +168,15 @@
   (gen* [this _ _ _]
     (if-let [gen (:gen this)]
       (gen)
-      (gen/gen-for-pred pred)))
+      (gen/gen-for-pred spec)))
   (with-gen* [this gfn]
     (assoc this :gen gfn))
   (describe* [this]
     (let [info (extra-spec-map this)]
-      `(spec ~form ~info)))
+      `(spec-tools.core/spec ~form ~info)))
   IFn
-  #?(:clj  (invoke [this x] (if (fn? pred) (pred x) (fail-on-invoke this)))
-     :cljs (-invoke [this x] (if (fn? pred) (pred x) (fail-on-invoke this)))))
+  #?(:clj  (invoke [this x] (if (fn? spec) (spec x) (fail-on-invoke this)))
+     :cljs (-invoke [this x] (if (fn? spec) (spec x) (fail-on-invoke this)))))
 
 #?(:clj
    (defmethod print-method Spec
@@ -207,20 +218,25 @@
 (defn create-spec
   "Creates a Spec intance from a map containing the following keys:
 
-           :pred  the wrapped spec predicate (mandatory)
-           :form  source code of the spec predicate, if :pred is a spec,
+           :spec  the wrapped spec predicate (mandatory)
+           :form  source code of the spec predicate, if :spec is a spec,
                   :form is read with `s/form` out of it. For non-spec
-                  preds, this is mandatory (mandatory/optional)
+                  preds, spec-tools.forms/resolve-form is called, if still
+                  not available, spec-creation will fail.
            :type  optional type for the spec. if not set, will be auto-
-                  resolved (optional)
-         :reason  optional reason to be added to problems with s/explain
+                  resolved via spec-tools.forms/resolve-type (optional)
+         :reason  reason to be added to problems with s/explain (optional)
             :gen  generator function for the spec (optional)
            :name  name of the spec (optional)
     :description  description of the spec (optional)
           :xx/yy  any qualified keys can be added (optional)"
-  [{:keys [pred type form] :as m}]
-  (assert pred "missing spec predicate")
-  (let [form (or form (s/form pred))
+  [{:keys [spec type form] :as m}]
+  (assert spec "missing spec predicate")
+  (let [form (or form
+                 (let [form (s/form spec)]
+                   (if-not (= form ::s/unknown) form))
+                 (forms/resolve-form spec)
+                 (throw (ex-info "No :form for spec" m)))
         info (extract-extra-info form)
         type (if-not (contains? m :type)
                (types/resolve-type form)
@@ -230,7 +246,7 @@
 
 (defn- extract-pred-and-info [x]
   (if (map? x)
-    [(:pred x) (dissoc x :pred)]
+    [(:spec x) (dissoc x :spec)]
     [x {}]))
 
 #?(:clj
@@ -244,7 +260,7 @@
      (spec integer? {:type :long})
 
      ;; map form
-     (spec {:pred integer?, :type :long})
+     (spec {:spec integer?, :type :long})
 
      calls create-spec, see it for details."
      ([pred-or-info]
@@ -260,7 +276,7 @@
              (merge
                ~info
                {:form form#
-                :pred ~pred})))
+                :spec ~pred})))
         `(let [info# ~info
                form# (if (symbol? '~pred)
                        '~(or (and (symbol? pred) (some->> pred resolve impl/->sym)) pred))]
@@ -269,7 +285,7 @@
              (merge
                ~info
                {:form form#
-                :pred ~pred})))))))
+                :spec ~pred})))))))
 
 #?(:clj
    (defmacro doc
@@ -283,14 +299,14 @@
       (doc integer? {:name \"it's a integer\"})
 
       ;; map form
-      (doc {:pred integer?, :name \"it's a integer\"}})
+      (doc {:spec integer?, :name \"it's a integer\"}})
 
       calls create-spec, see it for details."
      ([pred-or-info]
-      (let [[pred info] (extract-pred-and-info pred-or-info)]
-        `(doc ~pred ~info)))
-     ([pred info]
-      `(spec ~pred (merge ~info {:type nil})))))
+      (let [[spec info] (extract-pred-and-info pred-or-info)]
+        `(doc ~spec ~info)))
+     ([spec info]
+      `(spec ~spec (merge ~info {:type nil})))))
 
 ;;
 ;; Map Spec

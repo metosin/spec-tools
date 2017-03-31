@@ -19,17 +19,17 @@ No dependencies, but requires Java 1.8, Clojure `1.9.0-alpha15` and ClojureScrip
 
 Clojure Spec is implemented using reified protocols. This makes extending current specs non-trivial. Spec-tools introduces Spec Records that wrap the spec predicates and are easy to modify and extend. They satisfy the Spec protocols (`clojure.spec.Spec` & `clojure.spec.Specize`) and implement the `clojure.lang.IFn` so they can be used a normal function predicates. Specs are created with `spec-tools.core/spec`. The following keys having a special meaning:
 
-| Key                | Description                                                                         |
-| -------------------|-------------------------------------------------------------------------------------|
-| `:pred`            | The wrapped spec predicate.                                                         |
-| `:form`            | The wrapped spec form.                                                              |
-| `:type`            | Type hint of the Spec, mostly auto-resolved. Used in runtime conformation           |
-| `:name`            | Name of the spec. Contributes to (openapi-)docs                                     |
-| `:gen`             | Generator function for the Spec (set via `s/with-gen`)                              |
-| `:keys`            | Set of map keys that the spec defines. Extracted from `s/keys` Specs.               |
-| `:reason`          | Value is added to `s/explain-data` problems under key `:reason`                     |
-| `:description`     | Description of the spec. Contributes to (openapi-)docs                              |
-| `:json-schema/...` | Extra data that is merged with unqualifed keys into json-schema (TODO)              |
+| Key                | Description                                                                 |
+| -------------------|-----------------------------------------------------------------------------|
+| `:spec`            | The wrapped spec predicate.                                                 |
+| `:form`            | The wrapped spec form.                                                      |
+| `:type`            | Type hint of the Spec, mostly auto-resolved. Used in runtime conformation   |
+| `:name`            | Name of the spec. Maps to `title` to JSON Schema.                           |
+| `:description`     | Description of the spec. Maps to `description` in JSON Schema.              |
+| `:gen`             | Generator function for the Spec (set via `s/with-gen`)                      |
+| `:keys`            | Set of map keys that the spec defines. Extracted from `s/keys` Specs.       |
+| `:reason`          | Value is added to `s/explain-data` problems under key `:reason`             |
+| `:json-schema/...` | Extra data that is merged with unqualifed keys into json-schema             |
 
 #### Creating Specs
 
@@ -46,10 +46,18 @@ The following are all equivalent:
 (st/spec integer? {:type :long})
 
 ;; map form
-(st/spec {:pred integer?, :type :long})
+(st/spec {:spec integer?})
+(st/spec {:spec integer?, :type :long})
 
+;; a function
+(st/create-spec {:spec integer?})
+(st/create-spec {:spec integer?, :type :long})
+(st/create-spec {:spec integer?, :form `integer?})
+(st/create-spec {:spec integer?, :form `integer?, :type :long})
+
+;; ... resulting in:
 ; #Spec{:type :long,
-;       :pred clojure.core/integer?}
+;       :form clojure.core/integer?}
 ```
 
 #### Example usage
@@ -60,7 +68,7 @@ The following are all equivalent:
 
 my-integer?
 ; #Spec{:type :long
-;       :pred clojure.core/integer?}
+;       :form clojure.core/integer?}
 
 (my-integer? 1)
 ; true
@@ -70,16 +78,18 @@ my-integer?
 
 (assoc my-integer? :description "It's a int")
 ; #Spec{:type :long
-;       :pred clojure.core/integer?
+;       :form clojure.core/integer?
 ;       :description "It's a int"}
 
 (eval (s/form (st/spec integer? {:description "It's a int"})))
 ; #Spec{:type :long
-;       :pred clojure.core/integer?
+;       :form clojure.core/integer?
 ;       :description "It's a int"}
 ```
 
 For most clojure core predicates, the `:type` can be resolved automatically with a help of the `spec-tools.types/resolve-type` multimethod.
+
+For most clojure core predicates, the `:form` can be resolved automatically with a help of the `spec-tools.forms/resolve-form` multimethod.
 
 ### Predefined Spec Records
 
@@ -96,14 +106,14 @@ The following `clojure.core` predicates have a Spec-wrapped version in `spec-too
 
 sts/boolean?
 ; #Spec{:type :boolean
-;       :pred clojure.core/boolean?}
+;       :form clojure.core/boolean?}
 
 (sts/boolean? true)
 ; true
 
 (assoc sts/boolean? :description "it's an bool")
 ; #Spec{:type :boolean
-;       :pred clojure.core/boolean?
+;       :form clojure.core/boolean?
 ;       :description "It's a bool"}
 ```
 
@@ -314,6 +324,21 @@ Upcoming [Spec of Specs](http://dev.clojure.org/jira/browse/CLJ-2112) should hel
 ;                                       "zip" {:type "string"}},
 ;                          :required ("street" "zip")}},
 ;  :required ("id" "age" "name" "likes" "languages")}
+```
+
+Meta-data from Spec records is used to populate the data:
+
+```clj
+(jsc/to-json
+  (st/spec
+    {:spec integer?
+     :name "integer"
+     :description "it's an int"
+     :json-schema/default 42}))
+; {:type "integer"
+;  :title "integer"
+;  :description "it's an int"
+;  :default 42}
 ```
 
 Related: https://github.com/metosin/ring-swagger/issues/95

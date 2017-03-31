@@ -5,7 +5,8 @@
             [spec-tools.specs :as sts]
             [spec-tools.conform :as stc]
             [clojure.string :as str]
-            [spec-tools.conform :as conform]))
+            [spec-tools.conform :as conform]
+            [spec-tools.forms :as forms]))
 
 (s/def ::age (s/and sts/integer? #(> % 10)))
 (s/def ::over-a-million (s/and sts/int? #(> % 1000000)))
@@ -40,9 +41,32 @@
   (let [my-integer? (st/spec integer?)]
 
     (testing "creation"
-      (is (= (st/spec integer?)
-             (st/spec {:pred integer?})
-             (st/spec integer? {}))))
+      (testing "succeeds"
+        (is (= (st/spec integer?)
+               (st/spec {:spec integer?})
+               (st/spec {:spec integer?, :type :long})
+               (st/spec integer? {:type :long})
+               (st/create-spec {:spec integer?})
+               (st/create-spec {:spec integer? :type :long})
+               (st/create-spec {:spec integer?, :form `integer?})
+               (st/create-spec {:spec integer?, :form `integer?, :type :long}))))
+
+      (testing "anonymous functions"
+        (testing "fails without :form"
+          (is (thrown?
+                #?(:clj Exception, :cljs js/Error)
+                (st/create-spec
+                  {:name "positive?"
+                   :spec (fn [x] (pos? x))}))))
+        (testing ":form and :type can be provided"
+          (is (not
+                (nil?
+                  (st/spec?
+                    (st/create-spec
+                      {:name "positive?"
+                       :spec (fn [x] (pos? x))
+                       :type :long
+                       :form `(fn [x] (pos? x))}))))))))
 
     (testing "wrapped predicate work as a predicate"
       (is (true? (my-integer? 1)))
@@ -85,9 +109,9 @@
 
   (testing "creation"
     (is (= (st/doc integer? {:description "kikka"})
-           (st/doc {:pred integer?, :description "kikka"})
+           (st/doc {:spec integer?, :description "kikka"})
            (st/doc integer? {:description "kikka"})
-           (st/spec {:pred integer?, :description "kikka", :type nil}))))
+           (st/spec {:spec integer?, :description "kikka", :type nil}))))
 
   (testing "just docs, #12"
     (let [spec (st/doc integer? {:description "kikka"})]
@@ -367,3 +391,9 @@
            (st/extract-extra-info
              (s/form (s/keys
                        :req [(or ::age (and ::uuid ::lat))])))))))
+
+(deftest form-inference-test
+  (testing "for core predicates"
+    (is (= `integer? (forms/resolve-form integer?))))
+  (testing "nil for unknowns"
+    (is (= nil (forms/resolve-form #(> % 2))))))
