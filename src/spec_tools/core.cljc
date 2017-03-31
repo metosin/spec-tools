@@ -128,8 +128,6 @@
         "Can't invoke spec with a non-function predicate: " spec)
       {:spec spec})))
 
-(declare spec)
-
 (defrecord Spec [spec form type]
   #?@(:clj
       [s/Specize
