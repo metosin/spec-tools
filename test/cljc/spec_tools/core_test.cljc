@@ -56,15 +56,17 @@
           (is (thrown?
                 #?(:clj Exception, :cljs js/Error)
                 (st/create-spec
-                  {:spec (fn [x] (inc x))}))))
+                  {:name "positive?"
+                   :spec (fn [x] (pos? x))}))))
         (testing ":form and :type can be provided"
           (is (not
                 (nil?
                   (st/spec?
                     (st/create-spec
-                      {:spec (fn [x] (inc x))
+                      {:name "positive?"
+                       :spec (fn [x] (pos? x))
                        :type :long
-                       :form `(fn [x] (inc x))}))))))))
+                       :form `(fn [x] (pos? x))}))))))))
 
     (testing "wrapped predicate work as a predicate"
       (is (true? (my-integer? 1)))
