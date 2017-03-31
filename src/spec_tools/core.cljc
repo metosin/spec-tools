@@ -225,7 +225,7 @@
                   not available, spec-creation will fail.
            :type  optional type for the spec. if not set, will be auto-
                   resolved via spec-tools.forms/resolve-type (optional)
-         :reason  optional reason to be added to problems with s/explain
+         :reason  reason to be added to problems with s/explain (optional)
             :gen  generator function for the spec (optional)
            :name  name of the spec (optional)
     :description  description of the spec (optional)
