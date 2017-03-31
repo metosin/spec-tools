@@ -269,7 +269,7 @@
                                (assoc acc (keyword (name k)) v)
                                acc))
                            {}
-                           spec)
+                           (into {} spec))
         extra-info (-> spec
                        (select-keys [:name :description])
                        (set/rename-keys {:name :title}))]
