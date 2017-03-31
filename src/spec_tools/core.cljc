@@ -1,8 +1,8 @@
 (ns spec-tools.core
   #?(:cljs (:require-macros [spec-tools.core :refer [spec coll-spec]]))
   (:require [spec-tools.impl :as impl]
-            [spec-tools.types :as types]
-            [spec-tools.forms :as forms]
+            [spec-tools.type :as type]
+            [spec-tools.form :as form]
             [clojure.spec :as s]
     #?@(:clj  [
             [clojure.spec.gen :as gen]
@@ -235,11 +235,11 @@
   (let [form (or form
                  (let [form (s/form spec)]
                    (if-not (= form ::s/unknown) form))
-                 (forms/resolve-form spec)
+                 (form/resolve-form spec)
                  (throw (ex-info "No :form for spec" m)))
         info (extract-extra-info form)
         type (if-not (contains? m :type)
-               (types/resolve-type form)
+               (type/resolve-type form)
                type)]
     (map->Spec
       (merge m info {:form form, :type type}))))

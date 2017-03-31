@@ -17,14 +17,16 @@ No dependencies, but requires Java 1.8, Clojure `1.9.0-alpha15` and ClojureScrip
 
 ### Spec Records
 
-Clojure Spec is implemented using reified protocols. This makes extending current specs non-trivial. Spec-tools introduces Spec Records that wrap the spec predicates and are easy to modify and extend. They satisfy the Spec protocols (`clojure.spec.Spec` & `clojure.spec.Specize`) and implement the `clojure.lang.IFn` so they can be used a normal function predicates. Specs are created with `spec-tools.core/spec`. The following keys having a special meaning:
+Clojure Spec is implemented using reified protocols. This makes extending current specs non-trivial. Spec-tools introduces Spec Records that wrap the spec predicates and are easy to modify and extend. They satisfy the Spec protocols (`clojure.spec.Spec` & `clojure.spec.Specize`) and implement the `clojure.lang.IFn` so they can be used a normal function predicates. Specs are created with `spec-tools.core/spec` macro of with the underlying `spec-tools.core/create-spec` function.
+
+ The following keys having a special meaning:
 
 | Key                | Description                                                                 |
 | -------------------|-----------------------------------------------------------------------------|
 | `:spec`            | The wrapped spec predicate.                                                 |
 | `:form`            | The wrapped spec form.                                                      |
-| `:type`            | Type hint of the Spec, mostly auto-resolved. Used in runtime conformation   |
-| `:name`            | Name of the spec. Maps to `title` to JSON Schema.                           |
+| `:type`            | Type hint of the Spec, mostly auto-resolved. Used in runtime conformation.  |
+| `:name`            | Name of the spec. Maps to `title` in JSON Schema.                           |
 | `:description`     | Description of the spec. Maps to `description` in JSON Schema.              |
 | `:gen`             | Generator function for the Spec (set via `s/with-gen`)                      |
 | `:keys`            | Set of map keys that the spec defines. Extracted from `s/keys` Specs.       |
@@ -93,25 +95,19 @@ For most clojure core predicates, the `:form` can be resolved automatically with
 
 ### Predefined Spec Records
 
-The following `clojure.core` predicates have a Spec-wrapped version in `spec-tools.specs`:
-* `any?`, `some?`, `number?`, `integer?`, `int?`, `pos-int?`, `neg-int?`, `nat-int?`,
-`float?`, `double?`, `boolean?`, `string?`, `ident?`, `simple-ident?`, `qualified-ident?`,
-`keyword?`, `simple-keyword?`, `qualified-keyword?`, `symbol?`, `simple-symbol?`,
-`qualified-symbol?`, `uuid?`, `uri?`, `bigdec?`, `inst?`, `seqable?`, `indexed?`,
-`map?`, `vector?`, `list?`, `seq?`, `char?`, `set?`, `nil?`, `false?`, `true?`, `zero?`
-`rational?`, `coll?`, `empty?`, `associative?`, `sequential?`, `ratio?` and `bytes?`.
+Most `clojure.core` predicates have a predefined Spec-wrapped version in `spec-tools.specs`.
 
 ```clj
-(require '[spec-tools.specs :as sts])
+(require '[spec-tools.spec :as spec])
 
-sts/boolean?
+spec/boolean?
 ; #Spec{:type :boolean
 ;       :form clojure.core/boolean?}
 
-(sts/boolean? true)
+(spec/boolean? true)
 ; true
 
-(assoc sts/boolean? :description "it's an bool")
+(assoc spec/boolean? :description "it's an bool")
 ; #Spec{:type :boolean
 ;       :form clojure.core/boolean?
 ;       :description "It's a bool"}
@@ -154,7 +150,7 @@ For maps, there are also special conformers:
 ```clj
 (require '[spec-tools.conform :as stc])
 
-(s/def ::age (s/and sts/integer? #(> % 18)))
+(s/def ::age (s/and spec/integer? #(> % 18)))
 
 ;; no conforming
 (s/conform ::age "20")
@@ -175,7 +171,7 @@ For maps, there are also special conformers:
 
 ```clj
 (s/def ::name string?)
-(s/def ::birthdate sts/inst?)
+(s/def ::birthdate spec/inst?)
 
 (s/def ::languages
   (s/coll-of

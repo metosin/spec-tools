@@ -1,4 +1,4 @@
-(ns spec-tools.types
+(ns spec-tools.type
   (:require [spec-tools.impl :as impl]
             [clojure.string :as str]))
 

@@ -1,12 +1,11 @@
 (ns spec-tools.perf-test
-  (:require [clojure.spec :as spec]
-            [schema.core :as schema]
+  (:require [schema.core :as schema]
             [schema.coerce :as coerce]
             [spec-tools.core :as st]
-            [spec-tools.specs :as sts]
+            [spec-tools.spec :as spec]
             [criterium.core :as cc]
             [clojure.spec :as s]
-            [spec-tools.conform :as stc]))
+            [spec-tools.conform :as conform]))
 
 ;;
 ;; start repl with `lein perf repl`
@@ -23,8 +22,8 @@
 ;; Memory:                16 GB
 ;;
 
-(spec/def ::age (spec/and integer? #(> % 10)))
-(spec/def ::x-age (spec/and sts/integer? #(> % 10)))
+(s/def ::age (s/and integer? #(> % 10)))
+(s/def ::x-age (s/and spec/integer? #(> % 10)))
 
 (def age (schema/constrained schema/Int #(> % 10)))
 
@@ -46,7 +45,7 @@
   ; 81ns (alpha12)
   ; 84ns (alpha14)
   (title "spec: integer?")
-  (let [call #(spec/valid? ::age 12)]
+  (let [call #(s/valid? ::age 12)]
     (assert (call))
     (cc/quick-bench
       (call)))
@@ -55,7 +54,7 @@
   ; 77ns (alpha12)
   ; 82ns (alpha14)
   (title "spec: x-integer?")
-  (let [call #(spec/valid? ::x-age 12)]
+  (let [call #(s/valid? ::x-age 12)]
     (assert (call))
     (cc/quick-bench
       (call)))
@@ -83,7 +82,7 @@
   ;  100ns (alpha12)
   ;   81ns (alpha14)
   (title "spec: integer?")
-  (let [call #(spec/conform ::age 12)]
+  (let [call #(s/conform ::age 12)]
     (assert (= (call) 12))
     (cc/quick-bench
       (call)))
@@ -116,14 +115,14 @@
 
   (suite "conforming set of keywords")
 
-  (let [sizes-spec (spec/coll-of (spec/and sts/keyword? #{:L :M :S}) :into #{})
+  (let [sizes-spec (s/coll-of (s/and spec/keyword? #{:L :M :S}) :into #{})
         sizes-schema #{(schema/enum :L :M :S)}]
 
     ; 4300ns
     ; 1440ns (alpha12)
     ; 1160ns (alpha14)
     (title "spec: conform keyword enum")
-    (let [call #(st/conform sizes-spec ["L" "M"] stc/string-conformers)]
+    (let [call #(st/conform sizes-spec ["L" "M"] conform/string-conformers)]
       (assert (= (call) #{:L :M}))
       (cc/quick-bench
         (call)))
@@ -132,7 +131,7 @@
     ; 990ns (alpha12)
     ; 990ns (alpha14)
     (title "spec: conform keyword enum - no-op")
-    (let [call #(st/conform sizes-spec #{:L :M} stc/string-conformers)]
+    (let [call #(st/conform sizes-spec #{:L :M} conform/string-conformers)]
       (assert (= (call) #{:L :M}))
       (cc/quick-bench
         (call)))
@@ -153,15 +152,15 @@
       (cc/quick-bench
         (call)))))
 
-(s/def ::order-id sts/integer?)
-(s/def ::product-id sts/integer?)
-(s/def ::product-name sts/string?)
-(s/def ::price sts/double?)
-(s/def ::quantity sts/integer?)
-(s/def ::name sts/string?)
-(s/def ::zip sts/integer?)
+(s/def ::order-id spec/integer?)
+(s/def ::product-id spec/integer?)
+(s/def ::product-name spec/string?)
+(s/def ::price spec/double?)
+(s/def ::quantity spec/integer?)
+(s/def ::name spec/string?)
+(s/def ::zip spec/integer?)
 (s/def ::street string?)
-(s/def ::country (s/and sts/keyword? #{:fi :po}))
+(s/def ::country (s/and spec/keyword? #{:fi :po}))
 (s/def ::receiver (s/keys :req-un [::name ::street ::zip]
                           :opt-un [::country]))
 (s/def ::orderline (s/keys :req-un [::product-id ::price]
@@ -219,7 +218,7 @@
   ; 4.5µs (alpha12)
   ; 3.9µs (alpha14)
   (title "spec: conform")
-  (let [call #(st/conform ::order sample-order stc/string-conformers)]
+  (let [call #(st/conform ::order sample-order conform/string-conformers)]
     (assert (= (call) sample-order-valid))
     (cc/quick-bench
       (call)))
@@ -227,7 +226,7 @@
   ; 2.8µs (alpha12)
   ; 2.7µs (alpha14)
   (title "spec: conform - no-op")
-  (let [call #(st/conform ::order sample-order-valid stc/string-conformers)]
+  (let [call #(st/conform ::order sample-order-valid conform/string-conformers)]
     (assert (= (call) sample-order-valid))
     (cc/quick-bench
       (call)))

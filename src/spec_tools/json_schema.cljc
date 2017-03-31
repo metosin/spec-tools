@@ -2,7 +2,7 @@
   "Tools for converting specs into JSON Schemata."
   (:require [clojure.spec :as s]
             [spec-tools.visitor :as visitor :refer [visit]]
-            [spec-tools.types :as types]
+            [spec-tools.type :as type]
             [clojure.set :as set]))
 
 (defn- only-entry? [key a-map] (= [key] (keys a-map)))
@@ -211,7 +211,7 @@
 (defmethod accept-spec 'clojure.spec/every [dispatch spec children]
   (let [form (s/form spec)
         pred (second form)
-        type (types/resolve-type form)]
+        type (type/resolve-type form)]
     ;; Special case handling of s/map-of, which expands to s/every
     (if (is-map-of? spec)
       {:type "object" :additionalProperties (get-in (unwrap children) [:items 1])}

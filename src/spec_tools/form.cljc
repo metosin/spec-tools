@@ -1,4 +1,4 @@
-(ns spec-tools.forms)
+(ns spec-tools.form)
 
 (defmulti resolve-form identity :default ::default)
 

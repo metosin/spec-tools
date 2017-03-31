@@ -1,4 +1,4 @@
-(ns spec-tools.specs
+(ns spec-tools.spec
   (:refer-clojure :exclude [any? some? number? integer? int? pos-int? neg-int? nat-int?
                             float? double? boolean? string? ident? simple-ident? qualified-ident?
                             keyword? simple-keyword? qualified-keyword? symbol? simple-symbol?

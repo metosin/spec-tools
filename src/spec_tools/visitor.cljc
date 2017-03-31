@@ -2,7 +2,7 @@
   "Tools for walking spec definitions."
   (:require [clojure.spec :as s]
             [spec-tools.core :as st]
-            [spec-tools.types :as types]))
+            [spec-tools.type :as type]))
 
 (defn strip-fn-if-needed [form]
   (let [head (first form)]
@@ -105,7 +105,7 @@
 (defmethod visit 'clojure.spec/coll-of [spec accept]
   (let [form (s/form spec)
         pred (second form)
-        type (types/resolve-type form)
+        type (type/resolve-type form)
         dispatch (case type
                    :map ::map-of
                    :set ::set-of
