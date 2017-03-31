@@ -13,7 +13,7 @@ Status: **Alpha** (as spec is still alpha too).
 
 [![Clojars Project](http://clojars.org/metosin/spec-tools/latest-version.svg)](http://clojars.org/metosin/spec-tools)
 
-No dependencies, but requires Java 1.8, Clojure `1.9.0-alpha15` and ClojureScript `1.9.456`.
+No dependencies, but requires Java 1.8, Clojure `1.9.0-alpha15` and ClojureScript `1.9.494`.
 
 ### Spec Records
 
