@@ -51,11 +51,14 @@ The following are all equivalent:
 (st/spec {:spec integer?})
 (st/spec {:spec integer?, :type :long})
 
-;; a function
+;; function
+(st/create-spec 
+  {:spec integer?
+   :form `integer?
+   :type :long})
+
+;; function, with type and form inference
 (st/create-spec {:spec integer?})
-(st/create-spec {:spec integer?, :type :long})
-(st/create-spec {:spec integer?, :form `integer?})
-(st/create-spec {:spec integer?, :form `integer?, :type :long})
 
 ;; ... resulting in:
 ; #Spec{:type :long,
@@ -95,7 +98,7 @@ For most clojure core predicates, the `:form` can be resolved automatically with
 
 ### Predefined Spec Records
 
-Most `clojure.core` predicates have a predefined Spec-wrapped version in `spec-tools.specs`.
+Most `clojure.core` predicates have a predefined Spec-wrapped version in `spec-tools.spec`.
 
 ```clj
 (require '[spec-tools.spec :as spec])
@@ -105,6 +108,9 @@ spec/boolean?
 ;       :form clojure.core/boolean?}
 
 (spec/boolean? true)
+; true
+
+(s/valid? spec/boolean? false)
 ; true
 
 (assoc spec/boolean? :description "it's an bool")
@@ -129,9 +135,10 @@ Can be added to a Spec via the key `:reason`
 
 Spec-tools loans from the awesome [Schema](https://github.com/plumatic/schema) by separating specs (what) from conformers (how). The Spec Records contains a dynamical conformer, which can be instructed at runtime to select a suitable conforming function for the given type. Same specs can conform differently, e.g. when sending data over JSON vs Transit.
 
-By default, Specs conform is a no-op. Binding a dynamic var `spec-tools.core/*conformers*` with a function of `spec/type => spec-conformer` will cause the Spec to be conformed at runtime with the selected conformer.
+By default, Specs conform is a no-op. Binding a dynamic var `spec-tools.core/*conformers*` with a function of `type => spec-conformer` will cause the Spec to be conformed at runtime with the selected spec-conformer. 
 
-Conformers are arity2 functions taking the Spec Records and the value and should return either conformed value of `:clojure.spec/invalid`.
+* Types should be keywords. By default, the following types are used: `:long`, `:double`, `:boolean`, `:string`, `:keyword`, `:symbol`, `:uuid`, `:uri`, `:bigdec`, `:date`, `:ratio`, `:map`, `:set` and `:vector`
+* Spec-conformers are arity2 functions taking the Spec Records and the value and should return either conformed value of `:clojure.spec/invalid`.
 
 The following conformers are found in `spec-tools.conform`:
 
@@ -148,7 +155,7 @@ For maps, there are also special conformers:
 #### Conforming examples
 
 ```clj
-(require '[spec-tools.conform :as stc])
+(require '[spec-tools.conform :as conform])
 
 (s/def ::age (s/and spec/integer? #(> % 18)))
 
@@ -159,11 +166,11 @@ For maps, there are also special conformers:
 ; ::s/invalid
 
 ;; json-conforming
-(st/conform ::age "20" stc/json-conformers)
+(st/conform ::age "20" conform/json-conformers)
 ; ::s/invalid
 
 ;; string-conforming
-(st/conform ::age "20" stc/string-conformers)
+(st/conform ::age "20" conform/string-conformers)
 ; 20
 ```
 
@@ -175,7 +182,7 @@ For maps, there are also special conformers:
 
 (s/def ::languages
   (s/coll-of
-    (s/and st/keyword? #{:clj :cljs})
+    (s/and spec/keyword? #{:clj :cljs})
     :into #{}))
 
 (s/def ::user
@@ -194,11 +201,11 @@ For maps, there are also special conformers:
 ; ::s/invalid
 
 ;; json-conformers doesn't conform numbers
-(st/conform ::user data stc/json-conformers)
+(st/conform ::user data conform/json-conformers)
 ; ::s/invalid
 
 ;; string-conformers for the rescue
-(st/conform ::user data stc/string-conformers)
+(st/conform ::user data conform/string-conformers)
 ; {:name "Ilona"
 ;  :age 48
 ;  :languages #{:clj :cljs}
@@ -213,7 +220,7 @@ For maps, there are also special conformers:
 (st/conform
   ::user
   {:name "Inkeri", :age 102}
-  {:map stc/strip-extra-keys})
+  {:map conform/strip-extra-keys})
 ; {:name "Inkeri"}
 ```
 
@@ -223,7 +230,7 @@ Default conformers are just data, so overriding or extending them is easy:
 
 ```clj
 (def my-string-conformers
-  (-> stc/string-conformers
+  (-> conform/string-conformers
       (assoc
         :keyword
         (fn [_ value]
@@ -235,7 +242,7 @@ Default conformers are just data, so overriding or extending them is easy:
 (st/conform st/keyword? "kikka")
 ; ::s/invalid
 
-(st/conform st/keyword? "kikka" stc/string-conformers)
+(st/conform st/keyword? "kikka" conform/string-conformers)
 ; :kikka
 
 (st/conform st/keyword? "kikka" my-string-conformers)
