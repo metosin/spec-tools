@@ -51,21 +51,21 @@
                (st/create-spec {:spec integer?, :form `integer?, :type :long}))))
 
       (testing "anonymous functions"
-        (testing "fails without :form"
-          (is (thrown?
-                #?(:clj Exception, :cljs js/Error)
-                (st/create-spec
-                  {:name "positive?"
-                   :spec (fn [x] (pos? x))}))))
+
+        (testing ":form default to ::s/unknown"
+          (let [spec (st/create-spec
+                       {:name "positive?"
+                        :spec (fn [x] (pos? x))})]
+            (is (st/spec? spec))
+            (is (= (:form spec) ::s/unknown))))
+
         (testing ":form and :type can be provided"
-          (is (not
-                (nil?
-                  (st/spec?
-                    (st/create-spec
-                      {:name "positive?"
-                       :spec (fn [x] (pos? x))
-                       :type :long
-                       :form `(fn [x] (pos? x))}))))))))
+          (let [spec (st/create-spec
+                       {:name "positive?"
+                        :spec (fn [x] (pos? x))
+                        :type :long
+                        :form `(fn [x] (pos? x))})]
+            (is (st/spec? spec))))))
 
     (testing "wrapped predicate work as a predicate"
       (is (true? (my-integer? 1)))

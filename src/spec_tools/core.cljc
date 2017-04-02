@@ -236,7 +236,7 @@
                  (let [form (s/form spec)]
                    (if-not (= form ::s/unknown) form))
                  (form/resolve-form spec)
-                 (throw (ex-info "No :form for spec" m)))
+                 ::s/unknown)
         info (extract-extra-info form)
         type (if-not (contains? m :type)
                (type/resolve-type form)

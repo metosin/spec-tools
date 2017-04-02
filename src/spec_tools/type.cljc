@@ -89,6 +89,8 @@
 (defmethod resolve-type 'clojure.core/ratio? [_] :ratio)
 (defmethod resolve-type 'clojure.core/bytes? [_] nil)
 
+(defmethod resolve-type :clojure.spec/unknown [_] nil)
+
 ; keys
 (defmethod resolve-type 'clojure.spec/keys [_] :map)
 
