@@ -43,7 +43,7 @@
 (defn ^:skip-wiki set-of [value]
   (s/coll-of
     value
-    :kind set?))
+    :into #{}))
 
 (defn ^:skip-wiki enum [& values]
   (s/spec (set values)))
@@ -68,20 +68,20 @@
 ;; Dynamic conforming
 ;;
 
-(def ^:dynamic ^:private *conformers* nil)
+(def ^:dynamic ^:private *conforming* nil)
 
 (defn explain
   ([spec value]
    (explain spec value nil))
-  ([spec value conformers]
-   (binding [*conformers* conformers]
+  ([spec value conforming]
+   (binding [*conforming* conforming]
      (s/explain spec value))))
 
 (defn explain-data
   ([spec value]
    (explain-data spec value nil))
-  ([spec value conformers]
-   (binding [*conformers* conformers]
+  ([spec value conforming]
+   (binding [*conforming* conforming]
      (s/explain-data spec value))))
 
 (defn conform
@@ -89,8 +89,8 @@
    or ::s/invalid"
   ([spec value]
    (conform spec value nil))
-  ([spec value conformers]
-   (binding [*conformers* conformers]
+  ([spec value conforming]
+   (binding [*conforming* conforming]
      (s/conform spec value))))
 
 (defn conform!
@@ -100,19 +100,17 @@
    actual conformed value."
   ([spec value]
    (conform! spec value nil))
-  ([spec value conformers]
-   (binding [*conformers* conformers]
+  ([spec value conforming]
+   (binding [*conforming* conforming]
      (let [conformed (s/conform spec value)]
        (if-not (= conformed +invalid+)
          conformed
-         (let [problems (s/explain-data spec value)]
-           (throw
-             (ex-info
-               "Spec conform error"
-               {:type ::conform
-                :problems (+problems+ problems)
-                :spec spec
-                :value value}))))))))
+         (let [problems (s/explain-data spec value)
+               data {:type ::conform
+                     :problems (+problems+ problems)
+                     :spec spec
+                     :value value}]
+           (throw (ex-info (str "Spec conform error: " data) data))))))))
 
 ;;
 ;; Spec Record
@@ -140,8 +138,8 @@
     (if (and (fn? spec) (spec x))
       x
       ;; there is a dynamic conformer
-      (if-let [conformer (get *conformers* type)]
-        (conformer this x)
+      (if-let [conform (get *conforming* type)]
+        (conform this x)
         ;; spec predicate
         (if (s/spec? spec)
           (s/conform spec x)
