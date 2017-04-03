@@ -23,7 +23,7 @@
     "function for `spec-tools.types/resolve-type`. Spec: "
     (str/replace (str x) #"\n" " ") "\n"))
 
-(defmulti resolve-type #'dispatch :default ::default)
+(defmulti resolve-type dispatch :default ::default)
 
 (defmethod resolve-type ::default [x]
   (println (error-message x)))
@@ -66,8 +66,8 @@
 (defmethod resolve-type 'clojure.core/simple-symbol? [_] :symbol)
 (defmethod resolve-type 'clojure.core/qualified-symbol? [_] :symbol)
 (defmethod resolve-type 'clojure.core/uuid? [_] :uuid)
-(defmethod resolve-type 'clojure.core/uri? [_] :uri)
-(defmethod resolve-type 'clojure.core/bigdec? [_] :bigdec)
+#?(:clj (defmethod resolve-type 'clojure.core/uri? [_] :uri))
+#?(:clj (defmethod resolve-type 'clojure.core/bigdec? [_] :bigdec))
 (defmethod resolve-type 'clojure.core/inst? [_] :date)
 (defmethod resolve-type 'clojure.core/seqable? [_] nil)
 (defmethod resolve-type 'clojure.core/indexed? [_] nil)
@@ -81,13 +81,13 @@
 (defmethod resolve-type 'clojure.core/false? [_] :boolean)
 (defmethod resolve-type 'clojure.core/true? [_] :boolean)
 (defmethod resolve-type 'clojure.core/zero? [_] :long)
-(defmethod resolve-type 'clojure.core/rational? [_] :long)
+#?(:clj (defmethod resolve-type 'clojure.core/rational? [_] :long))
 (defmethod resolve-type 'clojure.core/coll? [_] nil)
 (defmethod resolve-type 'clojure.core/empty? [_] nil)
 (defmethod resolve-type 'clojure.core/associative? [_] nil)
 (defmethod resolve-type 'clojure.core/sequential? [_] nil)
-(defmethod resolve-type 'clojure.core/ratio? [_] :ratio)
-(defmethod resolve-type 'clojure.core/bytes? [_] nil)
+#?(:clj (defmethod resolve-type 'clojure.core/ratio? [_] :ratio))
+#?(:clj (defmethod resolve-type 'clojure.core/bytes? [_] nil))
 
 (defmethod resolve-type :clojure.spec/unknown [_] nil)
 
