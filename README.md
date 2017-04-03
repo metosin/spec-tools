@@ -145,13 +145,12 @@ Specs conform is default a no-op. Binding a dynamic var `spec-tools.core/*confor
 
 The following conforming are found in `spec-tools.conform`:
 
-| Name                | Description                                                                                                            |
-|---------------------|------------------------------------------------------------------------------------------------------------------------|
-| `string-conforming` | Conforms all specs from strings (things like `:query`, `:header` & `:path` -parameters).                               |
-| `json-conforming`   | [JSON](http://json.org/) Conforming (numbers and booleans not conformed).                                              |
-| `nil`               | No conforming (for [EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format)). |
-
-For maps, there is `strict-map-conforming` which strips extra keys from `s/keys` Specs.
+| Name                    | Description                                                                                                            |
+|-------------------------|------------------------------------------------------------------------------------------------------------------------|
+| `string-conforming`     | Conforms all specs from strings (things like `:query`, `:header` & `:path` -parameters).                               |
+| `json-conforming`       | [JSON](http://json.org/) Conforming (numbers and booleans not conformed).                                              |
+| `strict-map-conforming` | Strips out extra keys of `s/keys` Specs.                                                                               |
+| `nil`                   | No conforming (for [EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format)). |
 
 Default conforming are defined as data, so they are easy to combine and extend.
 
