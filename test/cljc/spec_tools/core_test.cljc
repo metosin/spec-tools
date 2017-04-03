@@ -395,5 +395,11 @@
 (deftest form-inference-test
   (testing "for core predicates"
     (is (= `integer? (form/resolve-form integer?))))
+  (testing "::s/unknown for unknowns"
+    (is (= ::s/unknown (form/resolve-form #(> % 2))))))
+
+(deftest spec-inference-test
+  (testing "for core predicates"
+    (is (= spec/integer? (spec/resolve-spec integer?))))
   (testing "nil for unknowns"
-    (is (= nil (form/resolve-form #(> % 2))))))
+    (is (= nil (spec/resolve-spec #(> % 2))))))

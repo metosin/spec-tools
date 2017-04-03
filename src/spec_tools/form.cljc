@@ -1,8 +1,9 @@
-(ns spec-tools.form)
+(ns spec-tools.form
+  (:require [clojure.spec :as s]))
 
 (defmulti resolve-form identity :default ::default)
 
-(defmethod resolve-form ::default [_] nil)
+(defmethod resolve-form ::default [_] ::s/unknown)
 
 (defmethod resolve-form any? [_] `any?)
 (defmethod resolve-form some? [_] `some?)

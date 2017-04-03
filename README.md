@@ -97,6 +97,8 @@ For most clojure core predicates, the `:type` can be resolved automatically with
 
 For most clojure core predicates, the `:form` can be resolved automatically with a help of the `spec-tools.form/resolve-form` multimethod.
 
+For most clojure core predicates, the `spec` can be resolved automatically with a help of the `spec-tools.spec/resolve-spec` multimethod.
+
 ### Predefined Spec Records
 
 Most `clojure.core` predicates have a predefined Spec-wrapped version in `spec-tools.spec`.
