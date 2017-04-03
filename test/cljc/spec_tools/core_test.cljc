@@ -41,7 +41,8 @@
 
     (testing "creation"
       (testing "succeeds"
-        (is (= (st/spec integer?)
+        (is (= spec/integer?
+               (st/spec integer?)
                (st/spec {:spec integer?})
                (st/spec {:spec integer?, :type :long})
                (st/spec integer? {:type :long})
