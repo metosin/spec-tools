@@ -82,14 +82,15 @@
 ;;
 
 (def json-conforming
-  {:keyword string->keyword
-   :uuid string->uuid
-   :date string->date
-   :symbol string->symbol
-   ;; TODO: implement
-   :uri nil
-   :bigdec nil
-   :ratio nil})
+  (merge
+    {:keyword string->keyword
+     :uuid string->uuid
+     :date string->date
+     :symbol string->symbol}
+    #?(:clj
+       {:uri nil
+        :bigdec nil
+        :ratio nil})))
 
 (def string-conforming
   (merge
