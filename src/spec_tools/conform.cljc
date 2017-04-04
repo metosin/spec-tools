@@ -78,24 +78,28 @@
     x))
 
 ;;
-;; conformers
+;; conforming
 ;;
 
-(def json-conformers
-  {:keyword string->keyword
-   :uuid string->uuid
-   :date string->date
-   :symbol string->symbol
-   ;; TODO: implement
-   :uri nil
-   :bigdec nil
-   :ratio nil})
-
-(def string-conformers
+(def json-conforming
   (merge
-    json-conformers
+    {:keyword string->keyword
+     :uuid string->uuid
+     :date string->date
+     :symbol string->symbol}
+    #?(:clj
+       {:uri nil
+        :bigdec nil
+        :ratio nil})))
+
+(def string-conforming
+  (merge
+    json-conforming
     {:long string->long
      :double string->double
      :boolean string->boolean
      :nil string->nil
      :string nil}))
+
+(def strict-map-conforming
+  {:map strip-extra-keys})

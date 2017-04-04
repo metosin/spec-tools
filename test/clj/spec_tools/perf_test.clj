@@ -122,7 +122,7 @@
     ; 1440ns (alpha12)
     ; 1160ns (alpha14)
     (title "spec: conform keyword enum")
-    (let [call #(st/conform sizes-spec ["L" "M"] conform/string-conformers)]
+    (let [call #(st/conform sizes-spec ["L" "M"] conform/string-conforming)]
       (assert (= (call) #{:L :M}))
       (cc/quick-bench
         (call)))
@@ -131,7 +131,7 @@
     ; 990ns (alpha12)
     ; 990ns (alpha14)
     (title "spec: conform keyword enum - no-op")
-    (let [call #(st/conform sizes-spec #{:L :M} conform/string-conformers)]
+    (let [call #(st/conform sizes-spec #{:L :M} conform/string-conforming)]
       (assert (= (call) #{:L :M}))
       (cc/quick-bench
         (call)))
@@ -218,7 +218,7 @@
   ; 4.5µs (alpha12)
   ; 3.9µs (alpha14)
   (title "spec: conform")
-  (let [call #(st/conform ::order sample-order conform/string-conformers)]
+  (let [call #(st/conform ::order sample-order conform/string-conforming)]
     (assert (= (call) sample-order-valid))
     (cc/quick-bench
       (call)))
@@ -226,7 +226,7 @@
   ; 2.8µs (alpha12)
   ; 2.7µs (alpha14)
   (title "spec: conform - no-op")
-  (let [call #(st/conform ::order sample-order-valid conform/string-conformers)]
+  (let [call #(st/conform ::order sample-order-valid conform/string-conforming)]
     (assert (= (call) sample-order-valid))
     (cc/quick-bench
       (call)))

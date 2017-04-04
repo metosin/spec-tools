@@ -1,8 +1,9 @@
-(ns spec-tools.form)
+(ns spec-tools.form
+  (:require [clojure.spec :as s]))
 
 (defmulti resolve-form identity :default ::default)
 
-(defmethod resolve-form ::default [_] nil)
+(defmethod resolve-form ::default [_] ::s/unknown)
 
 (defmethod resolve-form any? [_] `any?)
 (defmethod resolve-form some? [_] `some?)
@@ -26,8 +27,8 @@
 (defmethod resolve-form simple-symbol? [_] `simple-symbol?)
 (defmethod resolve-form qualified-symbol? [_] `qualified-symbol?)
 (defmethod resolve-form uuid? [_] `uuid?)
-(defmethod resolve-form uri? [_] `uri?)
-(defmethod resolve-form bigdec? [_] `bigdec?)
+#?(:clj (defmethod resolve-form uri? [_] `uri?))
+#?(:clj (defmethod resolve-form bigdec? [_] `bigdec?))
 (defmethod resolve-form inst? [_] `inst?)
 (defmethod resolve-form seqable? [_] `seqable?)
 (defmethod resolve-form indexed? [_] `indexed?)
@@ -41,10 +42,10 @@
 (defmethod resolve-form false? [_] `false?)
 (defmethod resolve-form true? [_] `true?)
 (defmethod resolve-form zero? [_] `zero?)
-(defmethod resolve-form rational? [_] `rational?)
+#?(:clj (defmethod resolve-form rational? [_] `rational?))
 (defmethod resolve-form coll? [_] `coll?)
 (defmethod resolve-form empty? [_] `empty?)
 (defmethod resolve-form associative? [_] `associative?)
 (defmethod resolve-form sequential? [_] `sequential?)
-(defmethod resolve-form ratio? [_] `ratio?)
-(defmethod resolve-form bytes? [_] `bytes?)
+#?(:clj (defmethod resolve-form ratio? [_] `ratio?))
+#?(:clj (defmethod resolve-form bytes? [_] `bytes?))
