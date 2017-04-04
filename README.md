@@ -138,7 +138,7 @@ Can be added to a Spec via the key `:reason`
 
 Spec-tools loans from the awesome [Schema](https://github.com/plumatic/schema) by separating specs (what) from conformers (how). The Spec Records contains a dynamical conformer, which can be instructed at runtime to select a suitable conforming function for the given type. Same specs can conform differently, e.g. when sending data over JSON vs Transit.
 
-Specs conform is default a no-op. Binding a dynamic var `spec-tools.core/*conformering-matcher*` with a function of `type => spec-conformer` will cause the Spec to be conformed at runtime with the selected spec-conformer. In `spec-tools.core` there are helper functions to set the binding. These are: `explain`, `explain-data`, `conform` and `conform!`.
+Specs conform is default a no-op. Binding a dynamic var `spec-tools.core/*conformering*` with a function of `type => spec-conformer` will cause the Spec to be conformed at runtime with the selected spec-conformer. In `spec-tools.core` there are helper functions to set the binding. These are: `explain`, `explain-data`, `conform` and `conform!`.
 
 * Types should be keywords. By default, the following types are used: `:long`, `:double`, `:boolean`, `:string`, `:keyword`, `:symbol`, `:uuid`, `:uri`, `:bigdec`, `:date`, `:ratio`, `:map`, `:set` and `:vector`
 * Spec-conformers are arity2 functions taking the Spec Records and the value and should return either conformed value of `:clojure.spec/invalid`.
