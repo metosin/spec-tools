@@ -1,6 +1,5 @@
 (ns spec-tools.type
-  (:require [spec-tools.impl :as impl]
-            [clojure.string :as str]))
+  (:require [spec-tools.impl :as impl]))
 
 (defn- dispatch [x]
   (cond
@@ -16,33 +15,32 @@
     ;; default
     :else x))
 
-(defn- error-message [x]
-  (str
-    "Can't resolve type for dispatch value `" (dispatch x) "`. "
-    "Provide a `:type` for the spec or add a dispatch "
-    "function for `spec-tools.types/resolve-type`. Spec: "
-    (str/replace (str x) #"\n" " ") "\n"))
-
 (defmulti resolve-type dispatch :default ::default)
 
-(defmethod resolve-type ::default [x]
-  (println (error-message x)))
+(defmethod resolve-type ::default [_] nil)
 
-(defn- all-types []
-  {:long
-   :double
-   :boolean
-   :string
-   :keyword
-   :symbol
-   :uuid
-   :uri
-   :bigdec
-   :date
-   :ratio
-   :map
-   :set
-   :vector})
+(defn type-values []
+  #{:long
+    :double
+    :boolean
+    :string
+    :keyword
+    :symbol
+    :uuid
+    :uri
+    :bigdec
+    :date
+    :ratio
+    :map
+    :set
+    :vector})
+
+(defn type-keys []
+  (-> resolve-type
+      methods
+      keys
+      (->> (filter symbol?))
+      set))
 
 (defmethod resolve-type 'clojure.core/any? [_] nil)
 (defmethod resolve-type 'clojure.core/some? [_] nil)

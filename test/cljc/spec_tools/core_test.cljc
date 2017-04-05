@@ -4,6 +4,7 @@
             [clojure.string :as str]
             [spec-tools.core :as st]
             [spec-tools.spec :as spec]
+            [spec-tools.type :as type]
             [spec-tools.form :as form]
             [spec-tools.conform :as conform]))
 
@@ -391,6 +392,19 @@
            (st/extract-extra-info
              (s/form (s/keys
                        :req [(or ::age (and ::uuid ::lat))])))))))
+
+(deftest type-inference-test
+  (testing "for core predicates"
+    (is (= :long (type/resolve-type `integer?))))
+  (testing "::s/unknown for unknowns"
+    (is (= nil (type/resolve-type #(> % 2)))))
+  (testing "type-values"
+    (is (not (empty? (type/type-values))))
+    (is (contains? (type/type-values) :boolean)))
+  (testing "type-keys"
+    (is (not (empty? (type/type-keys))))
+    (is (contains? (type/type-keys) 'clojure.spec/keys))
+    (is (contains? (type/type-keys) 'clojure.core/integer?))))
 
 (deftest form-inference-test
   (testing "for core predicates"
