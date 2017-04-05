@@ -47,8 +47,6 @@
     (is (= (jsc/to-json (s/coll-of string? :into '())) {:type "array" :items {:type "string"}}))
     (is (= (jsc/to-json (s/coll-of string? :into [])) {:type "array" :items {:type "string"}}))
     (is (= (jsc/to-json (s/coll-of string? :into #{})) {:type "array" :items {:type "string"}, :uniqueItems true}))
-    ;; TODO: this is wrong?
-    (is (= (jsc/to-json (s/coll-of string? :into {})) {:type "object", :additionalProperties {:type "string"}}))
     (is (= (jsc/to-json (s/map-of string? integer?))
            {:type "object" :additionalProperties {:type "integer"}}))
     (is (= (jsc/to-json (s/* integer?)) {:type "array" :items {:type "integer"}}))
@@ -65,7 +63,10 @@
     (is (= (jsc/to-json (s/map-of string? clojure.core/integer?))
            {:type "object" :additionalProperties {:type "integer"}}))
     ;; nilable
-    ))
+    )
+  (testing "failing clojure.specs"
+    (is (not= (jsc/to-json (s/coll-of (s/tuple string? any?) :into {}))
+              {:type "object", :additionalProperties {:type "string"}}))))
 
 #?(:clj
    (defn test-spec-conversion [spec]
