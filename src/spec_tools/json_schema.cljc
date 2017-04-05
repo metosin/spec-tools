@@ -243,6 +243,9 @@
 
 ; ?
 ; alt
+(defmethod accept-spec 'clojure.spec/alt [dispatch spec children]
+  {:anyOf children})
+
 ; cat
 ; &
 
@@ -253,7 +256,6 @@
 ; keys*
 
 ; nilable
-
 (defmethod accept-spec 'clojure.spec/nilable [dispatch spec children]
   {:oneOf [(unwrap children) {:type "null"}]})
 

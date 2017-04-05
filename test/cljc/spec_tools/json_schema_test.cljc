@@ -29,25 +29,43 @@
   (testing "simple specs"
     (is (= (jsc/to-json ::integer) {:type "integer"}))
     (is (= (jsc/to-json ::set) {:enum [1 3 2]})))
-  (testing "composite objects"
+
+  (testing "clojure.specs"
     (is (= (jsc/to-json (s/keys :req-un [::integer] :opt-un [::string]))
            {:type "object"
             :properties {"integer" {:type "integer"} "string" {:type "string"}}
             :required ["integer"]}))
-    (is (= (jsc/to-json (s/tuple integer? string?))
-           {:type "array" :items [{:type "integer"} {:type "string"}] :minItems 2}))
-    (is (= (jsc/to-json (s/* integer?)) {:type "array" :items {:type "integer"}}))
-    (is (= (jsc/to-json (s/+ integer?)) {:type "array" :items {:type "integer"} :minItems 1}))
-    ;; The following tests require the full qualifying of the predicates until
-    ;; this is fixed: <http://dev.clojure.org/jira/browse/CLJ-2035>
-    (is (= (jsc/to-json (s/every clojure.core/integer?)) {:type "array" :items {:type "integer"}}))
-    (is (= (jsc/to-json (s/map-of clojure.core/string? clojure.core/integer?))
-           {:type "object" :additionalProperties {:type "integer"}})))
-  (testing "composite specs"
     (is (= (jsc/to-json (s/or :int integer? :string string?))
            {:anyOf [{:type "integer"} {:type "string"}]}))
     (is (= (jsc/to-json (s/and integer? pos?))
-           {:allOf [{:type "integer"} {:minimum 0 :exclusiveMinimum true}]}))))
+           {:allOf [{:type "integer"} {:minimum 0 :exclusiveMinimum true}]}))
+    ;; merge
+    (is (= (jsc/to-json (s/every integer?)) {:type "array" :items {:type "integer"}}))
+    ;; every-ks
+    ;; coll-of
+    (is (= (jsc/to-json (s/coll-of string?)) {:type "array" :items {:type "string"}}))
+    (is (= (jsc/to-json (s/coll-of string? :into '())) {:type "array" :items {:type "string"}}))
+    (is (= (jsc/to-json (s/coll-of string? :into [])) {:type "array" :items {:type "string"}}))
+    (is (= (jsc/to-json (s/coll-of string? :into #{})) {:type "array" :items {:type "string"}, :uniqueItems true}))
+    ;; TODO: this is wrong?
+    (is (= (jsc/to-json (s/coll-of string? :into {})) {:type "object", :additionalProperties {:type "string"}}))
+    (is (= (jsc/to-json (s/map-of string? integer?))
+           {:type "object" :additionalProperties {:type "integer"}}))
+    (is (= (jsc/to-json (s/* integer?)) {:type "array" :items {:type "integer"}}))
+    (is (= (jsc/to-json (s/+ integer?)) {:type "array" :items {:type "integer"} :minItems 1}))
+    ;; ?
+    ;; alt
+    (is (= (jsc/to-json (s/alt :int integer? :string string?))
+           {:anyOf [{:type "integer"} {:type "string"}]}))
+    ;; cat
+    ;; &
+    (is (= (jsc/to-json (s/tuple integer? string?))
+           {:type "array" :items [{:type "integer"} {:type "string"}] :minItems 2}))
+    ;; keys*
+    (is (= (jsc/to-json (s/map-of string? clojure.core/integer?))
+           {:type "object" :additionalProperties {:type "integer"}}))
+    ;; nilable
+    ))
 
 #?(:clj
    (defn test-spec-conversion [spec]
