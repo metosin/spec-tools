@@ -16,16 +16,10 @@
 (s/def ::uuid spec/uuid?)
 (s/def ::birthdate spec/inst?)
 
-(deftest extract-extra-info-test
-  (testing "keys are extracted from keys-specs"
-    (let [spec (st/spec
-                 (s/keys
-                   :req [::age]
-                   :opt [::lat]
-                   :req-un [::uuid]
-                   :opt-un [::truth]))]
-      (is (= #{::age ::lat :uuid :truth}
-             (:keys spec))))))
+(deftest coerce-test
+  (is (= spec/boolean? (st/coerce-spec ::truth)))
+  (is (= spec/boolean? (st/coerce-spec spec/boolean?)))
+  (is (thrown? Exception (st/coerce-spec ::INVALID))))
 
 (deftest spec?-test
   (testing "spec"

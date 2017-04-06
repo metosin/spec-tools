@@ -21,6 +21,8 @@
 ;; helpers
 ;;
 
+(declare spec?)
+
 (defn ^:skip-wiki registry
   ([]
    (s/registry))
@@ -36,6 +38,18 @@
     (if (keyword? spec)
       (get-spec spec)
       spec)))
+
+(defn ^:skip-wiki coerce-spec
+  "Returns a spec from a spec name or spec. Throwns exception
+  if no spec was found."
+  [name-or-spec]
+  (or
+    (and (spec? name-or-spec) name-or-spec)
+    (get-spec name-or-spec)
+    (throw
+      (ex-info
+        (str "can't coerce to spec: " name-or-spec)
+        {:name-or-spec name-or-spec}))))
 
 (defn ^:skip-wiki eq [value]
   #{value})
