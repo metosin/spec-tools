@@ -5,6 +5,7 @@ Clojure(Script) tools for [clojure.spec](http://clojure.org/about/spec). Like [S
 * [Spec Records](#spec-records)
 * [Dynamic Conforming](#dynamic-conforming)
 * [Simple Collection Specs](#simple-collection-specs)
+* [Spec Visitors](#spec-visitors)
 * [Generating JSON Schemas](#generating-json-schemas)
 
 Status: **Alpha** (as spec is still alpha too).
@@ -152,13 +153,20 @@ The following conforming are found in `spec-tools.conform`:
 | `strict-map-conforming` | Strips out extra keys of `s/keys` Specs.                                                                               |
 | `nil`                   | No conforming (for [EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format)). |
 
-Default conforming are defined as data, so they are easy to combine and extend.
-
-#### Conforming examples
+Default conformings are defined as data, so they are easy to combine and extend:
 
 ```clj
 (require '[spec-tools.conform :as conform])
 
+(def strict-json-conforming
+  (merge
+    conform/json-conforming
+    conform/strict-map-conforming))
+```
+
+#### Conforming examples
+
+```clj
 (s/def ::age (s/and spec/integer? #(> % 18)))
 
 ;; no conforming
@@ -309,15 +317,41 @@ Spec-tools enables simple, Schema-like nested collection syntax for specs. `spec
 ;   :user$person$address/street}
 ```
 
+* **TODO**: Go fully data-driven?
 * **TODO**: Support optional values via `st/maybe`
+
+### Spec Visitors
+
+A tool to walk over and transform specs using the [Visitor-pattern](https://en.wikipedia.org/wiki/Visitor_pattern). There is a example visitor to collect all the registered specs linked to a spec. The [JSON Schema -generation](#generating-json-schemas) also uses this.
+
+```clj
+(require '[spec-tools.visitor :as visitor])
+
+(let [specs (atom {})
+      collect (fn [_ spec _]
+                (if-let [registered (s/get-spec spec)]
+                  (swap! specs assoc spec (s/form registered))
+                  @specs))]
+  (visitor/visit person-spec collect))
+; {:user/id clojure.core/integer?,
+;  :user$person/age (clojure.spec/and clojure.core/integer? (clojure.core/fn [%] (clojure.core/> % 18))),
+;  :user$person/name clojure.core/string?,
+;  :user$person/likes (spec-tools.core/spec (clojure.spec/map-of clojure.core/string? clojure.core/boolean?) {:type :map}),
+;  :user$person/languages (spec-tools.core/spec (clojure.spec/coll-of clojure.core/keyword? :into #{}) {:type :set}),
+;  :user$person$address/street clojure.core/string?,
+;  :user$person$address/zip clojure.core/string?,
+;  :user$person/address (spec-tools.core/spec
+;                        (clojure.spec/keys :req-un [:user$person$address/street :user$person$address/zip])
+;                        {:type :map, :keys #{:street :zip}})}
+```
+
+* **TODO**: Cover all of `clojure.spec`
 
 ### Generating JSON Schemas
 
-**WIP**
+Generating JSON Schemas from arbitrary specs (and Spec Records).
 
-Targeting to generate JSON Schemas from arbitrary specs (and Spec Records).
-
-Simple cases work, feel free to contribute more coverage (both impls & tests).
+Most cases work, feel free to contribute more coverage (both impls & tests).
 
 Upcoming [Spec of Specs](http://dev.clojure.org/jira/browse/CLJ-2112) should help.
 
@@ -354,7 +388,11 @@ Meta-data from Spec records is used to populate the data:
 ;  :default 42}
 ```
 
-Related: https://github.com/metosin/ring-swagger/issues/95
+Related:
+* https://github.com/metosin/ring-swagger/issues/95
+* https://github.com/metosin/spec-swagger
+
+* **TODO**: Cover all of `clojure.spec`
 
 ## License
 
