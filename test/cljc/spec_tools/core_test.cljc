@@ -19,7 +19,7 @@
 (deftest coerce-test
   (is (= spec/boolean? (st/coerce-spec ::truth)))
   (is (= spec/boolean? (st/coerce-spec spec/boolean?)))
-  (is (thrown? Exception (st/coerce-spec ::INVALID))))
+  (is (thrown? #?(:clj Exception, :cljs js/Error) (st/coerce-spec ::INVALID))))
 
 (deftest spec?-test
   (testing "spec"

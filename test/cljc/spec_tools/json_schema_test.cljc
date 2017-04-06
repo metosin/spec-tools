@@ -1,10 +1,10 @@
 (ns spec-tools.json-schema-test
   (:require [clojure.test :refer [deftest testing is]]
             [clojure.spec :as s]
+            [spec-tools.core :as st]
             [com.gfredericks.test.chuck.clojure-test :refer [checking]]
     #?(:clj
             [scjsv.core :as scjsv])
-            [spec-tools.core :as st]
             [spec-tools.json-schema :as jsc]))
 
 (s/def ::integer integer?)
