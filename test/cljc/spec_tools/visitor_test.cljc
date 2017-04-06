@@ -1,7 +1,8 @@
 (ns spec-tools.visitor-test
-  (:require [clojure.test :refer [deftest is]]
+  (:require [clojure.test :refer :all]
             [clojure.spec :as s]
-            [spec-tools.visitor :refer [visit]]))
+            [spec-tools.core :as st]
+            [spec-tools.visitor :as visitor]))
 
 (s/def ::str string?)
 (s/def ::int integer?)
@@ -10,8 +11,8 @@
 (defn collect [dispatch spec children] `[~dispatch ~@children])
 
 (deftest test-visit
-  (is (= (visit #{1 2 3} collect) [:spec-tools.visitor/set 1 3 2]))
-  (is (= (visit ::map collect)
+  (is (= (visitor/visit #{1 2 3} collect) [:spec-tools.visitor/set 1 3 2]))
+  (is (= (visitor/visit ::map collect)
          '[clojure.spec/keys [clojure.core/string?] [clojure.core/integer?]])))
 
 (s/def ::age number?)
@@ -24,10 +25,39 @@
 (deftest recursive-visit
   (let [specs (atom {})
         collect (fn [_ spec _]
-                  (swap! specs assoc spec (s/form (s/get-spec spec))))]
-    (is (= (visit ::user collect)
+                  (if-let [registered (s/get-spec spec)]
+                    (swap! specs assoc spec (s/form registered))
+                    @specs))]
+    (is (= (visitor/visit ::user collect)
            {::age (s/form ::age)
             ::first-name (s/form ::first-name)
             ::last-name (s/form ::last-name)
             ::name (s/form ::name)
             ::user (s/form ::user)}))))
+
+(def person-spec
+  (st/coll-spec
+    ::person
+    {::id integer?
+     :age ::age
+     :name string?
+     :likes {string? boolean?}
+     (st/req :languages) #{keyword?}
+     (st/opt :address) {:street string?
+                        :zip string?}}))
+
+(deftest readme-visitor-test
+  (let [expected #{:spec-tools.visitor-test/id
+                   :spec-tools.visitor-test$person/age
+                   :spec-tools.visitor-test$person/name
+                   :spec-tools.visitor-test$person/likes
+                   :spec-tools.visitor-test$person/languages
+                   :spec-tools.visitor-test$person$address/street
+                   :spec-tools.visitor-test$person$address/zip
+                   :spec-tools.visitor-test$person/address}
+        specs (visitor/visit person-spec (visitor/collect-specs))]
+    (testing "all specs are found"
+      (is (= expected (-> specs keys set))))
+    (testing "all spec forms are correct"
+      (is (= (->> expected (map s/get-spec) set)
+             (-> specs vals set))))))

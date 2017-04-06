@@ -3,7 +3,8 @@
   (:require [clojure.spec :as s]
             [spec-tools.visitor :as visitor :refer [visit]]
             [spec-tools.type :as type]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [spec-tools.core :as st]))
 
 (defn- only-entry? [key a-map] (= [key] (keys a-map)))
 
@@ -265,7 +266,8 @@
     {:minimum minimum :maximum maximum}))
 
 (defmethod accept-spec ::visitor/spec [dispatch spec children]
-  (let [json-schema-meta (reduce-kv
+  (let [spec (st/coerce-spec spec)
+        json-schema-meta (reduce-kv
                            (fn [acc k v]
                              (if (= "json-schema" (namespace k))
                                (assoc acc (keyword (name k)) v)

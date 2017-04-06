@@ -131,8 +131,22 @@
     (accept 'clojure.spec/nilable spec [(visit inner-spec accept)])))
 
 (defmethod visit 'spec-tools.core/spec [spec accept]
-  (let [spec (or (st/get-spec spec) spec)]
-    (accept ::spec spec (visit (de-spec spec) accept))))
+  (let [real-spec (st/coerce-spec spec)]
+    (accept ::spec spec (visit (de-spec real-spec) accept))))
 
 (defmethod visit ::default [spec accept]
   (accept (spec-dispatch spec accept) spec nil))
+
+;;
+;; sample visitor
+;;
+
+(defn collect-specs
+  "a visitor that collects all registered specs. Returns
+  a map of spec-name => specs"
+  []
+  (let [specs (atom {})]
+    (fn [_ spec _]
+      (if-let [s (s/get-spec spec)]
+        (swap! specs assoc spec s)
+        @specs))))
