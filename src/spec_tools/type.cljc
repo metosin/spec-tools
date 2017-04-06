@@ -19,7 +19,7 @@
 
 (defmethod resolve-type ::default [_] nil)
 
-(defn type-values []
+(defn types []
   #{:long
     :double
     :boolean
@@ -35,7 +35,7 @@
     :set
     :vector})
 
-(defn type-keys []
+(defn type-symbols []
   (-> resolve-type
       methods
       keys

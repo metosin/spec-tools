@@ -392,13 +392,13 @@
     (is (= :long (type/resolve-type `integer?))))
   (testing "::s/unknown for unknowns"
     (is (= nil (type/resolve-type #(> % 2)))))
-  (testing "type-values"
-    (is (not (empty? (type/type-values))))
-    (is (contains? (type/type-values) :boolean)))
-  (testing "type-keys"
-    (is (not (empty? (type/type-keys))))
-    (is (contains? (type/type-keys) 'clojure.spec/keys))
-    (is (contains? (type/type-keys) 'clojure.core/integer?))))
+  (testing "types"
+    (is (not (empty? (type/types))))
+    (is (contains? (type/types) :boolean)))
+  (testing "type-symbols"
+    (is (not (empty? (type/type-symbols))))
+    (is (contains? (type/type-symbols) 'clojure.spec/keys))
+    (is (contains? (type/type-symbols) 'clojure.core/integer?))))
 
 (deftest form-inference-test
   (testing "for core predicates"
