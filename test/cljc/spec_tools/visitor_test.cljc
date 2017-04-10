@@ -8,7 +8,7 @@
 (s/def ::int integer?)
 (s/def ::map (s/keys :req [::str] :opt [::int]))
 
-(defn collect [dispatch spec children] `[~dispatch ~@children])
+(defn collect [dispatch _ children] `[~dispatch ~@children])
 
 (deftest test-visit
   (is (= (visitor/visit #{1 2 3} collect) [:spec-tools.visitor/set 1 3 2]))
@@ -60,4 +60,13 @@
       (is (= expected (-> specs keys set))))
     (testing "all spec forms are correct"
       (is (= (->> expected (map s/get-spec) set)
-             (-> specs vals set))))))
+             (-> specs vals set))))
+
+    #?(:clj
+       (testing "convert-specs! transforms all specs into Spec records"
+         (visitor/convert-specs! person-spec)
+         (is (true?
+               (->> expected
+                    (map s/get-spec)
+                    (remove keyword?)
+                    (every? st/spec?))))))))

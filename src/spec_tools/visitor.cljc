@@ -150,3 +150,17 @@
       (if-let [s (s/get-spec spec)]
         (swap! specs assoc spec s)
         @specs))))
+
+(defn convert-specs!
+  "Collects all registered subspecs from a spec and
+  transforms their registry values into Spec Records."
+  [spec]
+  (let [specs (visit spec (collect-specs))
+        report (atom #{})]
+    (doseq [[k v] specs]
+      (if (keyword? v)
+        (swap! report into (convert-specs! v))
+        (when-not (st/spec? v)
+          (eval `(s/def ~k (st/create-spec {:spec ~v})))
+          (swap! report conj k))))
+    @report))

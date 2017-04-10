@@ -94,11 +94,13 @@ my-integer?
 ;       :description "It's a int"}
 ```
 
-For most clojure core predicates, the `:type` can be resolved automatically with a help of the `spec-tools.type/resolve-type` multimethod.
+For most core predicates, `:type` can be resolved automatically using the `spec-tools.type/resolve-type` multimethod.
 
-For most clojure core predicates, the `:form` can be resolved automatically with a help of the `spec-tools.form/resolve-form` multimethod.
+For most core predicates, `:form` can be resolved automatically using the `spec-tools.form/resolve-form` multimethod.
 
-For most clojure core predicates, the `spec` can be resolved automatically with a help of the `spec-tools.spec/resolve-spec` multimethod.
+For most core predicates, `spec` can be resolved automatically using the `spec-tools.spec/resolve-spec` multimethod.
+
+To transform registered specs into Spec records recursively, see the `spec-tools.visitor/convert-specs!`.
 
 ### Predefined Spec Records
 
@@ -328,12 +330,14 @@ A tool to walk over and transform specs using the [Visitor-pattern](https://en.w
 ```clj
 (require '[spec-tools.visitor :as visitor])
 
-(let [specs (atom {})
-      collect (fn [_ spec _]
-                (if-let [registered (s/get-spec spec)]
-                  (swap! specs assoc spec (s/form registered))
-                  @specs))]
-  (visitor/visit person-spec collect))
+(let [specs (atom {})]
+  (visitor/visit
+    person-spec
+    (fn [_ spec _]
+      (if-let [s (s/get-spec spec)]
+        (swap! specs assoc spec (s/form s))
+        @specs))))
+
 ; {:user/id clojure.core/integer?,
 ;  :user$person/age (clojure.spec/and clojure.core/integer? (clojure.core/fn [%] (clojure.core/> % 18))),
 ;  :user$person/name clojure.core/string?,
