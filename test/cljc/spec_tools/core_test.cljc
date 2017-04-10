@@ -214,7 +214,11 @@
 
     (testing "stripping extra keys"
       (is (= {:height 200, :weight 80}
-             (st/conform ::person person {:map conform/strip-extra-keys}))))))
+             (st/conform ::person person conform/strip-extra-keys-conforming))))
+
+    (testing "failing on extra keys"
+      (is (= st/+invalid+
+             (st/conform ::person person conform/fail-on-extra-keys-conforming))))))
 
 (s/def ::human (st/spec (s/keys :req-un [::height ::weight]) {:type ::human}))
 

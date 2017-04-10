@@ -146,12 +146,13 @@ Specs conform is default a no-op. Binding a dynamic var `spec-tools.core/*confor
 
 The following conforming are found in `spec-tools.conform`:
 
-| Name                    | Description                                                                                                            |
-|-------------------------|------------------------------------------------------------------------------------------------------------------------|
-| `string-conforming`     | Conforms all specs from strings (things like `:query`, `:header` & `:path` -parameters).                               |
-| `json-conforming`       | [JSON](http://json.org/) Conforming (numbers and booleans not conformed).                                              |
-| `strict-map-conforming` | Strips out extra keys of `s/keys` Specs.                                                                               |
-| `nil`                   | No conforming (for [EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format)). |
+| Name                            | Description                                                                                                              |
+|---------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| `string-conforming`             | Conforms all specs from strings (things like `:query`, `:header` & `:path` -parameters).                                 |
+| `json-conforming`               | [JSON](http://json.org/) Conforming (numbers and booleans not conformed).                                                |
+| `strip-extra-keys-conforming`   | Strips out extra keys of `s/keys` Specs.                                                                                 |
+| `fail-on-extra-keys-conforming` | Fails if `s/keys` Specs have extra keys.                                                                                 |
+| `nil`                           | No extra conforming ([EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format)). |
 
 Default conformings are defined as data, so they are easy to combine and extend:
 
@@ -161,7 +162,7 @@ Default conformings are defined as data, so they are easy to combine and extend:
 (def strict-json-conforming
   (merge
     conform/json-conforming
-    conform/strict-map-conforming))
+    conform/strip-extra-keys-conforming))
 ```
 
 #### Conforming examples
@@ -239,7 +240,7 @@ To strip out keys from a keyset:
 (st/conform
   ::user
   inkeri
-  conform/strict-map-conforming)
+  conform/strip-extra-keys-conforming)
 ; {:name "Inkeri"
 ;  :address {:street "Satamakatu"}}
 ```

@@ -3,7 +3,8 @@
   (:require [clojure.spec :as s]
     #?@(:cljs [[goog.date.UtcDateTime]
                [goog.date.Date]])
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [clojure.set :as set])
   #?(:clj
      (:import (java.util Date UUID)
               (java.time Instant))))
@@ -72,9 +73,14 @@
 ;; Maps
 ;;
 
-(defn strip-extra-keys [{:keys [:keys spec]} x]
+(defn strip-extra-keys [{:keys [keys spec]} x]
   (if (map? x)
     (s/conform spec (select-keys x keys))
+    x))
+
+(defn fail-on-extra-keys [{:keys [keys spec]} x]
+  (if (and (map? x) (not (set/subset? (-> x (clojure.core/keys) (set)) keys)))
+    ::s/invalid
     x))
 
 ;;
@@ -101,5 +107,8 @@
      :nil string->nil
      :string nil}))
 
-(def strict-map-conforming
+(def strip-extra-keys-conforming
   {:map strip-extra-keys})
+
+(def fail-on-extra-keys-conforming
+  {:map fail-on-extra-keys})
