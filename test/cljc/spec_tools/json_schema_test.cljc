@@ -58,10 +58,10 @@
             :minItems 2
             :maxItems 2
             :items {:anyOf [{:type "integer"} {:type "string"}]}}))
-    ;; &
+    ;; & is broken (http://dev.clojure.org/jira/browse/CLJ-2152)
     (is (= (jsc/to-json (s/tuple integer? string?))
            {:type "array" :items [{:type "integer"} {:type "string"}] :minItems 2}))
-    ;; keys*
+    ;; keys* is broken (http://dev.clojure.org/jira/browse/CLJ-2152)
     (is (= (jsc/to-json (s/map-of string? clojure.core/integer?))
            {:type "object" :additionalProperties {:type "integer"}}))
     (is (= (jsc/to-json (s/nilable string?))

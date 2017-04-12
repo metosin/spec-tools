@@ -240,12 +240,13 @@
 (defmethod accept-spec 'clojure.spec/alt [dispatch spec children]
   {:anyOf children})
 
-; cat
 (defmethod accept-spec 'clojure.spec/cat [dispatch spec children]
   {:type "array"
    :minItems (count children)
    :maxItems (count children)
    :items {:anyOf children}})
+
+; &
 
 (defmethod accept-spec 'clojure.spec/tuple [dispatch spec children]
   {:type "array" :items children :minItems (count children)})
