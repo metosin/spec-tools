@@ -79,13 +79,19 @@
   (let [[_ & inner-specs] (s/form spec)]
     (accept 'clojure.spec/and spec (mapv #(visit % accept) inner-specs))))
 
-;(defmethod visit 'clojure.spec/merge [spec accept])
+(defmethod visit 'clojure.spec/merge [spec accept]
+  (let [[_ & inner-specs] (s/form spec)]
+    (accept 'clojure.spec/merge spec (mapv #(visit % accept) inner-specs))))
 
 (defmethod visit 'clojure.spec/every [spec accept]
-  (let [[_ inner-spec & kwargs] (formize spec)]
+  (let [[_ inner-spec ] (formize spec)]
     (accept 'clojure.spec/every spec [(visit (++expand-every-cljs-spec-bug++ inner-spec) accept)])))
 
-;(defmethod visit 'clojure.spec/every-ks [spec accept])
+(defmethod visit 'clojure.spec/every-kv [spec accept]
+  (let [[_ inner-spec1 inner-spec2 ] (formize spec)]
+    (accept 'clojure.spec/every-kv spec (mapv
+                                          #(visit (++expand-every-cljs-spec-bug++ %) accept)
+                                          [inner-spec1 inner-spec2]))))
 
 (defmethod visit 'clojure.spec/coll-of [spec accept]
   (let [form (s/form spec)
@@ -117,17 +123,22 @@
   (let [[_ & {:as inner-spec-map}] (s/form spec)]
     (accept 'clojure.spec/alt spec (mapv #(visit % accept) (vals inner-spec-map)))))
 
-;(defmethod visit 'clojure.spec/cat [spec accept])
+(defmethod visit 'clojure.spec/cat [spec accept]
+  (let [[_ & {:as inner-spec-map}] (s/form spec)]
+    (accept 'clojure.spec/cat spec (mapv #(visit % accept) (vals inner-spec-map)))))
 
-;(defmethod visit 'clojure.spec/& [spec accept])
+(defmethod visit 'clojure.spec/& [spec accept]
+  (let [[_ inner-spec] (s/form spec)]
+    (accept 'clojure.spec/& spec [(visit inner-spec accept)])))
 
 (defmethod visit 'clojure.spec/tuple [spec accept]
   (let [[_ & inner-specs] (formize spec)]
     (accept 'clojure.spec/tuple spec (mapv #(visit % accept) inner-specs))))
 
-;(defmethod visit 'clojure.spec/keys* [spec accept])
-
-;(defmethod visit 'clojure.spec/nilable [spec accept])
+;; TODO: broken: http://dev.clojure.org/jira/browse/CLJ-2147
+(defmethod visit 'clojure.spec/keys* [spec accept]
+  (let [keys (impl/extract-keys (s/form spec))]
+    (accept 'clojure.spec/keys* spec (mapv #(visit % accept) keys))))
 
 (defmethod visit 'clojure.spec/nilable [spec accept]
   (let [[_ inner-spec] (s/form spec)]
