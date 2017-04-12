@@ -163,11 +163,16 @@
     x)
   (explain* [this path via in x]
     (let [problems (cond
+
                      (s/spec? spec)
-                     (s/explain* spec path via in (s/conform* this x))
+                     (let [conformed (s/conform* this x)
+                           val (if (= conformed +invalid+) x (s/unform spec conformed))]
+                       (s/explain* spec path via in val))
 
                      (s/regex? spec)
-                     (s/explain* (s/specize* spec) path via in (s/unform spec (s/conform* this x)))
+                     (let [conformed (s/conform* this x)
+                           val (if (= conformed +invalid+) x (s/unform spec conformed))]
+                       (s/explain* (s/specize* spec) path via in val))
 
                      :else
                      (when (= +invalid+ (if (and (fn? spec) (spec (s/conform* this x))) x +invalid+))
