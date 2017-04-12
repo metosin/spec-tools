@@ -167,14 +167,15 @@
 
 (defn convert-specs!
   "Collects all registered subspecs from a spec and
-  transforms their registry values into Spec Records."
+  transforms their registry values into Spec Records.
+  Does not convert clojure.spec regex ops."
   [spec]
   (let [specs (visit spec (spec-collector))
         report (atom #{})]
     (doseq [[k v] specs]
       (if (keyword? v)
         (swap! report into (convert-specs! v))
-        (when-not (st/spec? v)
+        (when-not (or (s/regex? v) (st/spec? v))
           (let [s (st/create-spec {:spec v})]
             (s/def-impl k (s/form s) s)
             (swap! report conj k)))))
