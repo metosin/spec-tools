@@ -189,7 +189,6 @@
     ;; (s/every (s/tuple key-spec value-spec) :into {} ...)
     (and (= pred #?(:clj 'clojure.spec/tuple :cljs 'cljs.spec/tuple)) (= (get kwargs :into)) {})))
 
-; keys
 (defmethod accept-spec 'clojure.spec/keys [dispatch spec children]
   (let [[_ & {:keys [req req-un opt opt-un]}] (s/form spec)
         names (map name (concat req req-un opt opt-un))
@@ -198,17 +197,14 @@
      :properties (zipmap names children)
      :required required}))
 
-; or
 (defmethod accept-spec 'clojure.spec/or [dispatch spec children]
   {:anyOf children})
 
-; and
 (defmethod accept-spec 'clojure.spec/and [dispatch spec children]
   (simplify-all-of {:allOf children}))
 
 ; merge
 
-; every
 (defmethod accept-spec 'clojure.spec/every [dispatch spec children]
   (let [form (s/form spec)
         pred (second form)
@@ -223,8 +219,6 @@
 
 ; every-ks
 
-; coll-of
-; map-of
 (defmethod accept-spec ::visitor/map-of [dispatch spec children]
   {:type "object", :additionalProperties (second children)})
 
@@ -234,32 +228,30 @@
 (defmethod accept-spec ::visitor/vector-of [dispatch spec children]
   {:type "array", :items (unwrap children)})
 
-; *
 (defmethod accept-spec 'clojure.spec/* [dispatch spec children]
   {:type "array" :items (unwrap children)})
 
-; +
 (defmethod accept-spec 'clojure.spec/+ [dispatch spec children]
   {:type "array" :items (unwrap children) :minItems 1})
 
-; ?
 (defmethod accept-spec 'clojure.spec/? [dispatch spec children]
   {:type "array" :items (unwrap children) :minItems 0})
 
-; alt
 (defmethod accept-spec 'clojure.spec/alt [dispatch spec children]
   {:anyOf children})
 
 ; cat
-; &
+(defmethod accept-spec 'clojure.spec/cat [dispatch spec children]
+  {:type "array"
+   :minItems (count children)
+   :maxItems (count children)
+   :items {:anyOf children}})
 
-; tuple
 (defmethod accept-spec 'clojure.spec/tuple [dispatch spec children]
   {:type "array" :items children :minItems (count children)})
 
 ; keys*
 
-; nilable
 (defmethod accept-spec 'clojure.spec/nilable [dispatch spec children]
   {:oneOf [(unwrap children) {:type "null"}]})
 

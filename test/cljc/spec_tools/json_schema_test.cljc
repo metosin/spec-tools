@@ -42,7 +42,6 @@
     ;; merge
     (is (= (jsc/to-json (s/every integer?)) {:type "array" :items {:type "integer"}}))
     ;; every-ks
-    ;; coll-of
     (is (= (jsc/to-json (s/coll-of string?)) {:type "array" :items {:type "string"}}))
     (is (= (jsc/to-json (s/coll-of string? :into '())) {:type "array" :items {:type "string"}}))
     (is (= (jsc/to-json (s/coll-of string? :into [])) {:type "array" :items {:type "string"}}))
@@ -52,10 +51,13 @@
     (is (= (jsc/to-json (s/* integer?)) {:type "array" :items {:type "integer"}}))
     (is (= (jsc/to-json (s/+ integer?)) {:type "array" :items {:type "integer"} :minItems 1}))
     (is (= (jsc/to-json (s/? integer?)) {:type "array" :items {:type "integer"} :minItems 0}))
-    ;; alt
     (is (= (jsc/to-json (s/alt :int integer? :string string?))
            {:anyOf [{:type "integer"} {:type "string"}]}))
-    ;; cat
+    (is (= (jsc/to-json (s/cat :int integer? :string string?))
+           {:type "array"
+            :minItems 2
+            :maxItems 2
+            :items {:anyOf [{:type "integer"} {:type "string"}]}}))
     ;; &
     (is (= (jsc/to-json (s/tuple integer? string?))
            {:type "array" :items [{:type "integer"} {:type "string"}] :minItems 2}))
