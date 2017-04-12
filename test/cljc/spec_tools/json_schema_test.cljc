@@ -41,7 +41,8 @@
            {:allOf [{:type "integer"} {:minimum 0 :exclusiveMinimum true}]}))
     ;; merge
     (is (= (jsc/to-json (s/every integer?)) {:type "array" :items {:type "integer"}}))
-    ;; every-ks
+    (is (= (jsc/to-json (s/every-kv string? integer?))
+           {:type "object" :additionalProperties {:type "integer"}}))
     (is (= (jsc/to-json (s/coll-of string?)) {:type "array" :items {:type "string"}}))
     (is (= (jsc/to-json (s/coll-of string? :into '())) {:type "array" :items {:type "string"}}))
     (is (= (jsc/to-json (s/coll-of string? :into [])) {:type "array" :items {:type "string"}}))

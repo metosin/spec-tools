@@ -217,7 +217,8 @@
         :set {:type "array", :uniqueItems true, :items (unwrap children)}
         :vector {:type "array", :items (unwrap children)}))))
 
-; every-ks
+(defmethod accept-spec 'clojure.spec/every-kv [dispatch spec children]
+  {:type "object", :additionalProperties (second children)})
 
 (defmethod accept-spec ::visitor/map-of [dispatch spec children]
   {:type "object", :additionalProperties (second children)})
