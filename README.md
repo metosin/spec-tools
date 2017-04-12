@@ -350,7 +350,7 @@ A tool to walk over and transform specs using the [Visitor-pattern](https://en.w
 ;                        {:type :map, :keys #{:street :zip}})}
 ```
 
-* **TODO**: Cover all of `clojure.spec`
+**NOTE**: due to [CLJ-2152](http://dev.clojure.org/jira/browse/CLJ-2152), `s/&` & `s/keys*` can't be visited.
 
 ### Generating JSON Schemas
 
