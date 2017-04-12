@@ -175,6 +175,7 @@
       (if (keyword? v)
         (swap! report into (convert-specs! v))
         (when-not (st/spec? v)
-          (eval `(s/def ~k (st/create-spec {:spec ~v})))
-          (swap! report conj k))))
+          (let [s (st/create-spec {:spec v})]
+            (s/def-impl k (s/form s) s)
+            (swap! report conj k)))))
     @report))
