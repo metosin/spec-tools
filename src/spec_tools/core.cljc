@@ -208,19 +208,13 @@
 
 ;; and's and or's are just flattened
 (defmethod collect-info 'clojure.spec/keys [_ form]
-  (if-let [{:keys [req opt req-un opt-un]} (some->> form (rest) (apply hash-map))]
-    (letfn [(polish [x]
-              (cond
-                (seq? x) (keep polish x)
-                (symbol? x) nil
-                :else x))]
-      {:keys (set
-               (flatten
-                 (concat
-                   (map polish req)
-                   (map polish opt)
-                   (map (comp keyword name) (map polish req-un))
-                   (map (comp keyword name) (map polish opt-un)))))})))
+  (let [{:keys [req opt req-un opt-un]} (some->> form (rest) (apply hash-map))]
+    {:keys (set
+             (flatten
+               (concat
+                 (map impl/polish (concat req opt))
+                 (->> (concat req-un opt-un)
+                      (map (comp keyword name impl/polish))))))}))
 
 (defn extract-extra-info [form]
   (if (seq? form)
