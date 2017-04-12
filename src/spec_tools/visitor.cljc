@@ -155,7 +155,7 @@
 ;; sample visitor
 ;;
 
-(defn collect-specs
+(defn spec-collector
   "a visitor that collects all registered specs. Returns
   a map of spec-name => specs"
   []
@@ -169,7 +169,7 @@
   "Collects all registered subspecs from a spec and
   transforms their registry values into Spec Records."
   [spec]
-  (let [specs (visit spec (collect-specs))
+  (let [specs (visit spec (spec-collector))
         report (atom #{})]
     (doseq [[k v] specs]
       (if (keyword? v)

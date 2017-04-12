@@ -55,7 +55,7 @@
                    :spec-tools.visitor-test$person$address/street
                    :spec-tools.visitor-test$person$address/zip
                    :spec-tools.visitor-test$person/address}
-        specs (visitor/visit person-spec (visitor/collect-specs))]
+        specs (visitor/visit person-spec (visitor/spec-collector))]
     (testing "all specs are found"
       (is (= expected (-> specs keys set))))
     (testing "all spec forms are correct"

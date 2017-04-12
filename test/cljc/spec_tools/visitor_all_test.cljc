@@ -126,7 +126,7 @@
   (is (= #{::p1 ::p2 ::p3}
          (->> (visitor/visit
                 (s/* (s/cat :prop ::p1 :val (s/alt :s ::p2 :b ::p3)))
-                (visitor/collect-specs))
+                (visitor/spec-collector))
               (keys)
               (set)))))
 
@@ -140,6 +140,6 @@
              ::or ::and ::merge ::every ::every-kv ::coll-of ::map-of
              ::* ::+ ::? ::alt ::cat ::& ::tuple ::keys* ::nilable ::all}
 
-           (->> (visitor/visit ::all (visitor/collect-specs))
+           (->> (visitor/visit ::all (visitor/spec-collector))
                 (keys)
                 (set))))))
