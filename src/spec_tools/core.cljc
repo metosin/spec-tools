@@ -162,8 +162,14 @@
   (unform* [_ x]
     x)
   (explain* [this path via in x]
-    (let [problems (if (s/spec? spec)
+    (let [problems (cond
+                     (s/spec? spec)
                      (s/explain* spec path via in (s/conform* this x))
+
+                     (s/regex? spec)
+                     (s/explain* (s/specize* spec) path via in (s/unform spec (s/conform* this x)))
+
+                     :else
                      (when (= +invalid+ (if (and (fn? spec) (spec (s/conform* this x))) x +invalid+))
                        [{:path path
                          :pred (s/abbrev form)
