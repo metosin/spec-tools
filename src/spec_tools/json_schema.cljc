@@ -226,7 +226,7 @@
 ; coll-of
 ; map-of
 (defmethod accept-spec ::visitor/map-of [dispatch spec children]
-  {:type "object", :additionalProperties (unwrap children)})
+  {:type "object", :additionalProperties (second children)})
 
 (defmethod accept-spec ::visitor/set-of [dispatch spec children]
   {:type "array", :items (unwrap children), :uniqueItems true})

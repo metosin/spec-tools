@@ -97,8 +97,8 @@
     (accept dispatch spec [(visit pred accept)])))
 
 (defmethod visit 'clojure.spec/map-of [spec accept]
-  (let [[_ _ v] (s/form spec)]
-    (accept ::map-of spec [(visit v accept)])))
+  (let [[_ k v] (s/form spec)]
+    (accept ::map-of spec (mapv #(visit % accept) [k v]))))
 
 (defmethod visit 'clojure.spec/* [spec accept]
   (let [[_ inner-spec] (s/form spec)]
