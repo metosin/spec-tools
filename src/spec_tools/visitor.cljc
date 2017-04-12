@@ -2,7 +2,8 @@
   "Tools for walking spec definitions."
   (:require [clojure.spec :as s]
             [spec-tools.core :as st]
-            [spec-tools.type :as type]))
+            [spec-tools.type :as type]
+            [spec-tools.impl :as impl]))
 
 (defn strip-fn-if-needed [form]
   (let [head (first form)]
@@ -67,8 +68,8 @@
   (accept ::set spec (vec (if (keyword? spec) (s/form spec) spec))))
 
 (defmethod visit 'clojure.spec/keys [spec accept]
-  (let [[_ & {:keys [req req-un opt opt-un]}] (s/form spec)]
-    (accept 'clojure.spec/keys spec (mapv #(visit % accept) (concat req req-un opt opt-un)))))
+  (let [keys (impl/extract-keys (s/form spec))]
+    (accept 'clojure.spec/keys spec (mapv #(visit % accept) keys))))
 
 (defmethod visit 'clojure.spec/or [spec accept]
   (let [[_ & {:as inner-spec-map}] (s/form spec)]
