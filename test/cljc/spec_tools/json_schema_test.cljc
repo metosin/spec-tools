@@ -64,8 +64,8 @@
     ;; keys*
     (is (= (jsc/to-json (s/map-of string? clojure.core/integer?))
            {:type "object" :additionalProperties {:type "integer"}}))
-    ;; nilable
-    )
+    (is (= (jsc/to-json (s/nilable string?))
+           {:oneOf [{:type "string"} {:type "null"}]})))
   (testing "failing clojure.specs"
     (is (not= (jsc/to-json (s/coll-of (s/tuple string? any?) :into {}))
               {:type "object", :additionalProperties {:type "string"}}))))
