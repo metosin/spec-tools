@@ -202,8 +202,6 @@
 (s/def ::weight integer?)
 (s/def ::person (st/spec (s/keys :req-un [::height ::weight])))
 
-(st/spec (s/keys :req-un [::height ::weight]))
-
 (deftest map-specs-test
   (let [person {:height 200, :weight 80, :age 36}]
 
