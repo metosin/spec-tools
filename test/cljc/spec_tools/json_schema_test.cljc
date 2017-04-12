@@ -51,7 +51,7 @@
            {:type "object" :additionalProperties {:type "integer"}}))
     (is (= (jsc/to-json (s/* integer?)) {:type "array" :items {:type "integer"}}))
     (is (= (jsc/to-json (s/+ integer?)) {:type "array" :items {:type "integer"} :minItems 1}))
-    ;; ?
+    (is (= (jsc/to-json (s/? integer?)) {:type "array" :items {:type "integer"} :minItems 0}))
     ;; alt
     (is (= (jsc/to-json (s/alt :int integer? :string string?))
            {:anyOf [{:type "integer"} {:type "string"}]}))

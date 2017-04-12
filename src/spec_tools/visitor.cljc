@@ -108,7 +108,9 @@
   (let [[_ inner-spec] (s/form spec)]
     (accept 'clojure.spec/+ spec [(visit inner-spec accept)])))
 
-;(defmethod visit 'clojure.spec/? [spec accept])
+(defmethod visit 'clojure.spec/? [spec accept]
+  (let [[_ inner-spec] (s/form spec)]
+    (accept 'clojure.spec/? spec [(visit inner-spec accept)])))
 
 (defmethod visit 'clojure.spec/alt [spec accept]
   (let [[_ & {:as inner-spec-map}] (s/form spec)]

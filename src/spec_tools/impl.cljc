@@ -56,4 +56,4 @@
 
 (defn extract-keys [form]
   (let [{:keys [req opt req-un opt-un]} (some->> form (rest) (apply hash-map))]
-    (set (flatten (map polish (concat req opt req-un opt-un))))))
+    (flatten (map polish (concat req opt req-un opt-un)))))

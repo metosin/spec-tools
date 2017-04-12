@@ -243,6 +243,9 @@
   {:type "array" :items (unwrap children) :minItems 1})
 
 ; ?
+(defmethod accept-spec 'clojure.spec/? [dispatch spec children]
+  {:type "array" :items (unwrap children) :minItems 0})
+
 ; alt
 (defmethod accept-spec 'clojure.spec/alt [dispatch spec children]
   {:anyOf children})
