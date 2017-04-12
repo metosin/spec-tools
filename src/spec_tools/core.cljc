@@ -154,8 +154,8 @@
       ;; there is a dynamic conformer
       (if-let [conform (get *conforming* type)]
         (conform this x)
-        ;; spec predicate
-        (if (s/spec? spec)
+        ;; spec or regex
+        (if (or (s/spec? spec) (s/regex? spec))
           (s/conform spec x)
           ;; invalid
           +invalid+))))
