@@ -20,7 +20,7 @@
                    :dependencies [[org.clojure/clojure "1.9.0-alpha15"]
                                   [org.clojure/clojurescript "1.9.518"]
                                   [criterium "0.4.4"]
-                                  [prismatic/schema "1.1.4"]
+                                  [prismatic/schema "1.1.5"]
                                   [org.clojure/test.check "0.9.0"]
                                   [org.clojure/tools.namespace "0.2.11"]
                                   [com.gfredericks/test.chuck "0.2.7"]
