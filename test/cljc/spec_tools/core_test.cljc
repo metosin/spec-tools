@@ -105,7 +105,11 @@
                  (st/deserialize (st/serialize spec))))))
 
       (testing "gen"
-        (is (seq? (s/exercise my-integer?)))))))
+        (is (seq? (s/exercise my-integer?)))
+        (is (every? #{:kikka :kukka} (-> spec/keyword?
+                                         (s/with-gen #(s/gen #{:kikka :kukka}))
+                                         (s/exercise)
+                                         (->> (map first)))))))))
 
 (deftest doc-test
 
