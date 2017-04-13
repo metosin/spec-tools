@@ -201,6 +201,22 @@
     (is (= "Success!\n"
            (with-out-str (st/explain spec/int? "12" conform/string-conforming))))))
 
+(deftest conform-unform-explain-tests
+  (testing "specs"
+    (let [spec (st/spec (s/or :int spec/int? :bool spec/boolean?))
+          value "1"]
+      (is (= st/+invalid+ (st/conform spec value)))
+      (is (= [:int 1] (st/conform spec value conform/string-conforming)))
+      (is (= 1 (s/unform spec (st/conform spec value conform/string-conforming))))
+      (is (= nil (st/explain-data spec value conform/string-conforming)))))
+  (testing "regexs"
+    (let [spec (st/spec (s/* (s/cat :key spec/keyword? :val spec/int?)))
+          value [:a "1" :b "2"]]
+      (is (= st/+invalid+ (st/conform spec value)))
+      (is (= [{:key :a, :val 1} {:key :b, :val 2}] (st/conform spec value conform/string-conforming)))
+      (is (= [:a 1 :b 2] (s/unform spec (st/conform spec value conform/string-conforming))))
+      (is (= nil (st/explain-data spec value conform/string-conforming))))))
+
 (s/def ::height integer?)
 (s/def ::weight integer?)
 (s/def ::person (st/spec (s/keys :req-un [::height ::weight])))

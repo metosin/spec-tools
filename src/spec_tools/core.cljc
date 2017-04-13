@@ -149,7 +149,7 @@
           ;; invalid
           +invalid+))))
   (unform* [_ x]
-    x)
+    (s/unform* (s/specize* spec) x))
   (explain* [this path via in x]
     (let [problems (cond
 
