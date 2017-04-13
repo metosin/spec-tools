@@ -51,11 +51,6 @@
         (str "can't coerce to spec: " name-or-spec)
         {:name-or-spec name-or-spec}))))
 
-(defn ^:skip-wiki set-of [value]
-  (s/coll-of
-    value
-    :into #{}))
-
 (defn ^:skip-wiki serialize
   "Writes specs into a string that can be read by the reader.
   TODO: Should optionally write the realated Registry entries."
