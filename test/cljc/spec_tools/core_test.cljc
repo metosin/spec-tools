@@ -192,11 +192,14 @@
   (testing "without conforming"
     (is (= st/+invalid+ (st/conform spec/int? "12")))
     (is (= {::s/problems [{:path [], :pred 'int?, :val "12", :via [], :in []}]}
-           (st/explain-data spec/int? "12"))))
+           (st/explain-data spec/int? "12")))
+    (is (= "val: \"12\" fails predicate: int?\n"
+           (with-out-str (st/explain spec/int? "12")))))
   (testing "with conforming"
     (is (= 12 (st/conform spec/int? "12" conform/string-conforming)))
-    (is (= nil
-           (st/explain-data spec/int? "12" conform/string-conforming)))))
+    (is (= nil (st/explain-data spec/int? "12" conform/string-conforming)))
+    (is (= "Success!\n"
+           (with-out-str (st/explain spec/int? "12" conform/string-conforming))))))
 
 (s/def ::height integer?)
 (s/def ::weight integer?)
