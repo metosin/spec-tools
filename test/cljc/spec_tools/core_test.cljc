@@ -16,6 +16,13 @@
 (s/def ::uuid spec/uuid?)
 (s/def ::birthdate spec/inst?)
 
+(s/def ::a spec/int?)
+(s/def ::b ::a)
+
+(deftest get-spec-test
+  (is (= spec/int? (st/get-spec ::a)))
+  (is (= spec/int? (st/get-spec ::b))))
+
 (deftest coerce-test
   (is (= spec/boolean? (st/coerce-spec ::truth)))
   (is (= spec/boolean? (st/coerce-spec spec/boolean?)))
