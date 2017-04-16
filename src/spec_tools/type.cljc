@@ -89,18 +89,14 @@
 
 (defmethod resolve-type :clojure.spec/unknown [_] nil)
 
-; keys
 (defmethod resolve-type 'clojure.spec/keys [_] :map)
 
-; or
 (defmethod resolve-type 'clojure.spec/or [x] nil)
 
-; and
 (defmethod resolve-type 'clojure.spec/and [x] nil)
 
 ; merge
 
-; every
 (defmethod resolve-type 'clojure.spec/every [x]
   (let [{:keys [into]} (apply hash-map (drop 2 x))]
     (cond
@@ -110,7 +106,6 @@
 
 ; every-ks
 
-; coll-of
 (defmethod resolve-type 'clojure.spec/coll-of [x]
   (let [{:keys [into]} (apply hash-map (drop 2 x))]
     (cond
@@ -118,7 +113,6 @@
       (set? into) :set
       :else :vector)))
 
-; map-of
 (defmethod resolve-type 'clojure.spec/map-of [_] :map)
 
 ; *

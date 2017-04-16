@@ -51,17 +51,6 @@
         (str "can't coerce to spec: " name-or-spec)
         {:name-or-spec name-or-spec}))))
 
-(defn ^:skip-wiki eq [value]
-  #{value})
-
-(defn ^:skip-wiki set-of [value]
-  (s/coll-of
-    value
-    :into #{}))
-
-(defn ^:skip-wiki enum [& values]
-  (s/spec (set values)))
-
 (defn ^:skip-wiki serialize
   "Writes specs into a string that can be read by the reader.
   TODO: Should optionally write the realated Registry entries."
@@ -154,16 +143,18 @@
       ;; there is a dynamic conformer
       (if-let [conform (get *conforming* type)]
         (conform this x)
-        ;; spec predicate
-        (if (s/spec? spec)
+        ;; spec or regex
+        (if (or (s/spec? spec) (s/regex? spec))
           (s/conform spec x)
           ;; invalid
           +invalid+))))
   (unform* [_ x]
-    x)
+    (s/unform* (s/specize* spec) x))
   (explain* [this path via in x]
-    (let [problems (if (s/spec? spec)
-                     (s/explain* spec path via in (s/conform* this x))
+    (let [problems (if (or (s/spec? spec) (s/regex? spec))
+                     (let [conformed (s/conform* this x)
+                           val (if (= conformed +invalid+) x (s/unform spec conformed))]
+                       (s/explain* (s/specize* spec) path via in val))
                      (when (= +invalid+ (if (and (fn? spec) (spec (s/conform* this x))) x +invalid+))
                        [{:path path
                          :pred (s/abbrev form)
@@ -208,19 +199,13 @@
 
 ;; and's and or's are just flattened
 (defmethod collect-info 'clojure.spec/keys [_ form]
-  (if-let [{:keys [req opt req-un opt-un]} (some->> form (rest) (apply hash-map))]
-    (letfn [(polish [x]
-              (cond
-                (seq? x) (keep polish x)
-                (symbol? x) nil
-                :else x))]
-      {:keys (set
-               (flatten
-                 (concat
-                   (map polish req)
-                   (map polish opt)
-                   (map (comp keyword name) (map polish req-un))
-                   (map (comp keyword name) (map polish opt-un)))))})))
+  (let [{:keys [req opt req-un opt-un]} (some->> form (rest) (apply hash-map))]
+    {:keys (set
+             (flatten
+               (concat
+                 (map impl/polish (concat req opt))
+                 (->> (concat req-un opt-un)
+                      (map (comp keyword name impl/polish))))))}))
 
 (defn extract-extra-info [form]
   (if (seq? form)

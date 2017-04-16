@@ -47,3 +47,13 @@
     (symbol? form) (clojure.core/or (->> form (resolve env) cljs-sym) form)
     (sequential? form) (walk/postwalk #(if (symbol? %) (cljs-resolve env %) %) (unfn form))
     :else form))
+
+(defn polish [x]
+  (cond
+    (seq? x) (flatten (keep polish x))
+    (symbol? x) nil
+    :else x))
+
+(defn extract-keys [form]
+  (let [{:keys [req opt req-un opt-un]} (some->> form (rest) (apply hash-map))]
+    (flatten (map polish (concat req opt req-un opt-un)))))

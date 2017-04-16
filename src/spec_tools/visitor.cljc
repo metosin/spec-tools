@@ -2,7 +2,8 @@
   "Tools for walking spec definitions."
   (:require [clojure.spec :as s]
             [spec-tools.core :as st]
-            [spec-tools.type :as type]))
+            [spec-tools.type :as type]
+            [spec-tools.impl :as impl]))
 
 (defn strip-fn-if-needed [form]
   (let [head (first form)]
@@ -18,7 +19,7 @@
     "cljs.spec" (symbol "clojure.spec" (name kw))
     kw))
 
-(defn- formize [spec] (if (seq? spec) spec (s/form spec)))
+(defn- extract-form [spec] (if (seq? spec) spec (s/form spec)))
 (defn- de-spec [{:keys [form spec]}] (if (seq? form) spec form))
 
 (defn- spec-dispatch
@@ -38,7 +39,7 @@
 (defn- expand-spec-ns [x]
   (if-not (namespace x) (symbol "clojure.core" (name x)) x))
 
-(defn- ++expand-every-cljs-spec-bug++ [x]
+(defn- ++expand-symbol-cljs-spec-bug++ [x]
   (if (seq? x)
     (let [[k & rest] x]
       (cons k (if (= k 'cljs.spec/tuple)
@@ -64,30 +65,36 @@
   spec-dispatch :default ::default)
 
 (defmethod visit ::set [spec accept]
-  (accept ::set spec (vec (if (keyword? spec) (s/form spec) spec))))
+  (accept ::set spec (vec (if (keyword? spec) (extract-form spec) spec))))
 
 (defmethod visit 'clojure.spec/keys [spec accept]
-  (let [[_ & {:keys [req req-un opt opt-un]}] (s/form spec)]
-    (accept 'clojure.spec/keys spec (mapv #(visit % accept) (concat req req-un opt opt-un)))))
+  (let [keys (impl/extract-keys (extract-form spec))]
+    (accept 'clojure.spec/keys spec (mapv #(visit % accept) keys))))
 
 (defmethod visit 'clojure.spec/or [spec accept]
-  (let [[_ & {:as inner-spec-map}] (s/form spec)]
+  (let [[_ & {:as inner-spec-map}] (extract-form spec)]
     (accept 'clojure.spec/or spec (mapv #(visit % accept) (vals inner-spec-map)))))
 
 (defmethod visit 'clojure.spec/and [spec accept]
-  (let [[_ & inner-specs] (s/form spec)]
+  (let [[_ & inner-specs] (extract-form spec)]
     (accept 'clojure.spec/and spec (mapv #(visit % accept) inner-specs))))
 
-;(defmethod visit 'clojure.spec/merge [spec accept])
+(defmethod visit 'clojure.spec/merge [spec accept]
+  (let [[_ & inner-specs] (extract-form spec)]
+    (accept 'clojure.spec/merge spec (mapv #(visit % accept) inner-specs))))
 
 (defmethod visit 'clojure.spec/every [spec accept]
-  (let [[_ inner-spec & kwargs] (formize spec)]
-    (accept 'clojure.spec/every spec [(visit (++expand-every-cljs-spec-bug++ inner-spec) accept)])))
+  (let [[_ inner-spec ] (extract-form spec)]
+    (accept 'clojure.spec/every spec [(visit (++expand-symbol-cljs-spec-bug++ inner-spec) accept)])))
 
-;(defmethod visit 'clojure.spec/every-ks [spec accept])
+(defmethod visit 'clojure.spec/every-kv [spec accept]
+  (let [[_ inner-spec1 inner-spec2 ] (extract-form spec)]
+    (accept 'clojure.spec/every-kv spec (mapv
+                                          #(visit (++expand-symbol-cljs-spec-bug++ %) accept)
+                                          [inner-spec1 inner-spec2]))))
 
 (defmethod visit 'clojure.spec/coll-of [spec accept]
-  (let [form (s/form spec)
+  (let [form (extract-form spec)
         pred (second form)
         type (type/resolve-type form)
         dispatch (case type
@@ -97,37 +104,44 @@
     (accept dispatch spec [(visit pred accept)])))
 
 (defmethod visit 'clojure.spec/map-of [spec accept]
-  (let [[_ _ v] (s/form spec)]
-    (accept ::map-of spec [(visit v accept)])))
+  (let [[_ k v] (extract-form spec)]
+    (accept ::map-of spec (mapv #(visit % accept) [k v]))))
 
 (defmethod visit 'clojure.spec/* [spec accept]
-  (let [[_ inner-spec] (s/form spec)]
+  (let [[_ inner-spec] (extract-form spec)]
     (accept 'clojure.spec/* spec [(visit inner-spec accept)])))
 
 (defmethod visit 'clojure.spec/+ [spec accept]
-  (let [[_ inner-spec] (s/form spec)]
+  (let [[_ inner-spec] (extract-form spec)]
     (accept 'clojure.spec/+ spec [(visit inner-spec accept)])))
 
-;(defmethod visit 'clojure.spec/? [spec accept])
+(defmethod visit 'clojure.spec/? [spec accept]
+  (let [[_ inner-spec] (extract-form spec)]
+    (accept 'clojure.spec/? spec [(visit (++expand-symbol-cljs-spec-bug++ inner-spec) accept)])))
 
 (defmethod visit 'clojure.spec/alt [spec accept]
-  (let [[_ & {:as inner-spec-map}] (s/form spec)]
+  (let [[_ & {:as inner-spec-map}] (extract-form spec)]
     (accept 'clojure.spec/alt spec (mapv #(visit % accept) (vals inner-spec-map)))))
 
-;(defmethod visit 'clojure.spec/cat [spec accept])
+(defmethod visit 'clojure.spec/cat [spec accept]
+  (let [[_ & {:as inner-spec-map}] (extract-form spec)]
+    (accept 'clojure.spec/cat spec (mapv #(visit % accept) (vals inner-spec-map)))))
 
-;(defmethod visit 'clojure.spec/& [spec accept])
+(defmethod visit 'clojure.spec/& [spec accept]
+  (let [[_ inner-spec] (extract-form spec)]
+    (accept 'clojure.spec/& spec [(visit inner-spec accept)])))
 
 (defmethod visit 'clojure.spec/tuple [spec accept]
-  (let [[_ & inner-specs] (formize spec)]
+  (let [[_ & inner-specs] (extract-form spec)]
     (accept 'clojure.spec/tuple spec (mapv #(visit % accept) inner-specs))))
 
-;(defmethod visit 'clojure.spec/keys* [spec accept])
-
-;(defmethod visit 'clojure.spec/nilable [spec accept])
+;; TODO: broken: http://dev.clojure.org/jira/browse/CLJ-2147
+(defmethod visit 'clojure.spec/keys* [spec accept]
+  (let [keys (impl/extract-keys (extract-form spec))]
+    (accept 'clojure.spec/keys* spec (mapv #(visit % accept) keys))))
 
 (defmethod visit 'clojure.spec/nilable [spec accept]
-  (let [[_ inner-spec] (s/form spec)]
+  (let [[_ inner-spec] (extract-form spec)]
     (accept 'clojure.spec/nilable spec [(visit inner-spec accept)])))
 
 (defmethod visit 'spec-tools.core/spec [spec accept]
@@ -141,7 +155,7 @@
 ;; sample visitor
 ;;
 
-(defn collect-specs
+(defn spec-collector
   "a visitor that collects all registered specs. Returns
   a map of spec-name => specs"
   []
@@ -153,14 +167,16 @@
 
 (defn convert-specs!
   "Collects all registered subspecs from a spec and
-  transforms their registry values into Spec Records."
+  transforms their registry values into Spec Records.
+  Does not convert clojure.spec regex ops."
   [spec]
-  (let [specs (visit spec (collect-specs))
+  (let [specs (visit spec (spec-collector))
         report (atom #{})]
     (doseq [[k v] specs]
       (if (keyword? v)
         (swap! report into (convert-specs! v))
-        (when-not (st/spec? v)
-          (eval `(s/def ~k (st/create-spec {:spec ~v})))
-          (swap! report conj k))))
+        (when-not (or (s/regex? v) (st/spec? v))
+          (let [s (st/create-spec {:spec v})]
+            (s/def-impl k (s/form s) s)
+            (swap! report conj k)))))
     @report))

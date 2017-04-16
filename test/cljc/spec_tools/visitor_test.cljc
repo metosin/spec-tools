@@ -55,18 +55,17 @@
                    :spec-tools.visitor-test$person$address/street
                    :spec-tools.visitor-test$person$address/zip
                    :spec-tools.visitor-test$person/address}
-        specs (visitor/visit person-spec (visitor/collect-specs))]
+        specs (visitor/visit person-spec (visitor/spec-collector))]
     (testing "all specs are found"
       (is (= expected (-> specs keys set))))
     (testing "all spec forms are correct"
       (is (= (->> expected (map s/get-spec) set)
              (-> specs vals set))))
 
-    #?(:clj
-       (testing "convert-specs! transforms all specs into Spec records"
-         (visitor/convert-specs! person-spec)
-         (is (true?
-               (->> expected
-                    (map s/get-spec)
-                    (remove keyword?)
-                    (every? st/spec?))))))))
+    (testing "convert-specs! transforms all specs into Spec records"
+      (visitor/convert-specs! person-spec)
+      (is (true?
+            (->> expected
+                 (map s/get-spec)
+                 (remove keyword?)
+                 (every? st/spec?)))))))

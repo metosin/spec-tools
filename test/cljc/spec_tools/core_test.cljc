@@ -16,6 +16,13 @@
 (s/def ::uuid spec/uuid?)
 (s/def ::birthdate spec/inst?)
 
+(s/def ::a spec/int?)
+(s/def ::b ::a)
+
+(deftest get-spec-test
+  (is (= spec/int? (st/get-spec ::a)))
+  (is (= spec/int? (st/get-spec ::b))))
+
 (deftest coerce-test
   (is (= spec/boolean? (st/coerce-spec ::truth)))
   (is (= spec/boolean? (st/coerce-spec spec/boolean?)))
@@ -98,7 +105,11 @@
                  (st/deserialize (st/serialize spec))))))
 
       (testing "gen"
-        (is (seq? (s/exercise my-integer?)))))))
+        (is (seq? (s/exercise my-integer?)))
+        (is (every? #{:kikka :kukka} (-> spec/keyword?
+                                         (s/with-gen #(s/gen #{:kikka :kukka}))
+                                         (s/exercise)
+                                         (->> (map first)))))))))
 
 (deftest doc-test
 
@@ -192,17 +203,34 @@
   (testing "without conforming"
     (is (= st/+invalid+ (st/conform spec/int? "12")))
     (is (= {::s/problems [{:path [], :pred 'int?, :val "12", :via [], :in []}]}
-           (st/explain-data spec/int? "12"))))
+           (st/explain-data spec/int? "12")))
+    (is (= "val: \"12\" fails predicate: int?\n"
+           (with-out-str (st/explain spec/int? "12")))))
   (testing "with conforming"
     (is (= 12 (st/conform spec/int? "12" conform/string-conforming)))
-    (is (= nil
-           (st/explain-data spec/int? "12" conform/string-conforming)))))
+    (is (= nil (st/explain-data spec/int? "12" conform/string-conforming)))
+    (is (= "Success!\n"
+           (with-out-str (st/explain spec/int? "12" conform/string-conforming))))))
+
+(deftest conform-unform-explain-tests
+  (testing "specs"
+    (let [spec (st/spec (s/or :int spec/int? :bool spec/boolean?))
+          value "1"]
+      (is (= st/+invalid+ (st/conform spec value)))
+      (is (= [:int 1] (st/conform spec value conform/string-conforming)))
+      (is (= 1 (s/unform spec (st/conform spec value conform/string-conforming))))
+      (is (= nil (st/explain-data spec value conform/string-conforming)))))
+  (testing "regexs"
+    (let [spec (st/spec (s/* (s/cat :key spec/keyword? :val spec/int?)))
+          value [:a "1" :b "2"]]
+      (is (= st/+invalid+ (st/conform spec value)))
+      (is (= [{:key :a, :val 1} {:key :b, :val 2}] (st/conform spec value conform/string-conforming)))
+      (is (= [:a 1 :b 2] (s/unform spec (st/conform spec value conform/string-conforming))))
+      (is (= nil (st/explain-data spec value conform/string-conforming))))))
 
 (s/def ::height integer?)
 (s/def ::weight integer?)
 (s/def ::person (st/spec (s/keys :req-un [::height ::weight])))
-
-(st/spec (s/keys :req-un [::height ::weight]))
 
 (deftest map-specs-test
   (let [person {:height 200, :weight 80, :age 36}]

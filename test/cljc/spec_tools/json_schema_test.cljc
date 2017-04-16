@@ -41,8 +41,8 @@
            {:allOf [{:type "integer"} {:minimum 0 :exclusiveMinimum true}]}))
     ;; merge
     (is (= (jsc/to-json (s/every integer?)) {:type "array" :items {:type "integer"}}))
-    ;; every-ks
-    ;; coll-of
+    (is (= (jsc/to-json (s/every-kv string? integer?))
+           {:type "object" :additionalProperties {:type "integer"}}))
     (is (= (jsc/to-json (s/coll-of string?)) {:type "array" :items {:type "string"}}))
     (is (= (jsc/to-json (s/coll-of string? :into '())) {:type "array" :items {:type "string"}}))
     (is (= (jsc/to-json (s/coll-of string? :into [])) {:type "array" :items {:type "string"}}))
@@ -51,19 +51,22 @@
            {:type "object" :additionalProperties {:type "integer"}}))
     (is (= (jsc/to-json (s/* integer?)) {:type "array" :items {:type "integer"}}))
     (is (= (jsc/to-json (s/+ integer?)) {:type "array" :items {:type "integer"} :minItems 1}))
-    ;; ?
-    ;; alt
+    (is (= (jsc/to-json (s/? integer?)) {:type "array" :items {:type "integer"} :minItems 0}))
     (is (= (jsc/to-json (s/alt :int integer? :string string?))
            {:anyOf [{:type "integer"} {:type "string"}]}))
-    ;; cat
-    ;; &
+    (is (= (jsc/to-json (s/cat :int integer? :string string?))
+           {:type "array"
+            :minItems 2
+            :maxItems 2
+            :items {:anyOf [{:type "integer"} {:type "string"}]}}))
+    ;; & is broken (http://dev.clojure.org/jira/browse/CLJ-2152)
     (is (= (jsc/to-json (s/tuple integer? string?))
            {:type "array" :items [{:type "integer"} {:type "string"}] :minItems 2}))
-    ;; keys*
+    ;; keys* is broken (http://dev.clojure.org/jira/browse/CLJ-2152)
     (is (= (jsc/to-json (s/map-of string? clojure.core/integer?))
            {:type "object" :additionalProperties {:type "integer"}}))
-    ;; nilable
-    )
+    (is (= (jsc/to-json (s/nilable string?))
+           {:oneOf [{:type "string"} {:type "null"}]})))
   (testing "failing clojure.specs"
     (is (not= (jsc/to-json (s/coll-of (s/tuple string? any?) :into {}))
               {:type "object", :additionalProperties {:type "string"}}))))
