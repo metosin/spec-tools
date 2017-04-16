@@ -45,7 +45,9 @@
                    :spec-tools.data-test$person/address
                    :spec-tools.data-test$person$address/zip
                    :spec-tools.data-test$person$address/street}
-                 generated-keys))))
+                 generated-keys))
+          (testing "all registered specs are Specs"
+            (is (true? (every? st/spec? (map st/get-spec generated-keys)))))))
       (testing "validating"
         (let [value {::id 1
                      ::age 63
