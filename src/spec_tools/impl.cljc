@@ -1,6 +1,7 @@
 (ns spec-tools.impl
   (:refer-clojure :exclude [resolve])
   (:require [cljs.analyzer.api :refer [resolve]]
+            [spec-tools.form :as form]
             [clojure.spec :as s]
             [clojure.walk :as walk])
   (:import
@@ -64,3 +65,58 @@
 
 (defn register-spec! [k s]
   (s/def-impl k (s/form s) s))
+
+(defn coll-of-spec [pred form type]
+  (clojure.spec/every-impl
+    form
+    pred
+    {:into type
+     ::s/conform-all true
+     ::s/describe `(s/coll-of ~form :into ~type),
+     ::s/cpred coll?,
+     ::s/kind-form (quote nil)}
+    nil))
+
+(defn map-of-spec [kpred vpred]
+  (let [forms (map form/resolve-form [kpred vpred])
+        tuple (s/tuple-impl forms [kpred vpred])]
+    (clojure.spec/every-impl
+      `(s/tuple ~@forms)
+      tuple
+      {:into {}
+       ::s/conform-all true
+       ::s/describe `(s/map-of ~@forms),
+       ::s/cpred coll?,
+       ::s/kind-form (quote nil)}
+      nil)))
+
+(defn keys-spec [{:keys [req opt req-un opt-un]}]
+  (let [req-specs (flatten (map polish (concat req req-un)))
+        opt-specs (flatten (map polish (concat opt opt-un)))
+        req-keys (flatten (concat (map polish req) (map polish-un req-un)))
+        opt-keys (flatten (concat (map polish opt) (map polish-un opt-un)))
+        pred-exprs (concat
+                     [#(map? %)]
+                     (map (fn [x] #(contains? % x)) req-keys))
+        pred-forms (concat
+                     [`(fn [~'%] (map? ~'%))]
+                     (map (fn [k] `(fn [~'%] (contains? ~'% ~k))) req-keys))
+        keys-pred (fn [x]
+                    (reduce
+                      (fn [_ p]
+                        (or (p x) (reduced false)))
+                      true
+                      pred-exprs))]
+
+    (s/map-spec-impl
+      {:req-un req-un
+       :opt-un opt-un
+       :pred-exprs pred-exprs
+       :keys-pred keys-pred
+       :opt-keys opt-keys
+       :req-specs req-specs
+       :req req
+       :req-keys req-keys
+       :opt-specs opt-specs
+       :pred-forms pred-forms
+       :opt opt})))
