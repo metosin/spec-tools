@@ -420,26 +420,32 @@
                        :req [(or ::age (and ::uuid ::lat))])))))))
 
 (deftest type-inference-test
-  (testing "for core predicates"
+  (testing "works for core predicates"
     (is (= :long (type/resolve-type `integer?))))
-  (testing "::s/unknown for unknowns"
+  (testing "unknowns return nil"
     (is (= nil (type/resolve-type #(> % 2)))))
-  (testing "types"
+  (testing "available types"
     (is (not (empty? (type/types))))
     (is (contains? (type/types) :boolean)))
-  (testing "type-symbols"
+  (testing "available type-symbols"
     (is (not (empty? (type/type-symbols))))
     (is (contains? (type/type-symbols) 'clojure.spec/keys))
     (is (contains? (type/type-symbols) 'clojure.core/integer?))))
 
 (deftest form-inference-test
-  (testing "for core predicates"
+  (testing "works for core predicates"
     (is (= `integer? (form/resolve-form integer?))))
-  (testing "::s/unknown for unknowns"
+  (testing "lists return identity"
+    (is (= `(s/coll-of integer?) (form/resolve-form `(s/coll-of integer?)))))
+  (testing "qualified keywords return identity"
+    (is (= ::kikka (form/resolve-form ::kikka))))
+  (testing "unqualified keywords return unknown"
+    (is (= ::s/unknown (form/resolve-form :kikka))))
+  (testing "unknowns return unknown"
     (is (= ::s/unknown (form/resolve-form #(> % 2))))))
 
 (deftest spec-inference-test
-  (testing "for core predicates"
+  (testing "works for core predicates"
     (is (= spec/integer? (spec/resolve-spec integer?))))
-  (testing "nil for unknowns"
+  (testing "unknowns return nil"
     (is (= nil (spec/resolve-spec #(> % 2))))))

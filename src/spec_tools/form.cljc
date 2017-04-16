@@ -1,8 +1,11 @@
 (ns spec-tools.form
   (:require [clojure.spec :as s]))
 
-(defmulti resolve-form identity :default ::default)
+(defmulti resolve-form
+  (fn [x] (if (or (qualified-keyword? x) (seq? x)) ::identity x))
+  :default ::default)
 
+(defmethod resolve-form ::identity [x] x)
 (defmethod resolve-form ::default [_] ::s/unknown)
 
 (defmethod resolve-form any? [_] `any?)
