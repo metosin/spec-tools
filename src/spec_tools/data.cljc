@@ -6,9 +6,11 @@
 
 (defrecord OptionalKey [k])
 (defrecord RequiredKey [k])
+(defrecord Maybe [v])
 
 (defn opt [k] (->OptionalKey k))
 (defn req [k] (->RequiredKey k))
+(defn maybe [v] (->Maybe v))
 
 (defn opt? [x]
   (instance? OptionalKey x))
@@ -21,6 +23,9 @@
 
 (defn unwrap-key [x]
   (if (wrapped-key? x) (:k x) x))
+
+(defn maybe? [x]
+  (instance? Maybe x))
 
 ;;
 ;; new
@@ -45,15 +50,18 @@
     (let [m (reduce-kv
               (fn [acc k v]
                 (let [kv (unwrap-key k)
-                      k1 (if (req? k) "req" "opt")
-                      k2 (if-not (qualified-keyword? kv) "-un")
-                      ak (keyword (str k1 k2))
+                      rk (keyword
+                           (str (if (req? k) "req" "opt")
+                                (if-not (qualified-keyword? kv) "-un")))
+                      [v wrap] (if (maybe? v)
+                                 [(:v v) (comp spec impl/nilable-spec)]
+                                 [v identity])
                       [k' v'] (if (qualified-keyword? kv)
                                 [kv (if (not= kv v) v)]
                                 (let [k' (keyword (str (str (namespace n) "$" (name n)) "/" (name (unwrap-key kv))))]
-                                  [k' (data-spec k' v)]))]
+                                  [k' (wrap (data-spec k' v))]))]
                   (-> acc
-                      (update ak (fnil conj []) k')
+                      (update rk (fnil conj []) k')
                       (cond-> v' (update ::defs (fnil conj []) [k' v'])))))
               {}
               data)

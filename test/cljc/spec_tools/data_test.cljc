@@ -2,8 +2,7 @@
   (:require [clojure.test :refer [deftest testing is]]
             [clojure.spec :as s]
             [spec-tools.core :as st]
-            [spec-tools.spec :as spec]
-            [spec-tools.data :refer [opt req] :as data]
+            [spec-tools.data :refer [opt req maybe] :as data]
             [spec-tools.conform :as conform]))
 
 (deftest map-test
@@ -16,8 +15,8 @@
                   :languages #{keyword?}
                   :orders [{:id int?
                             :description string?}]
-                  :address {:street string?
-                            :zip string?}}
+                  :address (maybe {:street string?
+                                   :zip string?})}
           person-spec (data/data-spec ::person person)
           person-keys-spec (st/spec
                              (s/keys
@@ -65,6 +64,15 @@
 
           (testing "data can be validated"
             (is (true? (s/valid? person-spec value))))
+
+          (testing "fails with invalid data"
+            (is (false? (s/valid? person-spec (dissoc value :boss)))))
+
+          (testing "optional keys"
+            (is (true? (s/valid? person-spec (dissoc value :description)))))
+
+          (testing "maybe values"
+            (is (true? (s/valid? person-spec (assoc value :address nil)))))
 
           (testing "map-conforming works recursively"
             (is (= value
