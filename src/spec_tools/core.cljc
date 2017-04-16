@@ -1,5 +1,5 @@
 (ns spec-tools.core
-  #?(:cljs (:require-macros [spec-tools.core :refer [spec coll-spec]]))
+  #?(:cljs (:require-macros [spec-tools.core :refer [spec]]))
   (:require [spec-tools.impl :as impl]
             [spec-tools.type :as type]
             [spec-tools.form :as form]
@@ -305,85 +305,85 @@
       `(spec ~spec (merge ~info {:type nil})))))
 
 ;;
-;; Map Spec
+;; Data Specs
 ;;
 
 (defrecord OptionalKey [k])
 (defrecord RequiredKey [k])
+(defrecord Maybe [v])
 
 (defn opt [k] (->OptionalKey k))
 (defn req [k] (->RequiredKey k))
+(defn maybe [v] (->Maybe v))
 
-#?(:clj (declare ^:private coll-spec-fn))
+(defn opt? [x]
+  (instance? OptionalKey x))
 
-#?(:clj
-   (defn- -vector [env n v]
-     (if-not (= 1 (count v))
-       (throw
-         (ex-info
-           "only single maps allowed in nested vectors"
-           {:k n :v v}))
-       `(spec (s/coll-of ~(coll-spec-fn env n (first v)) :into [])))))
+(defn req? [x]
+  (not (opt? x)))
 
-#?(:clj
-   (defn- -set [env n v]
-     (if-not (= 1 (count v))
-       (throw
-         (ex-info
-           "only single maps allowed in nested sets"
-           {:k n :v v}))
-       `(spec (s/coll-of ~(coll-spec-fn env n (first v)) :into #{})))))
+(defn wrapped-key? [x]
+  (or (opt? x) (instance? RequiredKey x)))
 
-#?(:clj
-   (defn- -map [env n m]
-     (let [resolve (if (impl/in-cljs? env) (partial impl/cljs-resolve env) resolve)
-           resolved-opt (resolve `opt)
-           resolved-req (resolve `req)]
+(defn unwrap-key [x]
+  (if (wrapped-key? x) (:k x) x))
 
-       ;; predicate keys
-       (if-let [key-spec (and (= 1 (count m))
-                              (let [k (first (keys m))]
-                                (and
-                                  (not
-                                    (or (keyword? k)
-                                        (and (seq? k)
-                                             (let [resolved (resolve (first k))]
-                                               (#{resolved-opt resolved-req} resolved)))))
-                                  k)))]
-         `(spec (s/map-of ~key-spec ~(coll-spec-fn env n (first (vals m)))))
-         ;; keyword keys
-         (let [m (reduce-kv
-                   (fn [acc k v]
-                     (let [[req? kv] (if (seq? k) [(not= resolved-opt (resolve (first k))) (second k)] [true k])
-                           k1 (if req? "req" "opt")
-                           k2 (if-not (qualified-keyword? kv) "-un")
-                           ak (keyword (str k1 k2))
-                           [k' v'] (if (qualified-keyword? kv)
-                                     [kv (if (not= kv v) v)]
-                                     (let [k' (keyword (str (str (namespace n) "$" (name n)) "/" (name kv)))]
-                                       [k' (if (or (map? v) (vector? v) (set? v))
-                                             (coll-spec-fn env k' v) v)]))]
-                       (-> acc
-                           (update ak (fnil conj []) k')
-                           (cond-> v' (update ::defs (fnil conj []) [k' v'])))))
-                   {}
-                   m)
-               defs (::defs m)
-               margs (apply concat (dissoc m ::defs))]
-           `(do
-              ~@(for [[k v] defs]
-                  `(s/def ~k ~v))
-              (spec (s/keys ~@margs))))))))
+(defn maybe? [x]
+  (instance? Maybe x))
 
-#?(:clj
-   (defn- coll-spec-fn [env n m]
-     (if-let [f (cond
-                  (map? m) -map
-                  (vector? m) -vector
-                  (set? m) -set)]
-       (f env n m)
-       `~m)))
+(declare data-spec)
 
-#?(:clj
-   (defmacro coll-spec [n m]
-     (coll-spec-fn &env n m)))
+(defn- -map-spec [n data]
+  ;; predicate keys
+  (if-let [[k' v'] (and (= 1 (count data))
+                        (let [[k v] (first data)]
+                          (and
+                            (not
+                              (or (keyword? k)
+                                  (wrapped-key? k)))
+                            [k v])))]
+    (create-spec {:spec (impl/map-of-spec (data-spec n k') (data-spec n v'))})
+    ;; keyword keys
+    (let [m (reduce-kv
+              (fn [acc k v]
+                (let [kv (unwrap-key k)
+                      rk (keyword
+                           (str (if (req? k) "req" "opt")
+                                (if-not (qualified-keyword? kv) "-un")))
+                      [v wrap] (if (maybe? v)
+                                 [(:v v) (comp #(create-spec {:spec %}) impl/nilable-spec)]
+                                 [v identity])
+                      [k' n'] (if (qualified-keyword? kv)
+                                [kv (if (not= kv v) kv)]
+                                (let [k' (keyword (str (str (namespace n) "$" (name n)) "/" (name (unwrap-key kv))))]
+                                  [k' k']))
+                      v' (if n' (wrap (data-spec n' v)))]
+                  (-> acc
+                      (update rk (fnil conj []) k')
+                      (cond-> v' (update ::defs (fnil conj []) [k' v'])))))
+              {}
+              data)
+          defs (::defs m)
+          margs (apply concat (dissoc m ::defs))]
+      (doseq [[k s] defs]
+        (impl/register-spec! k s))
+      (create-spec {:spec (impl/keys-spec margs)}))))
+
+(defn- -coll-spec [n v proto]
+  (when-not (= 1 (count v))
+    (throw
+      (ex-info
+        (str "only single maps allowed in nested " proto)
+        {:k n :v v})))
+  (let [pred (first v)
+        form (form/resolve-form pred)]
+    (create-spec {:spec (impl/coll-of-spec (data-spec n pred) form proto)})))
+
+(defn data-spec [name x]
+  (cond
+    (spec? x) x
+    (s/regex? x) x
+    (map? x) (-map-spec name x)
+    (set? x) (-coll-spec name x #{})
+    (vector? x) (-coll-spec name x [])
+    :else (create-spec {:spec x})))

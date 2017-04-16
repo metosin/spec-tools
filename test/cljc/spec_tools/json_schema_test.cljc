@@ -95,7 +95,7 @@
 (s/def ::age (s/and integer? #(> % 18)))
 
 (def person-spec
-  (st/coll-spec
+  (st/data-spec
     ::person
     {::id integer?
      :age ::age

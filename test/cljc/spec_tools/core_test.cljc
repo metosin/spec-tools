@@ -297,45 +297,48 @@
     (testing "my-conforming"
       (is (= :AKKIK (st/conform spec/keyword? "kikka" my-conforming))))))
 
-(deftest map-test
-  (testing "nested map spec"
-    (let [st-map (st/coll-spec
-                   ::my-map
-                   {::id integer?
-                    ::age ::age
-                    :boss spec/boolean?
-                    (st/req :name) string?
-                    (st/opt :description) string?
-                    :languages #{keyword?}
-                    :orders [{:id int?
-                              :description string?}]
-                    :address {:street string?
-                              :zip string?}})
-          s-keys (st/spec
-                   (s/keys
-                     :req [::id ::age]
-                     :req-un [:spec-tools.core-test$my-map/boss
-                              :spec-tools.core-test$my-map/name
-                              :spec-tools.core-test$my-map/languages
-                              :spec-tools.core-test$my-map/orders
-                              :spec-tools.core-test$my-map/address]
-                     :opt-un [:spec-tools.core-test$my-map/description]))]
+(deftest data-spec-tests
+  (testing "nested data-spec"
+    (let [person {::id integer?
+                  ::age ::age
+                  :boss boolean?
+                  (st/req :name) string?
+                  (st/opt :description) string?
+                  :languages #{keyword?}
+                  :orders [{:id int?
+                            :description string?}]
+                  :address (st/maybe {:street string?
+                                      :zip string?})}
+          person-spec (st/data-spec ::person person)
+          person-keys-spec (st/spec
+                             (s/keys
+                               :req [::id ::age]
+                               :req-un [:spec-tools.core-test$person/boss
+                                        :spec-tools.core-test$person/name
+                                        :spec-tools.core-test$person/languages
+                                        :spec-tools.core-test$person/orders
+                                        :spec-tools.core-test$person/address]
+                               :opt-un [:spec-tools.core-test$person/description]))]
 
       (testing "normal keys-spec-spec is generated"
-        (is (= (s/form s-keys) (s/form st-map))))
+        (is (= (s/form person-keys-spec)
+               (s/form person-spec))))
+
       (testing "nested keys are in the registry"
-        (let [generated-keys (->> (st/registry #"spec-tools.core-test\$my-map.*") (map first) set)]
-          (is (= #{:spec-tools.core-test$my-map/boss
-                   :spec-tools.core-test$my-map/name
-                   :spec-tools.core-test$my-map/description
-                   :spec-tools.core-test$my-map/languages
-                   :spec-tools.core-test$my-map/orders
-                   :spec-tools.core-test$my-map$orders/id
-                   :spec-tools.core-test$my-map$orders/description
-                   :spec-tools.core-test$my-map/address
-                   :spec-tools.core-test$my-map$address/zip
-                   :spec-tools.core-test$my-map$address/street}
-                 generated-keys))))
+        (let [generated-keys (->> (st/registry #"spec-tools.core-test\$person.*") (map first) set)]
+          (is (= #{:spec-tools.core-test$person/boss
+                   :spec-tools.core-test$person/name
+                   :spec-tools.core-test$person/description
+                   :spec-tools.core-test$person/languages
+                   :spec-tools.core-test$person/orders
+                   :spec-tools.core-test$person$orders/id
+                   :spec-tools.core-test$person$orders/description
+                   :spec-tools.core-test$person/address
+                   :spec-tools.core-test$person$address/zip
+                   :spec-tools.core-test$person$address/street}
+                 generated-keys))
+          (testing "all registered specs are Specs"
+            (is (true? (every? st/spec? (map st/get-spec generated-keys)))))))
       (testing "validating"
         (let [value {::id 1
                      ::age 63
@@ -352,55 +355,64 @@
                           (assoc-in [:address :KIKKA] true))]
 
           (testing "data can be validated"
-            (is (true? (s/valid? st-map value))))
+            (is (true? (s/valid? person-spec value))))
+
+          (testing "fails with invalid data"
+            (is (false? (s/valid? person-spec (dissoc value :boss)))))
+
+          (testing "optional keys"
+            (is (true? (s/valid? person-spec (dissoc value :description)))))
+
+          (testing "maybe values"
+            (is (true? (s/valid? person-spec (assoc value :address nil)))))
 
           (testing "map-conforming works recursively"
             (is (= value
-                   (st/conform st-map bloated {:map conform/strip-extra-keys}))))))))
+                   (st/conform person-spec bloated {:map conform/strip-extra-keys}))))))))
 
   (testing "top-level vector"
     (is (true?
           (s/valid?
-            (st/coll-spec ::vector [{:olipa {:kerran string?}}])
+            (st/data-spec ::vector [{:olipa {:kerran string?}}])
             [{:olipa {:kerran "avaruus"}}
              {:olipa {:kerran "elämä"}}])))
     (is (false?
           (s/valid?
-            (st/coll-spec ::vector [{:olipa {:kerran string?}}])
+            (st/data-spec ::vector [{:olipa {:kerran string?}}])
             [{:olipa {:kerran :muumuu}}]))))
 
   (testing "top-level set"
     (is (true?
           (s/valid?
-            (st/coll-spec ::vector #{{:olipa {:kerran string?}}})
+            (st/data-spec ::vector #{{:olipa {:kerran string?}}})
             #{{:olipa {:kerran "avaruus"}}
               {:olipa {:kerran "elämä"}}})))
     (is (false?
           (s/valid?
-            (st/coll-spec ::vector #{{:olipa {:kerran string?}}})
+            (st/data-spec ::vector #{{:olipa {:kerran string?}}})
             #{{:olipa {:kerran :muumuu}}}))))
 
   (testing "mega-nested"
     (is (true?
           (s/valid?
-            (st/coll-spec ::vector [[[[[[[[[[string?]]]]]]]]]])
+            (st/data-spec ::vector [[[[[[[[[[string?]]]]]]]]]])
             [[[[[[[[[["kikka" "kakka" "kukka"]]]]]]]]]])))
     (is (false?
           (s/valid?
-            (st/coll-spec ::vector [[[[[[[[[[string?]]]]]]]]]])
+            (st/data-spec ::vector [[[[[[[[[[string?]]]]]]]]]])
             [[[[[[[[[123]]]]]]]]]))))
 
   (testing "predicate keys"
     (is
       (true?
         (s/valid?
-          (st/coll-spec ::pred-keys {string? {keyword? [integer?]}})
+          (st/data-spec ::pred-keys {string? {keyword? [integer?]}})
           {"winning numbers" {:are [1 12 46 45]}
            "empty?" {:is []}})))
     (is
       (false?
         (s/valid?
-          (st/coll-spec ::pred-keys {string? {keyword? [integer?]}})
+          (st/data-spec ::pred-keys {string? {keyword? [integer?]}})
           {"invalid spec" "is this"})))))
 
 (deftest extract-extra-info-test
