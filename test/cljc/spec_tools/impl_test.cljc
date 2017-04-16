@@ -41,3 +41,19 @@
     (is (= {::int 1, :bool true, :kikka "kakka"}
            (s/conform spec {::int 1, :bool true, :kikka "kakka"})
            (s/conform impl {::int 1, :bool true, :kikka "kakka"})))))
+
+(deftest nilable-spec-tst
+  (let [spec (s/nilable string?)
+        impl (impl/nilable-spec string?)]
+    (is (= (s/form spec)
+           (s/form impl)))
+    (is (= nil
+           (s/explain-data spec "1")
+           (s/explain-data spec nil)
+           (s/explain-data impl "1")
+           (s/explain-data impl nil)))
+    (is (= (s/explain-data spec [1])
+           (s/explain-data impl [1])))
+    (is (= "1"
+           (s/conform spec "1")
+           (s/conform impl "1")))))

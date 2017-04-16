@@ -120,3 +120,7 @@
        :opt-specs opt-specs
        :pred-forms pred-forms
        :opt opt})))
+
+(defn nilable-spec [pred]
+  (let [form (form/resolve-form pred)]
+    (s/nilable-impl form pred nil)))
