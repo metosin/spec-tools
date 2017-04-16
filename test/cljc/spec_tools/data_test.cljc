@@ -10,7 +10,7 @@
   (testing "nested map spec"
     (let [person {::id integer?
                   ::age ::age
-                  :boss spec/boolean?
+                  :boss boolean?
                   (req :name) string?
                   (opt :description) string?
                   :languages #{keyword?}
@@ -20,14 +20,14 @@
                             :zip string?}}
           person-spec (data/data-spec ::person person)
           person-keys-spec (st/spec
-                            (s/keys
-                              :req [::id ::age]
-                              :req-un [:spec-tools.data-test$person/boss
-                                       :spec-tools.data-test$person/name
-                                       :spec-tools.data-test$person/languages
-                                       :spec-tools.data-test$person/orders
-                                       :spec-tools.data-test$person/address]
-                              :opt-un [:spec-tools.data-test$person/description]))]
+                             (s/keys
+                               :req [::id ::age]
+                               :req-un [:spec-tools.data-test$person/boss
+                                        :spec-tools.data-test$person/name
+                                        :spec-tools.data-test$person/languages
+                                        :spec-tools.data-test$person/orders
+                                        :spec-tools.data-test$person/address]
+                               :opt-un [:spec-tools.data-test$person/description]))]
 
       (testing "normal keys-spec-spec is generated"
         (is (= (s/form person-keys-spec)
