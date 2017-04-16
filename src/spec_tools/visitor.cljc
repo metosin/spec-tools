@@ -177,6 +177,6 @@
         (swap! report into (convert-specs! v))
         (when-not (or (s/regex? v) (st/spec? v))
           (let [s (st/create-spec {:spec v})]
-            (s/def-impl k (s/form s) s)
+            (impl/register-spec! k s)
             (swap! report conj k)))))
     @report))

@@ -1,6 +1,7 @@
 (ns spec-tools.impl
   (:refer-clojure :exclude [resolve])
   (:require [cljs.analyzer.api :refer [resolve]]
+            [clojure.spec :as s]
             [clojure.walk :as walk])
   (:import
     #?@(:clj
@@ -54,6 +55,12 @@
     (symbol? x) nil
     :else x))
 
+(defn polish-un [x]
+  (-> x polish name keyword))
+
 (defn extract-keys [form]
   (let [{:keys [req opt req-un opt-un]} (some->> form (rest) (apply hash-map))]
     (flatten (map polish (concat req opt req-un opt-un)))))
+
+(defn register-spec! [k s]
+  (s/def-impl k (s/form s) s))

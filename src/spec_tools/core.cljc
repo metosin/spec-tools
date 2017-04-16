@@ -204,8 +204,7 @@
              (flatten
                (concat
                  (map impl/polish (concat req opt))
-                 (->> (concat req-un opt-un)
-                      (map (comp keyword name impl/polish))))))}))
+                 (map impl/polish-un (concat req-un opt-un)))))}))
 
 (defn extract-extra-info [form]
   (if (seq? form)
