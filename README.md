@@ -4,7 +4,7 @@ Clojure(Script) tools for [clojure.spec](http://clojure.org/about/spec). Like [S
 
 * [Spec Records](#spec-records)
 * [Dynamic Conforming](#dynamic-conforming)
-* [Simple Collection Specs](#simple-collection-specs)
+* [Data Specs](#data-specs)
 * [Spec Visitors](#spec-visitors)
 * [Generating JSON Schemas](#generating-json-schemas)
 
@@ -270,58 +270,110 @@ To strip out keys from a keyset:
 ; :AKKIK
 ```
 
-### Simple Collection Specs
+### Data Specs
 
-Spec-tools enables simple, Schema-like nested collection syntax for specs. `spec-tools.core/coll-spec` takes a qualified spec name (for nested qualified key generation) and a Clojure `map`, `vector` or `set` form as a value. Collection specs are recursive and return `Spec` instances. The following rules apply:
+Data Specs offers an alternative, Schema-like data-driven syntax to define simple nested collection specs. Rules:
 
+* Just data, no macros
+* Produces vanilla specs with valid forms (via form inference)
 * Vectors and Sets are homogeneous, and must contains exactly one spec
 * Maps have either a single spec key (homogeneous keys) or any number keyword keys.
-* Map keyword keys
+* Map (keyword) keys
    * can be qualified or non-qualified (a qualified name will be generated for it)
    * are required by default
-   * can be wrapped into `st/opt` or `st/req` for marking them optional or required.
-* Map values can be specs, qualified spec names or nested collections.
+   * can be wrapped into `st/opt` or `st/req` for making them optional or required.
+* Map values
+   * can be functions, specs, qualified spec names or nested collections.
+   * wrapping value into `st/maybe` makes it `nillable`
 
 ```clj
-(s/def ::age (s/and integer? #(> % 18)))
+(s/def ::age spec/pos-int?)
 
-(def person-spec
-  (st/coll-spec
-    ::person
-    {::id integer?
-     :age ::age
-     :name string?
-     :likes {string? boolean?}
-     (st/req :languages) #{keyword?}
-     (st/opt :address) {:street string?
-                        :zip string?}}))
+;; a data-spec
+(def person
+  {::id integer?
+   ::age ::age
+   :boss boolean?
+   (st/req :name) string?
+   (st/opt :description) string?
+   :languages #{keyword?}
+   :orders [{:id int?
+             :description string?}]
+   :address (st/maybe
+              {:street string?
+               :zip string?})})
 
+;; it's just data.
+(def new-person
+  (dissoc person ::id))
+```
+
+* to turn a data-spec into a Spec, call `spec-tools.core/data-spec` on it, providing a qualified keyword describing the root spec name - used to generate unique names for sub-specs that will be registered.
+
+```clj
+;; transform into specs
+(def person-spec (st/data-spec ::person person))
+(def new-person-spec (st/data-spec ::person new-person))
+```
+
+* the following specs are now registered:
+
+```clj
+(keys (st/registry #"user.*"))
+; (:user/id
+;  :user/age
+;  :user$person/boss
+;  :user$person/name
+;  :user$person/description
+;  :user$person/languages
+;  :user$person/orders
+;  :user$person$orders/description
+;  :user$person$orders/id
+;  :user$person/address
+;  :user$person$address/street
+;  :user$person$address/zip)
+```
+
+* now you have specs:
+
+```clj
 (s/valid?
-  person-spec
-  {::id 1
-   :age 63
+  new-person-spec
+  {::age 63
+   :boss true
    :name "Liisa"
-   :likes {"coffee" true
-           "maksapihvi" false}
    :languages #{:clj :cljs}
+   :orders [{:id 1, :description "cola"}
+            {:id 2, :description "kebab"}]
+   :description "Liisa is a valid boss"
    :address {:street "Amurinkatu 2"
              :zip "33210"}})
 ; true
-
-; the following specs got registered:
-(st/registry #"user.*")
-; #{:user/id
-;   :user$person/age
-;   :user$person/name
-;   :user$person/likes
-;   :user$person/languages
-;   :user$person/address
-;   :user$person$address/zip
-;   :user$person$address/street}
 ```
 
-* **TODO**: Go fully data-driven?
-* **TODO**: Support optional values via `st/maybe`
+* all generated specs are wrapped into Specs Records so dynamic conforming works out of the box:
+
+```clj
+(st/conform!
+  new-person-spec
+  {::age "63"
+   :boss "true"
+   :name "Liisa"
+   :languages ["clj" "cljs"]
+   :orders [{:id "1", :description "cola"}
+            {:id "2", :description "kebab"}]
+   :description "Liisa is a valid boss"
+   :address nil}
+  conform/string-conforming)
+; {::age 63
+;  :boss true
+;  :name "Liisa"
+;  :languages #{:clj :cljs}
+;  :orders [{:id 1, :description "cola"}
+;           {:id 2, :description "kebab"}]
+;  :description "Liisa is a valid boss"
+;  :address nil}
+```
 
 ### Spec Visitors
 
@@ -333,6 +385,7 @@ A tool to walk over and transform specs using the [Visitor-pattern](https://en.w
 (let [specs (atom {})]
   (visitor/visit
     person-spec
+
     (fn [_ spec _]
       (if-let [s (s/get-spec spec)]
         (swap! specs assoc spec (s/form s))
