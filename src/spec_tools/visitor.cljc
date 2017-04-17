@@ -19,8 +19,12 @@
     "cljs.spec" (symbol "clojure.spec" (name kw))
     kw))
 
-(defn- extract-form [spec] (if (seq? spec) spec (s/form spec)))
-(defn- de-spec [{:keys [form spec]}] (if (seq? form) spec form))
+(defn extract-spec [spec]
+  (let [[_ form opts] (if (seq? spec) spec (s/form spec))]
+    (assoc opts :form form)))
+
+(defn extract-form [spec]
+  (if (seq? spec) spec (s/form spec)))
 
 (defn- spec-dispatch
   [spec accept]
@@ -84,11 +88,11 @@
     (accept 'clojure.spec/merge spec (mapv #(visit % accept) inner-specs))))
 
 (defmethod visit 'clojure.spec/every [spec accept]
-  (let [[_ inner-spec ] (extract-form spec)]
+  (let [[_ inner-spec] (extract-form spec)]
     (accept 'clojure.spec/every spec [(visit (++expand-symbol-cljs-spec-bug++ inner-spec) accept)])))
 
 (defmethod visit 'clojure.spec/every-kv [spec accept]
-  (let [[_ inner-spec1 inner-spec2 ] (extract-form spec)]
+  (let [[_ inner-spec1 inner-spec2] (extract-form spec)]
     (accept 'clojure.spec/every-kv spec (mapv
                                           #(visit (++expand-symbol-cljs-spec-bug++ %) accept)
                                           [inner-spec1 inner-spec2]))))
@@ -145,8 +149,8 @@
     (accept 'clojure.spec/nilable spec [(visit inner-spec accept)])))
 
 (defmethod visit 'spec-tools.core/spec [spec accept]
-  (let [real-spec (st/coerce-spec spec)]
-    (accept ::spec spec (visit (de-spec real-spec) accept))))
+  (let [[_ inner-spec] (extract-form spec)]
+    (accept ::spec spec [(visit inner-spec accept)])))
 
 (defmethod visit ::default [spec accept]
   (accept (spec-dispatch spec accept) spec nil))

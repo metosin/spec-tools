@@ -375,9 +375,9 @@
       (ex-info
         (str "only single maps allowed in nested " proto)
         {:k n :v v})))
-  (let [pred (first v)
-        form (form/resolve-form pred)]
-    (create-spec {:spec (impl/coll-of-spec (data-spec n pred) form proto)})))
+  (let [spec (data-spec n (first v))
+        form (s/form spec)]
+    (create-spec {:spec (impl/coll-of-spec spec form proto)})))
 
 (defn data-spec [name x]
   (cond

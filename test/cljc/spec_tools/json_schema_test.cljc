@@ -131,3 +131,14 @@
               :name "integer"
               :description "it's an int"
               :json-schema/default 42})))))
+
+(deftest deeply-nested-test
+  (is (= {:type "array"
+          :items {:type "array"
+                  :items {:type "array"
+                          :items {:type "array"
+                                  :items {:type "string"}}}}}
+         (jsc/to-json
+           (st/data-spec
+             ::nested
+             [[[[string?]]]])))))
