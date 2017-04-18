@@ -3,8 +3,7 @@
   (:require [clojure.spec :as s]
             [spec-tools.visitor :as visitor :refer [visit]]
             [spec-tools.type :as type]
-            [clojure.set :as set]
-            [spec-tools.core :as st]))
+            [clojure.set :as set]))
 
 (defn- only-entry? [key a-map] (= [key] (keys a-map)))
 
@@ -183,14 +182,14 @@
 (defn- is-map-of?
   "Predicate to check if spec looks like an expansion of clojure.spec/map-of."
   [spec]
-  (let [[_ inner-spec & {:as kwargs}] (s/form spec)
+  (let [[_ inner-spec & {:as kwargs}] (visitor/extract-form spec)
         pred (when (seq? inner-spec) (first inner-spec))]
     ;; (s/map-of key-spec value-spec) expands to
     ;; (s/every (s/tuple key-spec value-spec) :into {} ...)
     (and (= pred #?(:clj 'clojure.spec/tuple :cljs 'cljs.spec/tuple)) (= (get kwargs :into)) {})))
 
 (defmethod accept-spec 'clojure.spec/keys [dispatch spec children]
-  (let [[_ & {:keys [req req-un opt opt-un]}] (s/form spec)
+  (let [[_ & {:keys [req req-un opt opt-un]}] (visitor/extract-form spec)
         names (map name (concat req req-un opt opt-un))
         required (map name (concat req req-un))]
     {:type "object"
@@ -206,8 +205,7 @@
 ; merge
 
 (defmethod accept-spec 'clojure.spec/every [dispatch spec children]
-  (let [form (s/form spec)
-        pred (second form)
+  (let [form (visitor/extract-form spec)
         type (type/resolve-type form)]
     ;; Special case handling of s/map-of, which expands to s/every
     (if (is-map-of? spec)
@@ -263,7 +261,7 @@
     {:minimum minimum :maximum maximum}))
 
 (defmethod accept-spec ::visitor/spec [dispatch spec children]
-  (let [spec (st/coerce-spec spec)
+  (let [spec (visitor/extract-spec spec)
         json-schema-meta (reduce-kv
                            (fn [acc k v]
                              (if (= "json-schema" (namespace k))
@@ -274,7 +272,7 @@
         extra-info (-> spec
                        (select-keys [:name :description])
                        (set/rename-keys {:name :title}))]
-    (merge children extra-info json-schema-meta)))
+    (merge (unwrap children) extra-info json-schema-meta)))
 
 (defmethod accept-spec ::default [dispatch spec children]
   {})
