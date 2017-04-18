@@ -87,7 +87,7 @@
 ;; conforming
 ;;
 
-(def json-conforming
+(def json-type-conforming-opts
   (merge
     {:keyword string->keyword
      :uuid string->uuid
@@ -98,17 +98,17 @@
         :bigdec nil
         :ratio nil})))
 
-(def string-conforming
+(def string-type-conforming-opts
   (merge
-    json-conforming
+    json-type-conforming-opts
     {:long string->long
      :double string->double
      :boolean string->boolean
      :nil string->nil
      :string nil}))
 
-(def strip-extra-keys-conforming
+(def strip-extra-keys-type-conforming-opts
   {:map strip-extra-keys})
 
-(def fail-on-extra-keys-conforming
+(def fail-on-extra-keys-type-conforming-opts
   {:map fail-on-extra-keys})

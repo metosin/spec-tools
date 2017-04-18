@@ -4,8 +4,7 @@
             [spec-tools.core :as st]
             [spec-tools.spec :as spec]
             [criterium.core :as cc]
-            [clojure.spec :as s]
-            [spec-tools.conform :as conform]))
+            [clojure.spec :as s]))
 
 ;;
 ;; start repl with `lein perf repl`
@@ -122,7 +121,7 @@
     ; 1440ns (alpha12)
     ; 1160ns (alpha14)
     (title "spec: conform keyword enum")
-    (let [call #(st/conform sizes-spec ["L" "M"] conform/string-conforming)]
+    (let [call #(st/conform sizes-spec ["L" "M"] st/string-conforming)]
       (assert (= (call) #{:L :M}))
       (cc/quick-bench
         (call)))
@@ -131,7 +130,7 @@
     ; 990ns (alpha12)
     ; 990ns (alpha14)
     (title "spec: conform keyword enum - no-op")
-    (let [call #(st/conform sizes-spec #{:L :M} conform/string-conforming)]
+    (let [call #(st/conform sizes-spec #{:L :M} st/string-conforming)]
       (assert (= (call) #{:L :M}))
       (cc/quick-bench
         (call)))
@@ -218,7 +217,7 @@
   ; 4.5µs (alpha12)
   ; 3.9µs (alpha14)
   (title "spec: conform")
-  (let [call #(st/conform ::order sample-order conform/string-conforming)]
+  (let [call #(st/conform ::order sample-order st/string-conforming)]
     (assert (= (call) sample-order-valid))
     (cc/quick-bench
       (call)))
@@ -226,7 +225,7 @@
   ; 2.8µs (alpha12)
   ; 2.7µs (alpha14)
   (title "spec: conform - no-op")
-  (let [call #(st/conform ::order sample-order-valid conform/string-conforming)]
+  (let [call #(st/conform ::order sample-order-valid st/string-conforming)]
     (assert (= (call) sample-order-valid))
     (cc/quick-bench
       (call)))

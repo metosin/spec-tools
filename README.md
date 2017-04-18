@@ -39,7 +39,6 @@ Clojure Spec is implemented using reified protocols. This makes extending curren
 The following are all equivalent:
 
 ```clj
-(require '[clojure.spec :as s])
 (require '[spec-tools.core :as st])
 
 ;; using type inference
@@ -70,6 +69,7 @@ The following are all equivalent:
 #### Example usage
 
 ```clj
+(require '[clojure.spec :as s])
 
 (def my-integer? (st/spec integer?))
 
@@ -139,12 +139,17 @@ Can be added to a Spec via the key `:reason`
 
 Spec-tools loans from the awesome [Schema](https://github.com/plumatic/schema) by separating specs (what) from conformers (how). Spec Records contain a dynamical conformer, which can be instructed at runtime to use a suitable conforming function for that spec. Specs can conform differently, e.g. when reading data from JSON or Transit.
 
-Specs conform is by default a no-op. Binding a dynamic var `spec-tools.core/*conformering*` with a function of `type => spec-conformer` will cause the Spec to be conformed with the selected spec-conformer. In `spec-tools.core` there are helper functions to set the binding. These are: `explain`, `explain-data`, `conform` and `conform!`.
+Spec Record conform is by default a no-op. Binding a dynamic var `spec-tools.core/*conformering*` with a function of `spec => spec-conformer` will cause the Spec to be conformed with the selected spec-conformer. `spec-tools.core` has helper functions for setting the binding: `explain`, `explain-data`, `conform` and `conform!`.
 
-* Types should be keywords. By default, the following types are used: `:long`, `:double`, `:boolean`, `:string`, `:keyword`, `:symbol`, `:uuid`, `:uri`, `:bigdec`, `:date`, `:ratio`, `:map`, `:set` and `:vector`
-* Spec-conformers are arity2 functions taking the Spec Records and the value and should return either conformed value of `:clojure.spec/invalid`.
+Spec-conformers are arity2 functions taking the Spec Records and the value and should return either conformed value of `:clojure.spec/invalid`.
 
-The following conforming are found in `spec-tools.conform`:
+### Type based conforming
+
+A common way to do dynamic conforming is to select conformer based on the specs `:type`. By default, the following spec types are supported (and mostly, auto-resolved): `:long`, `:double`, `:boolean`, `:string`, `:keyword`, `:symbol`, `:uuid`, `:uri`, `:bigdec`, `:date`, `:ratio`, `:map`, `:set` and `:vector`.
+
+`spec-tools.conform` has spec-conformer functions for different types and required type mappings to build type-based conforming out of those.
+
+The following type-based conforming are found in `spec-tools.core`:
 
 | Name                            | Description                                                                                                              |
 |---------------------------------|--------------------------------------------------------------------------------------------------------------------------|
@@ -154,15 +159,16 @@ The following conforming are found in `spec-tools.conform`:
 | `fail-on-extra-keys-conforming` | Fails if `s/keys` Specs have extra keys.                                                                                 |
 | `nil`                           | No extra conforming ([EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format)). |
 
-Default conformings are defined as data, so they are easy to combine and extend:
+Type-based conforming mappings are defined as data, so they are easy to combine and extend:
 
 ```clj
 (require '[spec-tools.conform :as conform])
 
 (def strict-json-conforming
-  (merge
-    conform/json-conforming
-    conform/strip-extra-keys-conforming))
+  (st/type-conforming
+    (merge
+      conform/json-type-conforming-opts
+      conform/strip-extra-keys-type-conforming-opts)))
 ```
 
 #### Conforming examples
@@ -177,11 +183,11 @@ Default conformings are defined as data, so they are easy to combine and extend:
 ; ::s/invalid
 
 ;; json-conforming
-(st/conform ::age "20" conform/json-conforming)
+(st/conform ::age "20" st/json-conforming)
 ; ::s/invalid
 
 ;; string-conforming
-(st/conform ::age "20" conform/string-conforming)
+(st/conform ::age "20" st/string-conforming)
 ; 20
 ```
 
@@ -211,11 +217,11 @@ Default conformings are defined as data, so they are easy to combine and extend:
 ; ::s/invalid
 
 ;; json-conforming doesn't conform numbers
-(st/conform ::user data conform/json-conforming)
+(st/conform ::user data st/json-conforming)
 ; ::s/invalid
 
 ;; string-conforming for the rescue
-(st/conform ::user data conform/string-conforming)
+(st/conform ::user data st/string-conforming)
 ; {:name "Ilona"
 ;  :age 48
 ;  :languages #{:clj :cljs}
@@ -240,7 +246,7 @@ To strip out keys from a keyset:
 (st/conform
   ::user
   inkeri
-  conform/strip-extra-keys-conforming)
+  st/strip-extra-keys-conforming)
 ; {:name "Inkeri"
 ;  :address {:street "Satamakatu"}}
 ```
@@ -248,23 +254,26 @@ To strip out keys from a keyset:
 #### Custom conforming
 
 ```clj
-(def my-string-conforming
-  (-> conform/string-conforming
-      (assoc
-        :keyword
-        (fn [_ value]
-          (-> value
-              str/upper-case
-              str/reverse
-              keyword))))
+(require '[clojure.string :as str])
 
-(st/conform st/keyword? "kikka")
+(def my-string-conforming
+  (st/type-conforming
+    (assoc
+      conform/string-type-conforming-opts
+      :keyword
+      (fn [_ value]
+        (-> value
+            str/upper-case
+            str/reverse
+            keyword))))
+
+(st/conform spec/keyword? "kikka")
 ; ::s/invalid
 
-(st/conform st/keyword? "kikka" conform/string-conforming)
+(st/conform spec/keyword? "kikka" st/string-conforming)
 ; :kikka
 
-(st/conform st/keyword? "kikka" my-string-conforming)
+(st/conform spec/keyword? "kikka" my-string-conforming)
 ; :AKKIK
 ```
 
@@ -362,7 +371,7 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
             {:id "2", :description "kebab"}]
    :description "Liisa is a valid boss"
    :address nil}
-  conform/string-conforming)
+  st/string-conforming)
 ; {::age 63
 ;  :boss true
 ;  :name "Liisa"

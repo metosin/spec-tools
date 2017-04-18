@@ -3,6 +3,7 @@
   (:require [spec-tools.impl :as impl]
             [spec-tools.type :as type]
             [spec-tools.form :as form]
+            [spec-tools.conform :as conform]
             [clojure.spec :as s]
     #?@(:clj  [
             [clojure.spec.gen :as gen]
@@ -73,6 +74,23 @@
 
 (def ^:dynamic ^:private *conforming* nil)
 
+(defn type-conforming [opts]
+  (fn [spec]
+    (let [type (:type spec)]
+      (get opts type))))
+
+(def json-conforming
+  (type-conforming conform/json-type-conforming-opts))
+
+(def string-conforming
+  (type-conforming conform/string-type-conforming-opts))
+
+(def strip-extra-keys-conforming
+  (type-conforming conform/strip-extra-keys-type-conforming-opts))
+
+(def fail-on-extra-keys-conforming
+  (type-conforming conform/fail-on-extra-keys-type-conforming-opts))
+
 (defn explain
   ([spec value]
    (explain spec value nil))
@@ -141,7 +159,7 @@
     (if (and (fn? spec) (spec x))
       x
       ;; there is a dynamic conformer
-      (if-let [conform (get *conforming* type)]
+      (if-let [conform (if *conforming* (*conforming* this))]
         (conform this x)
         ;; spec or regex
         (if (or (s/spec? spec) (s/regex? spec))
