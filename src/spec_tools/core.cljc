@@ -80,16 +80,16 @@
       (get opts type))))
 
 (def json-conforming
-  (type-conforming conform/json-type-conforming-opts))
+  (type-conforming conform/json-type-conforming))
 
 (def string-conforming
-  (type-conforming conform/string-type-conforming-opts))
+  (type-conforming conform/string-type-conforming))
 
 (def strip-extra-keys-conforming
-  (type-conforming conform/strip-extra-keys-type-conforming-opts))
+  (type-conforming conform/strip-extra-keys-type-conforming))
 
 (def fail-on-extra-keys-conforming
-  (type-conforming conform/fail-on-extra-keys-type-conforming-opts))
+  (type-conforming conform/fail-on-extra-keys-type-conforming))
 
 (defn explain
   ([spec value]

@@ -287,7 +287,7 @@
 (deftest extending-test
   (let [my-conforming (st/type-conforming
                         (assoc
-                          conform/string-type-conforming-opts
+                          conform/string-type-conforming
                           :keyword
                           (fn [_ value]
                             (-> value

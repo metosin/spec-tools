@@ -147,8 +147,6 @@ Spec-conformers are arity2 functions taking the Spec Records and the value and s
 
 A common way to do dynamic conforming is to select conformer based on the specs `:type`. By default, the following spec types are supported (and mostly, auto-resolved): `:long`, `:double`, `:boolean`, `:string`, `:keyword`, `:symbol`, `:uuid`, `:uri`, `:bigdec`, `:date`, `:ratio`, `:map`, `:set` and `:vector`.
 
-`spec-tools.conform` has spec-conformer functions for different types and required type mappings to build type-based conforming out of those.
-
 The following type-based conforming are found in `spec-tools.core`:
 
 | Name                            | Description                                                                                                              |
@@ -167,8 +165,8 @@ Type-based conforming mappings are defined as data, so they are easy to combine 
 (def strict-json-conforming
   (st/type-conforming
     (merge
-      conform/json-type-conforming-opts
-      conform/strip-extra-keys-type-conforming-opts)))
+      conform/json-type-conforming
+      conform/strip-extra-keys-type-conforming)))
 ```
 
 #### Conforming examples
@@ -259,7 +257,7 @@ To strip out keys from a keyset:
 (def my-string-conforming
   (st/type-conforming
     (assoc
-      conform/string-type-conforming-opts
+      conform/string-type-conforming
       :keyword
       (fn [_ value]
         (-> value
