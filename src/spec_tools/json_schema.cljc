@@ -24,7 +24,7 @@
 
 (defmulti accept-spec spec-dispatch :default ::default)
 
-(defn to-json [spec] (visit spec accept-spec))
+(defn transform [spec] (visit spec accept-spec))
 
 ;;
 ;; predicate list taken from https://github.com/clojure/clojure/blob/master/src/clj/clojure/spec/gen.clj

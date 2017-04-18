@@ -421,7 +421,7 @@ Upcoming [Spec of Specs](http://dev.clojure.org/jira/browse/CLJ-2112) should hel
 ```clj
 (require '[spec-tools.json-schema :as jsc])
 
-(jsc/to-json person-spec)
+(jsc/transform person-spec)
 ; {:type "object",
 ;  :properties {"id" {:type "integer"},
 ;               "age" {:type "integer"},
@@ -439,7 +439,7 @@ Upcoming [Spec of Specs](http://dev.clojure.org/jira/browse/CLJ-2112) should hel
 Meta-data from Spec records is used to populate the data:
 
 ```clj
-(jsc/to-json
+(jsc/transform
   (st/spec
     {:spec integer?
      :name "integer"
