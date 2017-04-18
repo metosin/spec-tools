@@ -154,7 +154,7 @@
       (is (= st/+invalid+ (st/conform ::birthdate "2014-02-18T18:25:37Z")))))
 
   (testing "string-conforming"
-    (let [conform #(st/conform %1 %2 conform/string-conforming)]
+    (let [conform #(st/conform %1 %2 st/string-conforming)]
       (testing "everything gets conformed"
         (is (= 12 (conform ::age "12")))
         (is (= 1234567 (conform ::over-a-million "1234567")))
@@ -169,7 +169,7 @@
                (conform ::birthdate "2014-02-18T18:25:37Z"))))))
 
   (testing "json-conforming"
-    (let [conform #(st/conform %1 %2 conform/json-conforming)]
+    (let [conform #(st/conform %1 %2 st/json-conforming)]
       (testing "some are not conformed"
         (is (= st/+invalid+ (conform ::age "12")))
         (is (= st/+invalid+ (conform ::over-a-million "1234567")))
@@ -186,7 +186,7 @@
 
 (deftest conform!-test
   (testing "suceess"
-    (is (= 12 (st/conform! ::age "12" conform/string-conforming))))
+    (is (= 12 (st/conform! ::age "12" st/string-conforming))))
   (testing "failing"
     (is (thrown? #?(:clj Exception, :cljs js/Error) (st/conform! ::age "12")))
     (try
@@ -207,26 +207,26 @@
     (is (= "val: \"12\" fails predicate: int?\n"
            (with-out-str (st/explain spec/int? "12")))))
   (testing "with conforming"
-    (is (= 12 (st/conform spec/int? "12" conform/string-conforming)))
-    (is (= nil (st/explain-data spec/int? "12" conform/string-conforming)))
+    (is (= 12 (st/conform spec/int? "12" st/string-conforming)))
+    (is (= nil (st/explain-data spec/int? "12" st/string-conforming)))
     (is (= "Success!\n"
-           (with-out-str (st/explain spec/int? "12" conform/string-conforming))))))
+           (with-out-str (st/explain spec/int? "12" st/string-conforming))))))
 
 (deftest conform-unform-explain-tests
   (testing "specs"
     (let [spec (st/spec (s/or :int spec/int? :bool spec/boolean?))
           value "1"]
       (is (= st/+invalid+ (st/conform spec value)))
-      (is (= [:int 1] (st/conform spec value conform/string-conforming)))
-      (is (= 1 (s/unform spec (st/conform spec value conform/string-conforming))))
-      (is (= nil (st/explain-data spec value conform/string-conforming)))))
+      (is (= [:int 1] (st/conform spec value st/string-conforming)))
+      (is (= 1 (s/unform spec (st/conform spec value st/string-conforming))))
+      (is (= nil (st/explain-data spec value st/string-conforming)))))
   (testing "regexs"
     (let [spec (st/spec (s/* (s/cat :key spec/keyword? :val spec/int?)))
           value [:a "1" :b "2"]]
       (is (= st/+invalid+ (st/conform spec value)))
-      (is (= [{:key :a, :val 1} {:key :b, :val 2}] (st/conform spec value conform/string-conforming)))
-      (is (= [:a 1 :b 2] (s/unform spec (st/conform spec value conform/string-conforming))))
-      (is (= nil (st/explain-data spec value conform/string-conforming))))))
+      (is (= [{:key :a, :val 1} {:key :b, :val 2}] (st/conform spec value st/string-conforming)))
+      (is (= [:a 1 :b 2] (s/unform spec (st/conform spec value st/string-conforming))))
+      (is (= nil (st/explain-data spec value st/string-conforming))))))
 
 (s/def ::height integer?)
 (s/def ::weight integer?)
@@ -242,11 +242,11 @@
 
     (testing "stripping extra keys"
       (is (= {:height 200, :weight 80}
-             (st/conform ::person person conform/strip-extra-keys-conforming))))
+             (st/conform ::person person st/strip-extra-keys-conforming))))
 
     (testing "failing on extra keys"
       (is (= st/+invalid+
-             (st/conform ::person person conform/fail-on-extra-keys-conforming))))))
+             (st/conform ::person person st/fail-on-extra-keys-conforming))))))
 
 (s/def ::human (st/spec (s/keys :req-un [::height ::weight]) {:type ::human}))
 
@@ -266,10 +266,11 @@
 
     (testing "bmi-conforming"
       (is (= {:height 200, :weight 80, :bmi 20.0}
-             (st/conform ::human person {::human bmi-conformer}))))))
+             (st/conform ::human person (st/type-conforming
+                                          {::human bmi-conformer})))))))
 
 (deftest unform-test
-  (let [unform-conform #(s/unform %1 (st/conform %1 %2 conform/string-conforming))]
+  (let [unform-conform #(s/unform %1 (st/conform %1 %2 st/string-conforming))]
     (testing "conformed values can be unformed"
       (is (= 12 (unform-conform ::age "12")))
       (is (= 1234567 (unform-conform ::age "1234567")))
@@ -284,16 +285,17 @@
              (unform-conform ::birthdate "2014-02-18T18:25:37.456Z"))))))
 
 (deftest extending-test
-  (let [my-conforming (-> conform/string-conforming
-                          (assoc
-                            :keyword
-                            (fn [_ value]
-                              (-> value
-                                  str/upper-case
-                                  str/reverse
-                                  keyword))))]
+  (let [my-conforming (st/type-conforming
+                        (assoc
+                          conform/string-type-conforming
+                          :keyword
+                          (fn [_ value]
+                            (-> value
+                                str/upper-case
+                                str/reverse
+                                keyword))))]
     (testing "string-conforming"
-      (is (= :kikka (st/conform spec/keyword? "kikka" conform/string-conforming))))
+      (is (= :kikka (st/conform spec/keyword? "kikka" st/string-conforming))))
     (testing "my-conforming"
       (is (= :AKKIK (st/conform spec/keyword? "kikka" my-conforming))))))
 
@@ -368,7 +370,7 @@
 
           (testing "map-conforming works recursively"
             (is (= value
-                   (st/conform person-spec bloated {:map conform/strip-extra-keys}))))))))
+                   (st/conform person-spec bloated st/strip-extra-keys-conforming))))))))
 
   (testing "top-level vector"
     (is (true?
@@ -420,7 +422,7 @@
            (st/conform
              (st/data-spec ::kikka {keyword? keyword?})
              {"thanks" "alex"}
-             conform/string-conforming)))))
+             st/string-conforming)))))
 
 (deftest extract-extra-info-test
   (testing "all keys types are extracted"
