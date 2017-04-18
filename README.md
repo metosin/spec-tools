@@ -98,8 +98,6 @@ For most core predicates, `:type` can be resolved automatically using the `spec-
 
 For most core predicates, `:form` can be resolved automatically using the `spec-tools.form/resolve-form` multimethod.
 
-For most core predicates, `spec` can be resolved automatically using the `spec-tools.spec/resolve-spec` multimethod.
-
 To transform registered specs into Spec records recursively, see the `spec-tools.visitor/convert-specs!`.
 
 ### Predefined Spec Records
@@ -139,9 +137,9 @@ Can be added to a Spec via the key `:reason`
 
 ## Dynamic conforming
 
-Spec-tools loans from the awesome [Schema](https://github.com/plumatic/schema) by separating specs (what) from conformers (how). The Spec Records contains a dynamical conformer, which can be instructed at runtime to select a suitable conforming function for the given type. Same specs can conform differently, e.g. when sending data over JSON vs Transit.
+Spec-tools loans from the awesome [Schema](https://github.com/plumatic/schema) by separating specs (what) from conformers (how). Spec Records contain a dynamical conformer, which can be instructed at runtime to use a suitable conforming function for that spec. Specs can conform differently, e.g. when reading data from JSON or Transit.
 
-Specs conform is default a no-op. Binding a dynamic var `spec-tools.core/*conformering*` with a function of `type => spec-conformer` will cause the Spec to be conformed at runtime with the selected spec-conformer. In `spec-tools.core` there are helper functions to set the binding. These are: `explain`, `explain-data`, `conform` and `conform!`.
+Specs conform is by default a no-op. Binding a dynamic var `spec-tools.core/*conformering*` with a function of `type => spec-conformer` will cause the Spec to be conformed with the selected spec-conformer. In `spec-tools.core` there are helper functions to set the binding. These are: `explain`, `explain-data`, `conform` and `conform!`.
 
 * Types should be keywords. By default, the following types are used: `:long`, `:double`, `:boolean`, `:string`, `:keyword`, `:symbol`, `:uuid`, `:uri`, `:bigdec`, `:date`, `:ratio`, `:map`, `:set` and `:vector`
 * Spec-conformers are arity2 functions taking the Spec Records and the value and should return either conformed value of `:clojure.spec/invalid`.

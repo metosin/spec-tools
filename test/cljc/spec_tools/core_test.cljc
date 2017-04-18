@@ -462,9 +462,3 @@
     (is (= ::s/unknown (form/resolve-form :kikka))))
   (testing "unknowns return unknown"
     (is (= ::s/unknown (form/resolve-form #(> % 2))))))
-
-(deftest spec-inference-test
-  (testing "works for core predicates"
-    (is (= spec/integer? (spec/resolve-spec integer?))))
-  (testing "unknowns return nil"
-    (is (= nil (spec/resolve-spec #(> % 2))))))
