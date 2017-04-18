@@ -84,8 +84,9 @@
       `(s/tuple ~@forms)
       tuple
       {:into {}
+       :conform-keys true
        ::s/conform-all true
-       ::s/describe `(s/map-of ~@forms),
+       ::s/describe `(s/map-of ~@forms :conform-keys true),
        ::s/cpred coll?,
        ::s/kind-form (quote nil)}
       nil)))

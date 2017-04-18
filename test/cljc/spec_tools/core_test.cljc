@@ -413,7 +413,14 @@
       (false?
         (s/valid?
           (st/data-spec ::pred-keys {string? {keyword? [integer?]}})
-          {"invalid spec" "is this"})))))
+          {"invalid spec" "is this"}))))
+
+  (testing "map-of key conforming"
+    (is (= {:thanks :alex}
+           (st/conform
+             (st/data-spec ::kikka {keyword? keyword?})
+             {"thanks" "alex"}
+             conform/string-conforming)))))
 
 (deftest extract-extra-info-test
   (testing "all keys types are extracted"
