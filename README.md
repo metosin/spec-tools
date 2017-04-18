@@ -14,11 +14,11 @@ Status: **Alpha** (as spec is still alpha too).
 
 [![Clojars Project](http://clojars.org/metosin/spec-tools/latest-version.svg)](http://clojars.org/metosin/spec-tools)
 
-No dependencies, but requires Java 1.8, Clojure `1.9.0-alpha15` and ClojureScript `1.9.494`.
+No dependencies, but requires Java 1.8, Clojure `1.9.0-alpha15` and ClojureScript `1.9.518`.
 
 ### Spec Records
 
-Clojure Spec is implemented using reified protocols. This makes extending current specs non-trivial. Spec-tools introduces Spec Records that wrap the spec predicates and are easy to modify and extend. They satisfy the Spec protocols (`clojure.spec.Spec` & `clojure.spec.Specize`) and implement the `clojure.lang.IFn` so they can be used a normal function predicates. Specs are created with `spec-tools.core/spec` macro of with the underlying `spec-tools.core/create-spec` function.
+Clojure Spec is implemented using reified protocols, making extending specs non-trivial. Spec-tools introduces Spec Records that wrap the spec predicates and are easy to modify and extend. They satisfy the Spec protocols (`clojure.spec.Spec` & `clojure.spec.Specize`) and implement the `clojure.lang.IFn` so they can be used as normal function predicates. Specs are created with `spec-tools.core/spec` macro of with the underlying `spec-tools.core/create-spec` function.
 
  The following keys having a special meaning:
 
@@ -98,11 +98,11 @@ For most core predicates, `:type` can be resolved automatically using the `spec-
 
 For most core predicates, `:form` can be resolved automatically using the `spec-tools.form/resolve-form` multimethod.
 
-To transform registered specs into Spec records recursively, see the `spec-tools.visitor/convert-specs!`.
+To transform registered specs into Spec Records, see `spec-tools.visitor/convert-specs!`.
 
 ### Predefined Spec Records
 
-Most `clojure.core` predicates have a predefined Spec-wrapped version in `spec-tools.spec`.
+Most `clojure.core` predicates have a predefined Spec Record instance in `spec-tools.spec`.
 
 ```clj
 (require '[spec-tools.spec :as spec])
@@ -137,7 +137,7 @@ Can be added to a Spec via the key `:reason`
 
 ## Dynamic conforming
 
-Spec-tools loans from the awesome [Schema](https://github.com/plumatic/schema) by separating specs (what) from conformers (how). Spec Records contain a dynamical conformer, which can be instructed at runtime to use a suitable conforming function for that spec. Specs can conform differently, e.g. when reading data from JSON or Transit.
+Spec-tools loans from the awesome [Schema](https://github.com/plumatic/schema) by separating specs (what) from conformers (how). Spec Records contain a dynamical conformer, which can be instructed at runtime to use a suitable conforming function for that spec. This enables Specs to conform differently in different runtime condition, e.g. when reading data from JSON vs Transit.
 
 Spec Record conform is by default a no-op. Binding a dynamic var `spec-tools.core/*conforming*` with a function of `spec => spec-conformer` will cause the Spec to be conformed with the selected spec-conformer. `spec-tools.core` has helper functions for setting the binding: `explain`, `explain-data`, `conform` and `conform!`.
 
@@ -145,7 +145,7 @@ Spec-conformers are arity2 functions taking the Spec Records and the value and s
 
 ### Type based conforming
 
-A common way to do dynamic conforming is to select conformer based on the specs `:type`. By default, the following spec types are supported (and mostly, auto-resolved): `:long`, `:double`, `:boolean`, `:string`, `:keyword`, `:symbol`, `:uuid`, `:uri`, `:bigdec`, `:date`, `:ratio`, `:map`, `:set` and `:vector`.
+A common way to do dynamic conforming is to select conformer based on the spec's `:type`. By default, the following types are supported (and mostly, auto-resolved): `:long`, `:double`, `:boolean`, `:string`, `:keyword`, `:symbol`, `:uuid`, `:uri`, `:bigdec`, `:date`, `:ratio`, `:map`, `:set` and `:vector`.
 
 The following type-based conforming are found in `spec-tools.core`:
 
@@ -280,16 +280,17 @@ To strip out keys from a keyset:
 Data Specs offers an alternative, Schema-like data-driven syntax to define simple nested collection specs. Rules:
 
 * Just data, no macros
-* Produces vanilla specs with valid forms (via form inference)
+* Can be transformed into vanilla specs with valid forms (via form inference)
 * Vectors and Sets are homogeneous, and must contains exactly one spec
 * Maps have either a single spec key (homogeneous keys) or any number keyword keys.
-* Map (keyword) keys
-   * can be qualified or non-qualified (a qualified name will be generated for it)
-   * are required by default
-   * can be wrapped into `st/opt` or `st/req` for making them optional or required.
-* Map values
-   * can be functions, specs, qualified spec names or nested collections.
-   * wrapping value into `st/maybe` makes it `nillable`
+  * With homogeneous keys, keys are also conformed
+  * Map (keyword) keys
+    * can be qualified or non-qualified (a qualified name will be generated for it)
+    * are required by default
+    * can be wrapped into `st/opt` or `st/req` for making them optional or required.
+  * Map values
+    * can be functions, specs, qualified spec names or nested collections.
+    * wrapping value into `st/maybe` makes it `nillable`
 
 ```clj
 (s/def ::age spec/pos-int?)
@@ -317,8 +318,11 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
 
 ```clj
 ;; transform into specs
-(def person-spec (st/data-spec ::person person))
-(def new-person-spec (st/data-spec ::person new-person))
+(def person-spec
+  (st/data-spec ::person person))
+
+(def new-person-spec
+  (st/data-spec ::person new-person))
 ```
 
 * the following specs are now registered:
@@ -339,7 +343,7 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
 ;  :user$person$address/zip)
 ```
 
-* now you have specs:
+* and now we have specs:
 
 ```clj
 (s/valid?
@@ -390,7 +394,6 @@ A tool to walk over and transform specs using the [Visitor-pattern](https://en.w
 (let [specs (atom {})]
   (visitor/visit
     person-spec
-
     (fn [_ spec _]
       (if-let [s (s/get-spec spec)]
         (swap! specs assoc spec (s/form s))
@@ -413,10 +416,6 @@ A tool to walk over and transform specs using the [Visitor-pattern](https://en.w
 ### Generating JSON Schemas
 
 Generating JSON Schemas from arbitrary specs (and Spec Records).
-
-Most cases work, feel free to contribute more coverage (both impls & tests).
-
-Upcoming [Spec of Specs](http://dev.clojure.org/jira/browse/CLJ-2112) should help.
 
 ```clj
 (require '[spec-tools.json-schema :as jsc])
@@ -454,8 +453,7 @@ Meta-data from Spec records is used to populate the data:
 Related:
 * https://github.com/metosin/ring-swagger/issues/95
 * https://github.com/metosin/spec-swagger
-
-* **TODO**: Cover all of `clojure.spec`
+* [Spec of Specs](http://dev.clojure.org/jira/browse/CLJ-2112)
 
 ## License
 
