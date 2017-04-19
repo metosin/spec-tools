@@ -66,16 +66,17 @@
 (defn register-spec! [k s]
   (s/def-impl k (s/form s) s))
 
-(defn coll-of-spec [pred form type]
-  (clojure.spec/every-impl
-    form
-    pred
-    {:into type
-     ::s/conform-all true
-     ::s/describe `(s/coll-of ~form :into ~type),
-     ::s/cpred coll?,
-     ::s/kind-form (quote nil)}
-    nil))
+(defn coll-of-spec [pred type]
+  (let [form (form/resolve-form pred)]
+    (clojure.spec/every-impl
+      form
+      pred
+      {:into type
+       ::s/conform-all true
+       ::s/describe `(s/coll-of ~form :into ~type),
+       ::s/cpred coll?,
+       ::s/kind-form (quote nil)}
+      nil)))
 
 (defn map-of-spec [kpred vpred]
   (let [forms (map form/resolve-form [kpred vpred])

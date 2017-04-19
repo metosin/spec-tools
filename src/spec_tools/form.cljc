@@ -2,9 +2,13 @@
   (:require [clojure.spec :as s]))
 
 (defmulti resolve-form
-  (fn [x] (if (or (qualified-keyword? x) (record? x) (seq? x)) ::identity x))
+  (fn [x] (cond
+            (or (qualified-keyword? x) (seq? x)) ::identity
+            (or (s/spec? x) (s/regex? x)) ::spec
+            :else x))
   :default ::default)
 
+(defmethod resolve-form ::spec [x] (s/form x))
 (defmethod resolve-form ::identity [x] x)
 (defmethod resolve-form ::default [_] ::s/unknown)
 
