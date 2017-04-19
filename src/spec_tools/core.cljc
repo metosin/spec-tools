@@ -155,18 +155,13 @@
 
   s/Spec
   (conform* [this x]
-    ;; function predicate
-    (if (and (fn? spec) (spec x))
-      x
-      (let [conforming *conforming*]
-        ;; there is a dynamic conformer
-        (if-let [conform (if conforming (conforming this))]
-          (conform this x)
-          ;; spec or regex
-          (if (or (s/spec? spec) (s/regex? spec))
-            (s/conform spec x)
-            ;; invalid
-            +invalid+)))))
+    (or (and (fn? spec) (spec x) x)
+        (let [conforming *conforming*]
+          (if-let [conform (if conforming (conforming this))]
+            (conform this x)
+            (if (or (s/spec? spec) (s/regex? spec))
+              (s/conform spec x)
+              +invalid+)))))
   (unform* [_ x]
     (s/unform* (s/specize* spec) x))
   (explain* [this path via in x]
