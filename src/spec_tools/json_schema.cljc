@@ -191,7 +191,7 @@
 (defmethod accept-spec 'clojure.spec/keys [dispatch spec children]
   (let [[_ & {:keys [req req-un opt opt-un]}] (visitor/extract-form spec)
         names (map name (concat req req-un opt opt-un))
-        required (map name (concat req req-un))]
+        required (mapv name (concat req req-un))]
     {:type "object"
      :properties (zipmap names children)
      :required required}))
