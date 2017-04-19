@@ -18,7 +18,7 @@ No dependencies, but requires Java 1.8, Clojure `1.9.0-alpha15` and ClojureScrip
 
 ### Spec Records
 
-Clojure Spec is implemented using reified protocols, making extending specs non-trivial. Spec-tools introduces Spec Records that wrap the spec predicates and are easy to modify and extend. They satisfy the Spec protocols (`clojure.spec.Spec` & `clojure.spec.Specize`) and implement the `clojure.lang.IFn` so they can be used as normal function predicates. Specs are created with `spec-tools.core/spec` macro of with the underlying `spec-tools.core/create-spec` function.
+Clojure Spec is implemented using reified protocols, making extending specs non-trivial. Spec-tools introduces Spec Records that wrap the spec predicates and are easy to modify and extend. They satisfy the Spec protocols (`Spec` & `Specize`) and implement the `IFn` so they can be used as normal function predicates. Specs are created with `spec-tools.core/spec` macro of with the underlying `spec-tools.core/create-spec` function.
 
  The following keys having a special meaning:
 
@@ -196,8 +196,9 @@ Type-based conforming mappings are defined as data, so they are easy to combine 
 (s/def ::birthdate spec/inst?)
 
 (s/def ::languages
-  (st/set-of
-    (s/and spec/keyword? #{:clj :cljs})))
+  (s/coll-of
+    (s/and spec/keyword? #{:clj :cljs})
+    :into {}))
 
 (s/def ::user
   (s/keys
@@ -228,7 +229,7 @@ Type-based conforming mappings are defined as data, so they are easy to combine 
 
 #### Map Conforming
 
-To strip out keys from a keyset:
+To strip out extra keys from a keyset:
 
 ```clj
 (s/def ::street string?)
@@ -464,7 +465,7 @@ Generating JSON Schemas from arbitrary specs (and Spec Records).
 ;  :required ["id" "age" "boss" "name" "languages" "orders" "address"]}
 ```
 
-Meta-data from Spec records is used to populate the data:
+Extra data from Spec records is used to populate the data:
 
 ```clj
 (jsc/transform
