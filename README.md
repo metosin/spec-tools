@@ -446,16 +446,20 @@ Generating JSON Schemas from arbitrary specs (and Spec Records).
 (jsc/transform person-spec)
 ; {:type "object",
 ;  :properties {"id" {:type "integer"},
-;               "age" {:type "integer"},
+;               "age" {:type "integer", :format "int64", :minimum 1},
+;               "boss" {:type "boolean"},
 ;               "name" {:type "string"},
-;               "likes" {:type "object"
-;                        :additionalProperties {:type "boolean"}},
 ;               "languages" {:type "array", :items {:type "string"}, :uniqueItems true},
-;               "address" {:type "object",
-;                          :properties {"street" {:type "string"}
-;                                       "zip" {:type "string"}},
-;                          :required ("street" "zip")}},
-;  :required ("id" "age" "name" "likes" "languages")}
+;               "orders" {:type "array",
+;                         :items {:type "object",
+;                                 :properties {"id" {:type "integer", :format "int64"}, "description" {:type "string"}},
+;                                 :required ("id" "description")}},
+;               "address" {:oneOf [{:type "object",
+;                                   :properties {"street" {:type "string"}, "zip" {:type "string"}},
+;                                   :required ("street" "zip")}
+;                                  {:type "null"}]},
+;               "description" {:type "string"}},
+;  :required ("id" "age" "boss" "name" "languages" "orders" "address")}
 ```
 
 Meta-data from Spec records is used to populate the data:
