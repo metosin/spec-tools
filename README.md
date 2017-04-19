@@ -386,29 +386,52 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
 
 ### Spec Visitors
 
-A tool to walk over and transform specs using the [Visitor-pattern](https://en.wikipedia.org/wiki/Visitor_pattern). There is a example visitor to collect all the registered specs linked to a spec. The [JSON Schema -generation](#generating-json-schemas) also uses this.
+A tool to walk over and transform specs using the [Visitor-pattern](https://en.wikipedia.org/wiki/Visitor_pattern). There is a example visitor to collect all the registered specs linked to a spec. The [JSON Schema -generation](#generating-json-schemas) uses this.
 
 ```clj
 (require '[spec-tools.visitor :as visitor])
 
-(let [specs (atom {})]
-  (visitor/visit
-    person-spec
-    (fn [_ spec _]
-      (if-let [s (s/get-spec spec)]
-        (swap! specs assoc spec (s/form s))
-        @specs))))
+(visitor/visit
+  person-spec
+  (fn [_ spec _]
+    (if-let [s (s/get-spec spec)]
+      (println spec "\n =>" (s/form s) "\n"))))
 
-; {:user/id clojure.core/integer?,
-;  :user$person/age (clojure.spec/and clojure.core/integer? (clojure.core/fn [%] (clojure.core/> % 18))),
-;  :user$person/name clojure.core/string?,
-;  :user$person/likes (spec-tools.core/spec (clojure.spec/map-of clojure.core/string? clojure.core/boolean?) {:type :map}),
-;  :user$person/languages (spec-tools.core/spec (clojure.spec/coll-of clojure.core/keyword? :into #{}) {:type :set}),
-;  :user$person$address/street clojure.core/string?,
-;  :user$person$address/zip clojure.core/string?,
-;  :user$person/address (spec-tools.core/spec
-;                        (clojure.spec/keys :req-un [:user$person$address/street :user$person$address/zip])
-;                        {:type :map, :keys #{:street :zip}})}
+; :user/id
+;  => (spec-tools.core/spec clojure.core/integer? {:type :long})
+;
+; :user/age
+;  => (spec-tools.core/spec clojure.core/pos-int? {:type :long})
+;
+; :user$person/boss
+;  => (spec-tools.core/spec clojure.core/boolean? {:type :boolean})
+;
+; :user$person/name
+;  => (spec-tools.core/spec clojure.core/string? {:type :string})
+;
+; :user$person/languages
+;  => (spec-tools.core/spec (clojure.spec/coll-of (spec-tools.core/spec clojure.core/keyword? {:type :keyword}) :into #{}) {:type :set})
+;
+; :user$person$orders/id
+;  => (spec-tools.core/spec clojure.core/int? {:type :long})
+;
+; :user$person$orders/description
+;  => (spec-tools.core/spec clojure.core/string? {:type :string})
+;
+; :user$person/orders
+;  => (spec-tools.core/spec (clojure.spec/coll-of (spec-tools.core/spec (clojure.spec/keys :req-un [:user$person$orders/id :user$person$orders/description]) {:type :map, :keys #{:description :id}}) :into []) {:type :vector})
+;
+; :user$person$address/street
+;  => (spec-tools.core/spec clojure.core/string? {:type :string})
+;
+; :user$person$address/zip
+;  => (spec-tools.core/spec clojure.core/string? {:type :string})
+;
+; :user$person/address
+;  => (spec-tools.core/spec (clojure.spec/nilable (spec-tools.core/spec (clojure.spec/keys :req-un [:user$person$address/street :user$person$address/zip]) {:type :map, :keys #{:street :zip}})) {:type nil})
+;
+; :user$person/description
+;  => (spec-tools.core/spec clojure.core/string? {:type :string})
 ```
 
 **NOTE**: due to [CLJ-2152](http://dev.clojure.org/jira/browse/CLJ-2152), `s/&` & `s/keys*` can't be visited.
