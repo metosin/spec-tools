@@ -3,7 +3,6 @@
   (:require [clojure.spec :as s]
     #?@(:cljs [[goog.date.UtcDateTime]
                [goog.date.Date]])
-            [clojure.string :as str]
             [clojure.set :as set])
   #?(:clj
      (:import (java.util Date UUID)
@@ -20,7 +19,8 @@
          :cljs (js/parseInt x 10))
       (catch #?(:clj  Exception
                 :cljs js/Error) _
-        ::s/invalid))))
+        ::s/invalid))
+    ::s/invalid))
 
 (defn string->double [_ x]
   (if (string? x)
@@ -29,18 +29,21 @@
          :cljs (js/parseFloat x))
       (catch #?(:clj  Exception
                 :cljs js/Error) _
-        ::s/invalid))))
+        ::s/invalid))
+    ::s/invalid))
 
 (defn string->keyword [_ x]
   (if (string? x)
-    (keyword x)))
+    (keyword x)
+    ::s/invalid))
 
 (defn string->boolean [_ x]
   (if (string? x)
     (cond
       (= "true" x) true
       (= "false" x) false
-      :else ::s/invalid)))
+      :else ::s/invalid)
+    ::s/invalid))
 
 (defn string->uuid [_ x]
   (if (string? x)
@@ -49,7 +52,8 @@
          :cljs (uuid x))
       (catch #?(:clj  Exception
                 :cljs js/Error) _
-        ::s/invalid))))
+        ::s/invalid))
+    ::s/invalid))
 
 (defn string->date [_ x]
   (if (string? x)
@@ -59,14 +63,16 @@
          :cljs (js/Date. (.getTime (goog.date.UtcDateTime.fromIsoString x))))
       (catch #?(:clj  Exception
                 :cljs js/Error) _
-        ::s/invalid))))
+        ::s/invalid))
+    ::s/invalid))
 
 (defn string->symbol [_ x]
   (if (string? x)
-    (symbol x)))
+    (symbol x)
+    ::s/invalid))
 
 (defn string->nil [_ x]
-  (if-not (str/blank? x)
+  (if-not (= "" x)
     ::s/invalid))
 
 ;;
@@ -78,7 +84,7 @@
     (s/conform spec (select-keys x keys))
     x))
 
-(defn fail-on-extra-keys [{:keys [keys spec]} x]
+(defn fail-on-extra-keys [{:keys [keys]} x]
   (if (and (map? x) (not (set/subset? (-> x (clojure.core/keys) (set)) keys)))
     ::s/invalid
     x))
