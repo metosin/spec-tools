@@ -155,15 +155,14 @@
 
   s/Spec
   (conform* [this x]
-    (or (and (fn? spec) (spec x) x)
-        (let [conforming *conforming*]
-          (if-let [conform (if conforming (conforming this))]
-            (conform this x)
-            (if (or (s/spec? spec) (s/regex? spec))
-              (s/conform spec x)
-              +invalid+)))))
+    (let [conforming *conforming*]
+      (if-let [conform (if conforming (conforming this))]
+        (let [conformed (conform this x)]
+          (or (and (= +invalid+ conformed) conformed)
+              (s/conform spec conformed)))
+        (s/conform spec x))))
   (unform* [_ x]
-    (s/unform* (s/specize* spec) x))
+    (s/unform spec x))
   (explain* [this path via in x]
     (let [problems (if (or (s/spec? spec) (s/regex? spec))
                      (let [conformed (s/conform* this x)

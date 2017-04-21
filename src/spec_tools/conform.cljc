@@ -13,50 +13,52 @@
 ;;
 
 (defn string->long [_ x]
-  (if (string? x)
-    (try
-      #?(:clj  (Long/parseLong x)
-         :cljs (js/parseInt x 10))
-      (catch #?(:clj  Exception
-                :cljs js/Error) _
-        ::s/invalid))
-    ::s/invalid))
+  (cond
+    (int? x) x
+    (string? x) (try
+                  #?(:clj  (Long/parseLong x)
+                     :cljs (js/parseInt x 10))
+                  (catch #?(:clj Exception, :cljs js/Error) _
+                    ::s/invalid))
+    :else ::s/invalid))
 
 (defn string->double [_ x]
-  (if (string? x)
-    (try
-      #?(:clj  (Double/parseDouble x)
-         :cljs (js/parseFloat x))
-      (catch #?(:clj  Exception
-                :cljs js/Error) _
-        ::s/invalid))
-    ::s/invalid))
+  (cond
+    (double? x) x
+    (string? x) (try
+                  #?(:clj  (Double/parseDouble x)
+                     :cljs (js/parseFloat x))
+                  (catch #?(:clj Exception, :cljs js/Error) _
+                    ::s/invalid))
+    :else ::s/invalid))
 
 (defn string->keyword [_ x]
-  (if (string? x)
-    (keyword x)
-    ::s/invalid))
+  (cond
+    (keyword? x) x
+    (string? x) (keyword x)
+    :else ::s/invalid))
 
 (defn string->boolean [_ x]
-  (if (string? x)
-    (cond
-      (= "true" x) true
-      (= "false" x) false
-      :else ::s/invalid)
-    ::s/invalid))
+  (cond
+    (boolean? x) x
+    (= "true" x) true
+    (= "false" x) false
+    :else ::s/invalid))
 
 (defn string->uuid [_ x]
-  (if (string? x)
-    (try
-      #?(:clj  (UUID/fromString x)
-         :cljs (uuid x))
-      (catch #?(:clj  Exception
-                :cljs js/Error) _
-        ::s/invalid))
-    ::s/invalid))
+  (cond
+    (uuid? x) x
+    (string? x) (try
+                  #?(:clj  (UUID/fromString x)
+                     :cljs (uuid x))
+                  (catch #?(:clj Exception, :cljs js/Error) _
+                    ::s/invalid))
+    :else ::s/invalid))
 
 (defn string->date [_ x]
-  (if (string? x)
+  (cond
+    (inst? x) x
+    (string? x)
     (try
       #?(:clj  (Date/from
                  (Instant/parse x))
@@ -64,24 +66,27 @@
       (catch #?(:clj  Exception
                 :cljs js/Error) _
         ::s/invalid))
-    ::s/invalid))
+    :else ::s/invalid))
 
 (defn string->symbol [_ x]
-  (if (string? x)
-    (symbol x)
-    ::s/invalid))
+  (cond
+    (symbol? x) x
+    (string? x) (symbol x)
+    :else ::s/invalid))
 
 (defn string->nil [_ x]
-  (if-not (= "" x)
-    ::s/invalid))
+  (cond
+    (nil? x) nil
+    (= "" x) nil
+    :else ::s/invalid))
 
 ;;
 ;; Maps
 ;;
 
-(defn strip-extra-keys [{:keys [keys spec]} x]
+(defn strip-extra-keys [{:keys [keys]} x]
   (if (map? x)
-    (s/conform spec (select-keys x keys))
+    (select-keys x keys)
     x))
 
 (defn fail-on-extra-keys [{:keys [keys]} x]
