@@ -133,6 +133,9 @@
                      :value value}]
            (throw (ex-info (str "Spec conform error: " data) data))))))))
 
+(defn select-spec [spec value]
+  (conform spec value strip-extra-keys-conforming))
+
 ;;
 ;; Spec Record
 ;;

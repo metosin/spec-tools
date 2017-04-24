@@ -250,6 +250,14 @@ To strip out extra keys from a keyset:
 ;  :address {:street "Satamakatu"}}
 ```
 
+Inspired by the [Schema-tools](https://github.com/metosin/schema-tools), there are also a `select-spec` to achieve the same:
+
+```clj
+(st/select-spec ::user inkeri)
+; {:name "Inkeri"
+;  :address {:street "Satamakatu"}}
+```
+
 #### Custom conforming
 
 ```clj

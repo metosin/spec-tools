@@ -242,7 +242,8 @@
 
     (testing "stripping extra keys"
       (is (= {:height 200, :weight 80}
-             (st/conform ::person person st/strip-extra-keys-conforming))))
+             (st/conform ::person person st/strip-extra-keys-conforming)
+             (st/select-spec ::person person))))
 
     (testing "failing on extra keys"
       (is (= st/+invalid+
