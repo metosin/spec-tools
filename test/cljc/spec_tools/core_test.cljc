@@ -246,7 +246,10 @@
 
     (testing "failing on extra keys"
       (is (= st/+invalid+
-             (st/conform ::person person st/fail-on-extra-keys-conforming))))))
+             (st/conform ::person person st/fail-on-extra-keys-conforming))))
+
+    (testing "explain works too"
+      (is (is (seq (st/explain-data ::person person st/fail-on-extra-keys-conforming)))))))
 
 (s/def ::human (st/spec (s/keys :req-un [::height ::weight]) {:type ::human}))
 

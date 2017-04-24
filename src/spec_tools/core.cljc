@@ -165,9 +165,20 @@
     (s/unform spec x))
   (explain* [this path via in x]
     (let [problems (if (or (s/spec? spec) (s/regex? spec))
+                     ;; conforming might fail deliberately, while the vanilla
+                     ;; conform would succeed - we'll short-circuit it here.
+                     ;; https://dev.clojure.org/jira/browse/CLJ-2115 would help
                      (let [conformed (s/conform* this x)
-                           val (if (= conformed +invalid+) x (s/unform spec conformed))]
-                       (s/explain* (s/specize* spec) path via in val))
+                           [valid? val] (if (and (= conformed +invalid+)
+                                                 (not= (conform this x) +invalid+))
+                                          [false x] [true (s/unform spec conformed)])]
+                       (if valid?
+                         (s/explain* (s/specize* spec) path via in val)
+                         [{:path path
+                           :pred (s/abbrev form)
+                           :val x
+                           :via via
+                           :in in}]))
                      (when (= +invalid+ (if (and (fn? spec) (spec (s/conform* this x))) x +invalid+))
                        [{:path path
                          :pred (s/abbrev form)
