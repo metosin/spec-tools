@@ -10,6 +10,8 @@
             :src-uri "http://github.com/metosin/spec-tools/blob/master/"
             :src-uri-prefix "#L"}
 
+  :dependencies [[org.clojure/spec.alpha "0.1.94"]]
+
   :profiles {:dev {:plugins [[jonase/eastwood "0.2.3"]
                              [funcool/codeina "0.5.0"]
                              [lein-doo "0.1.7"]

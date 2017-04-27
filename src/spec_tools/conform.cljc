@@ -1,6 +1,6 @@
 (ns spec-tools.conform
   #?(:cljs (:refer-clojure :exclude [Inst Keyword UUID]))
-  (:require [clojure.spec :as s]
+  (:require [clojure.spec.alpha :as s]
     #?@(:cljs [[goog.date.UtcDateTime]
                [goog.date.Date]])
             [clojure.set :as set])

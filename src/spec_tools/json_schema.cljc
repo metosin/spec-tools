@@ -1,6 +1,6 @@
 (ns spec-tools.json-schema
   "Tools for converting specs into JSON Schemata."
-  (:require [clojure.spec :as s]
+  (:require [clojure.spec.alpha :as s]
             [spec-tools.visitor :as visitor :refer [visit]]
             [spec-tools.type :as type]
             [clojure.set :as set]))
@@ -176,19 +176,19 @@
 (defmethod accept-spec 'clojure.core/pos? [_ _ _] {:minimum 0 :exclusiveMinimum true})
 (defmethod accept-spec 'clojure.core/neg? [_ _ _] {:maximum 0 :exclusiveMaximum true})
 
-(defmethod accept-spec ::visitor/set [dispatch spec children]
+(defmethod accept-spec ::visitor/set [_ _ children]
   {:enum children})
 
 (defn- is-map-of?
-  "Predicate to check if spec looks like an expansion of clojure.spec/map-of."
+  "Predicate to check if spec looks like an expansion of clojure.spec.alpha/map-of."
   [spec]
   (let [[_ inner-spec & {:as kwargs}] (visitor/extract-form spec)
         pred (when (seq? inner-spec) (first inner-spec))]
     ;; (s/map-of key-spec value-spec) expands to
     ;; (s/every (s/tuple key-spec value-spec) :into {} ...)
-    (and (= pred #?(:clj 'clojure.spec/tuple :cljs 'cljs.spec/tuple)) (= (get kwargs :into)) {})))
+    (and (= pred #?(:clj 'clojure.spec.alpha/tuple :cljs 'cljs.spec/tuple)) (= (get kwargs :into)) {})))
 
-(defmethod accept-spec 'clojure.spec/keys [dispatch spec children]
+(defmethod accept-spec 'clojure.spec.alpha/keys [_ spec children]
   (let [[_ & {:keys [req req-un opt opt-un]}] (visitor/extract-form spec)
         names (map name (concat req req-un opt opt-un))
         required (mapv name (concat req req-un))]
@@ -196,15 +196,15 @@
      :properties (zipmap names children)
      :required required}))
 
-(defmethod accept-spec 'clojure.spec/or [dispatch spec children]
+(defmethod accept-spec 'clojure.spec.alpha/or [_ _ children]
   {:anyOf children})
 
-(defmethod accept-spec 'clojure.spec/and [dispatch spec children]
+(defmethod accept-spec 'clojure.spec.alpha/and [_ _ children]
   (simplify-all-of {:allOf children}))
 
 ; merge
 
-(defmethod accept-spec 'clojure.spec/every [dispatch spec children]
+(defmethod accept-spec 'clojure.spec.alpha/every [_ spec children]
   (let [form (visitor/extract-form spec)
         type (type/resolve-type form)]
     ;; Special case handling of s/map-of, which expands to s/every
@@ -215,31 +215,31 @@
         :set {:type "array", :uniqueItems true, :items (unwrap children)}
         :vector {:type "array", :items (unwrap children)}))))
 
-(defmethod accept-spec 'clojure.spec/every-kv [dispatch spec children]
+(defmethod accept-spec 'clojure.spec.alpha/every-kv [_ _ children]
   {:type "object", :additionalProperties (second children)})
 
-(defmethod accept-spec ::visitor/map-of [dispatch spec children]
+(defmethod accept-spec ::visitor/map-of [_ _ children]
   {:type "object", :additionalProperties (second children)})
 
-(defmethod accept-spec ::visitor/set-of [dispatch spec children]
+(defmethod accept-spec ::visitor/set-of [_ _ children]
   {:type "array", :items (unwrap children), :uniqueItems true})
 
-(defmethod accept-spec ::visitor/vector-of [dispatch spec children]
+(defmethod accept-spec ::visitor/vector-of [_ _ children]
   {:type "array", :items (unwrap children)})
 
-(defmethod accept-spec 'clojure.spec/* [dispatch spec children]
+(defmethod accept-spec 'clojure.spec.alpha/* [_ _ children]
   {:type "array" :items (unwrap children)})
 
-(defmethod accept-spec 'clojure.spec/+ [dispatch spec children]
+(defmethod accept-spec 'clojure.spec.alpha/+ [_ _ children]
   {:type "array" :items (unwrap children) :minItems 1})
 
-(defmethod accept-spec 'clojure.spec/? [dispatch spec children]
+(defmethod accept-spec 'clojure.spec.alpha/? [_ _ children]
   {:type "array" :items (unwrap children) :minItems 0})
 
-(defmethod accept-spec 'clojure.spec/alt [dispatch spec children]
+(defmethod accept-spec 'clojure.spec.alpha/alt [_ _ children]
   {:anyOf children})
 
-(defmethod accept-spec 'clojure.spec/cat [dispatch spec children]
+(defmethod accept-spec 'clojure.spec.alpha/cat [_ _ children]
   {:type "array"
    :minItems (count children)
    :maxItems (count children)
@@ -247,20 +247,20 @@
 
 ; &
 
-(defmethod accept-spec 'clojure.spec/tuple [dispatch spec children]
+(defmethod accept-spec 'clojure.spec.alpha/tuple [_ _ children]
   {:type "array" :items children :minItems (count children)})
 
 ; keys*
 
-(defmethod accept-spec 'clojure.spec/nilable [dispatch spec children]
+(defmethod accept-spec 'clojure.spec.alpha/nilable [_ _ children]
   {:oneOf [(unwrap children) {:type "null"}]})
 
 ;; this is just a function in clojure.spec?
-(defmethod accept-spec 'clojure.spec/int-in-range? [dispatch spec children]
+(defmethod accept-spec 'clojure.spec.alpha/int-in-range? [_ spec _]
   (let [[_ minimum maximum _] (visitor/strip-fn-if-needed spec)]
     {:minimum minimum :maximum maximum}))
 
-(defmethod accept-spec ::visitor/spec [dispatch spec children]
+(defmethod accept-spec ::visitor/spec [_ spec children]
   (let [spec (visitor/extract-spec spec)
         json-schema-meta (reduce-kv
                            (fn [acc k v]
@@ -274,5 +274,5 @@
                        (set/rename-keys {:name :title}))]
     (merge (unwrap children) extra-info json-schema-meta)))
 
-(defmethod accept-spec ::default [dispatch spec children]
+(defmethod accept-spec ::default [_ _ _]
   {})

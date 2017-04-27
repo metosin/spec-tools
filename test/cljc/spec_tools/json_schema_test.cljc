@@ -1,6 +1,6 @@
 (ns spec-tools.json-schema-test
   (:require [clojure.test :refer [deftest testing is]]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
             [spec-tools.core :as st]
             [com.gfredericks.test.chuck.clojure-test :refer [checking]]
     #?(:clj

@@ -4,7 +4,7 @@
             [spec-tools.core :as st]
             [spec-tools.spec :as spec]
             [criterium.core :as cc]
-            [clojure.spec :as s]))
+            [clojure.spec.alpha :as s]))
 
 ;;
 ;; start repl with `lein perf repl`

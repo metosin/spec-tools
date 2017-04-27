@@ -4,7 +4,7 @@
             [spec-tools.type :as type]
             [spec-tools.form :as form]
             [spec-tools.conform :as conform]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
     #?@(:clj  [
             [clojure.spec.gen :as gen]
             [clojure.edn]]
@@ -66,7 +66,7 @@
      :cljs (cljs.reader/read-string s)))
 
 (def +invalid+ '::s/invalid)
-(def +problems+ #?(:clj :clojure.spec/problems, :cljs :cljs.spec/problems))
+(def +problems+ #?(:clj :clojure.spec.alpha/problems, :cljs :cljs.spec/problems))
 
 ;;
 ;; Dynamic conforming
@@ -225,7 +225,7 @@
 (defmethod collect-info ::default [_ _] nil)
 
 ;; and's and or's are just flattened
-(defmethod collect-info 'clojure.spec/keys [_ form]
+(defmethod collect-info 'clojure.spec.alpha/keys [_ form]
   (let [{:keys [req opt req-un opt-un]} (some->> form (rest) (apply hash-map))]
     {:keys (set
              (flatten

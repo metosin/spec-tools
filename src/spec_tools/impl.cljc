@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [resolve])
   (:require [cljs.analyzer.api :refer [resolve]]
             [spec-tools.form :as form]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
             [clojure.walk :as walk])
   (:import
     #?@(:clj
@@ -20,7 +20,7 @@
   (or
     (if (symbol? x)
       (if-let [ns (get {"cljs.core" "clojure.core"
-                        "cljs.spec" "clojure.spec"} (namespace x))]
+                        "cljs.spec" "clojure.spec.alpha"} (namespace x))]
         (symbol ns (name x))))
     x))
 
@@ -68,7 +68,7 @@
 
 (defn coll-of-spec [pred type]
   (let [form (form/resolve-form pred)]
-    (clojure.spec/every-impl
+    (clojure.spec.alpha/every-impl
       form
       pred
       {:into type
@@ -81,7 +81,7 @@
 (defn map-of-spec [kpred vpred]
   (let [forms (map form/resolve-form [kpred vpred])
         tuple (s/tuple-impl forms [kpred vpred])]
-    (clojure.spec/every-impl
+    (clojure.spec.alpha/every-impl
       `(s/tuple ~@forms)
       tuple
       {:into {}
