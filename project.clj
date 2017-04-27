@@ -13,7 +13,7 @@
   :profiles {:dev {:plugins [[jonase/eastwood "0.2.3"]
                              [funcool/codeina "0.5.0"]
                              [lein-doo "0.1.7"]
-                             [lein-cljsbuild "1.1.5"]
+                             [lein-cljsbuild "1.1.6"]
                              [lein-cloverage "1.0.9"]]
                    :jvm-opts ^:replace ["-server"]
                    ;:global-vars {*warn-on-reflection* true}
