@@ -63,6 +63,10 @@
   (let [{:keys [req opt req-un opt-un]} (some->> form (rest) (apply hash-map))]
     (flatten (map polish (concat req opt req-un opt-un)))))
 
+;;
+;; FIXME: using ^:skip-wiki functions from clojure.spec. might break.
+;;
+
 (defn register-spec! [k s]
   (s/def-impl k (s/form s) s))
 
