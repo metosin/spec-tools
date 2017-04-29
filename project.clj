@@ -1,5 +1,5 @@
 (defproject metosin/spec-tools "0.1.0-SNAPSHOT"
-  :description "Common utilities for clojure.spec"
+  :description "Clojure(Script) tools for clojure.spec"
   :url "https://github.com/metosin/spec-tools"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"
@@ -11,6 +11,7 @@
             :src-uri-prefix "#L"}
 
   :profiles {:dev {:plugins [[jonase/eastwood "0.2.3"]
+                             [lein-tach "0.3.0"]
                              [funcool/codeina "0.5.0"]
                              [lein-doo "0.1.7"]
                              [lein-cljsbuild "1.1.6"]
