@@ -370,7 +370,7 @@
                               (or (keyword? k)
                                   (wrapped-key? k)))
                             [k v])))]
-    (create-spec {:spec (impl/map-of-spec (data-spec n k') (data-spec n v'))})
+    (create-spec {:spec (impl/map-of-spec (data-spec n k' false) (data-spec n v'))})
     ;; keyword keys
     (let [m (reduce-kv
               (fn [acc k v]
@@ -406,11 +406,14 @@
   (let [spec (data-spec n (first v))]
     (create-spec {:spec (impl/coll-of-spec spec proto)})))
 
-(defn data-spec [name x]
-  (cond
-    (spec? x) x
-    (s/regex? x) x
-    (map? x) (-map-spec name x)
-    (set? x) (-coll-spec name x #{})
-    (vector? x) (-coll-spec name x [])
-    :else (create-spec {:spec x})))
+(defn data-spec
+  ([name x]
+    (data-spec name x true))
+  ([name x coll-specs?]
+   (cond
+     (spec? x) x
+     (s/regex? x) x
+     (and coll-specs? (map? x)) (-map-spec name x)
+     (and coll-specs? (set? x)) (-coll-spec name x #{})
+     (and coll-specs? (vector? x)) (-coll-spec name x [])
+     :else (create-spec {:spec x}))))

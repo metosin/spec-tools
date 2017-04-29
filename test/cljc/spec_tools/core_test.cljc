@@ -420,6 +420,16 @@
         (s/valid?
           (st/data-spec ::pred-keys {string? {keyword? [integer?]}})
           {"invalid spec" "is this"}))))
+  
+  (testing "set keys"
+    (let [spec (st/data-spec ::pred-keys {#{:one :two} string?})]
+      (is
+        (= true
+           (s/valid? spec {:one "beer"})
+           (s/valid? spec {:two "beers"})))
+      (is
+        (= false
+           (s/valid? spec {:three "beers"})))))
 
   (testing "map-of key conforming"
     (is (= {:thanks :alex}
