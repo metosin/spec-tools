@@ -169,6 +169,7 @@
         (swap! specs assoc spec s)
         @specs))))
 
+;; FIXME: uses ^:skip-wiki functions from clojure.spec
 (defn convert-specs!
   "Collects all registered subspecs from a spec and
   transforms their registry values into Spec Records.
