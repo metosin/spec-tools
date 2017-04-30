@@ -1,5 +1,5 @@
 (ns spec-tools.core-test
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require [clojure.test :refer [deftest testing is are]]
             [clojure.spec :as s]
             [clojure.string :as str]
             [spec-tools.core :as st]
@@ -18,6 +18,8 @@
 
 (s/def ::a spec/int?)
 (s/def ::b ::a)
+
+(s/def ::string string?)
 
 (deftest get-spec-test
   (is (= spec/int? (st/get-spec ::a)))
@@ -69,6 +71,42 @@
                         :type :long
                         :form `(fn [x] (pos? x))})]
             (is (st/spec? spec))))))
+
+    (testing "forms"
+      (are [spec form]
+        (= form (s/form spec))
+
+        (st/spec integer?)
+        `(spec-tools.core/spec
+           integer?
+           {:type :long})
+
+        (st/spec #{pos? neg?})
+        `(spec-tools.core/spec
+           #{neg? pos?}
+           {:type nil})
+
+        (st/spec ::string)
+        `(spec-tools.core/spec
+           string?
+           {:type :string})
+
+        (st/spec ::lat)
+        `(spec-tools.core/spec
+           (spec-tools.core/spec
+             double?
+             {:type :double})
+           {:type nil})
+
+        (st/spec (fn [x] (> x 10)))
+        `(spec-tools.core/spec
+           (clojure.core/fn [~'x] (> ~'x 10))
+           {:type nil})
+
+        (st/spec #(> % 10))
+        `(spec-tools.core/spec
+           (clojure.core/fn [~'%] (> ~'% 10))
+           {:type nil})))
 
     (testing "wrapped predicate work as a predicate"
       (is (true? (my-integer? 1)))

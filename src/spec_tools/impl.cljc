@@ -35,20 +35,16 @@
   #?(:clj  (clj-sym x)
      :cljs (cljs-sym x)))
 
-(defn- unfn [expr]
+(defn- unfn [cljs? expr]
   (if (clojure.core/and (seq? expr)
                         (symbol? (first expr))
                         (= "fn*" (name (first expr))))
     (let [[[s] & form] (rest expr)]
-      (conj (walk/postwalk-replace {s '%} form) '[%] 'fn))
+      (conj (walk/postwalk-replace {s '%} form) '[%] (if cljs? 'cljs.core/fn 'clojure.core/fn)))
     expr))
 
-(defn cljs-resolve [env form]
-  (cond
-    (keyword? form) form
-    (symbol? form) (clojure.core/or (->> form (resolve env) cljs-sym) form)
-    (sequential? form) (walk/postwalk #(if (symbol? %) (cljs-resolve env %) %) (unfn form))
-    :else form))
+(defn cljs-resolve [env symbol]
+  (clojure.core/or (->> symbol (resolve env) cljs-sym) symbol))
 
 (defn polish [x]
   (cond
@@ -62,6 +58,18 @@
 (defn extract-keys [form]
   (let [{:keys [req opt req-un opt-un]} (some->> form (rest) (apply hash-map))]
     (flatten (map polish (concat req opt req-un opt-un)))))
+
+(defn resolve-form [env pred]
+  (let [cljs? (in-cljs? env)
+        res (if cljs? (partial cljs-resolve env) clojure.core/resolve)]
+    (->> pred
+         (walk/postwalk
+           (fn [x]
+             (if (symbol? x)
+               (or (some->> x res ->sym) x)
+               x)))
+         (unfn cljs?)
+         #_(walk/postwalk clojure-core-symbol-or-any))))
 
 ;;
 ;; FIXME: using ^:skip-wiki functions from clojure.spec. might break.

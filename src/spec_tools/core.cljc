@@ -256,7 +256,9 @@
           :xx/yy  any qualified keys can be added (optional)"
   [{:keys [spec type form] :as m}]
   (assert spec "missing spec predicate")
-  (let [form (or form
+  (let [form (or (if (qualified-keyword? form)
+                   (s/form form))
+                 form
                  (let [form (s/form spec)]
                    (if-not (= form ::s/unknown) form))
                  (form/resolve-form spec)
@@ -286,30 +288,21 @@
      ;; map form
      (spec {:spec integer?, :type :long})
 
-     calls create-spec, see it for details."
+     calls `create-spec`, see it for details."
      ([pred-or-info]
       (let [[pred info] (extract-pred-and-info pred-or-info)]
         `(spec ~pred ~info)))
      ([pred info]
-      (if (impl/in-cljs? &env)
-        `(let [info# ~info
-               form# (if (symbol? '~pred)
-                       '~(or (and (symbol? pred) (some->> pred (impl/cljs-resolve &env) impl/->sym)) pred))]
-           (assert (map? info#) (str "spec info should be a map, was: " info#))
-           (create-spec
-             (merge
-               ~info
-               {:form form#
-                :spec ~pred})))
-        `(let [info# ~info
-               form# (if (symbol? '~pred)
-                       '~(or (and (symbol? pred) (some->> pred resolve impl/->sym)) pred))]
-           (assert (map? info#) (str "spec info should be a map, was: " info#))
-           (create-spec
-             (merge
-               ~info
-               {:form form#
-                :spec ~pred})))))))
+      `(let [info# ~info
+             form# '~(impl/resolve-form &env pred)]
+         (assert (map? info#) (str "spec info should be a map, was: " info#))
+         (create-spec
+           (merge
+             info#
+             {:form form#
+              :spec ~pred}))))))
+
+(spec integer?)
 
 #?(:clj
    (defmacro doc
@@ -325,7 +318,7 @@
       ;; map form
       (doc {:spec integer?, :name \"it's a integer\"}})
 
-      calls create-spec, see it for details."
+      calls `spec`, see it for details."
      ([pred-or-info]
       (let [[spec info] (extract-pred-and-info pred-or-info)]
         `(doc ~spec ~info)))
