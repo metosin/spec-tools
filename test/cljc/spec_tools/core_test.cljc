@@ -420,7 +420,7 @@
         (s/valid?
           (st/data-spec ::pred-keys {string? {keyword? [integer?]}})
           {"invalid spec" "is this"}))))
-  
+
   (testing "set keys"
     (let [spec (st/data-spec ::pred-keys {#{:one :two} string?})]
       (is

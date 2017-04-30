@@ -10,7 +10,6 @@
             [clojure.edn]]
         :cljs [[goog.date.UtcDateTime]
                [cljs.reader]
-               [goog.date.Date]
                [clojure.test.check.generators]
                [cljs.spec.impl.gen :as gen]]))
   (:import
@@ -195,10 +194,12 @@
                                 (assoc :reason spec-reason)))]
       (if problems
         (map with-reason problems))))
-  (gen* [this _ _ _]
+  (gen* [this overrides path rmap]
     (if-let [gen (:gen this)]
       (gen)
-      (gen/gen-for-pred spec)))
+      (or
+        (gen/gen-for-pred spec)
+        (s/gen* spec overrides path rmap))))
   (with-gen* [this gfn]
     (assoc this :gen gfn))
   (describe* [this]
