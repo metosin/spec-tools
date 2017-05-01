@@ -2,6 +2,7 @@
   (:require [clojure.test :refer [deftest testing is]]
             [clojure.spec :as s]
             [spec-tools.core :as st]
+            [spec-tools.data-spec :as ds]
             [spec-tools.visitor :as visitor]))
 
 (s/def ::str string?)
@@ -36,14 +37,14 @@
             ::user (s/form ::user)}))))
 
 (def person-spec
-  (st/data-spec
+  (ds/to-spec
     ::person
     {::id integer?
      :age ::age
      :name string?
      :likes {string? boolean?}
-     (st/req :languages) #{keyword?}
-     (st/opt :address) {:street string?
+     (ds/req :languages) #{keyword?}
+     (ds/opt :address) {:street string?
                         :zip string?}}))
 
 (deftest readme-visitor-test
