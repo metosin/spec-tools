@@ -256,7 +256,9 @@
           :xx/yy  any qualified keys can be added (optional)"
   [{:keys [spec type form] :as m}]
   (assert spec "missing spec predicate")
-  (let [form (or (if (qualified-keyword? form)
+  (let [spec (if (qualified-keyword? spec)
+               (s/get-spec spec) spec)
+        form (or (if (qualified-keyword? form)
                    (s/form form))
                  form
                  (let [form (s/form spec)]
@@ -268,12 +270,7 @@
                (type/resolve-type form)
                type)]
     (map->Spec
-      (merge m info {:form form, :type type}))))
-
-(defn- extract-pred-and-info [x]
-  (if (map? x)
-    [(:spec x) (dissoc x :spec)]
-    [x {}]))
+      (merge m info {:spec spec :form form, :type type}))))
 
 #?(:clj
    (defmacro spec
@@ -290,7 +287,7 @@
 
      calls `create-spec`, see it for details."
      ([pred-or-info]
-      (let [[pred info] (extract-pred-and-info pred-or-info)]
+      (let [[pred info] (impl/extract-pred-and-info pred-or-info)]
         `(spec ~pred ~info)))
      ([pred info]
       `(let [info# ~info
@@ -301,8 +298,6 @@
              info#
              {:form form#
               :spec ~pred}))))))
-
-(spec integer?)
 
 #?(:clj
    (defmacro doc
@@ -320,7 +315,7 @@
 
       calls `spec`, see it for details."
      ([pred-or-info]
-      (let [[spec info] (extract-pred-and-info pred-or-info)]
+      (let [[spec info] (impl/extract-pred-and-info pred-or-info)]
         `(doc ~spec ~info)))
      ([spec info]
       `(spec ~spec (merge ~info {:type nil})))))

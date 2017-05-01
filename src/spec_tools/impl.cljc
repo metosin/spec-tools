@@ -71,6 +71,11 @@
          (unfn cljs?)
          #_(walk/postwalk clojure-core-symbol-or-any))))
 
+(defn extract-pred-and-info [x]
+  (if (map? x)
+    [(:spec x) (dissoc x :spec)]
+    [x {}]))
+
 ;;
 ;; FIXME: using ^:skip-wiki functions from clojure.spec. might break.
 ;;

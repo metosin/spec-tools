@@ -1,4 +1,4 @@
-(ns spec-tools.core-test
+(ns spec-tools.data-spec-test2
   (:require [clojure.test :refer [deftest testing is are]]
             [clojure.spec :as s]
             [clojure.string :as str]
