@@ -98,8 +98,6 @@ For most core predicates, `:type` can be resolved automatically using the `spec-
 
 For most core predicates, `:form` can be resolved automatically using the `spec-tools.form/resolve-form` multimethod.
 
-To transform registered specs into Spec Records, see `spec-tools.visitor/convert-specs!`.
-
 ### Predefined Spec Records
 
 Most `clojure.core` predicates have a predefined Spec Record instance in `spec-tools.spec`.
@@ -286,6 +284,10 @@ Inspired by the [Schema-tools](https://github.com/metosin/schema-tools), there a
 
 ### Data Specs
 
+```clj
+(require '[spec-tools.data-spec :as ds])
+```
+
 Data Specs offers an alternative, Schema-like data-driven syntax to define simple nested collection specs. Rules:
 
 * Just data, no macros
@@ -296,10 +298,12 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
   * Map (keyword) keys
     * can be qualified or non-qualified (a qualified name will be generated for it)
     * are required by default
-    * can be wrapped into `st/opt` or `st/req` for making them optional or required.
+    * can be wrapped into `ds/opt` or `ds/req` for making them optional or required.
   * Map values
     * can be functions, specs, qualified spec names or nested collections.
-    * wrapping value into `st/maybe` makes it `nillable`
+    * wrapping value into `ds/maybe` makes it `s/nillable`
+
+**NOTE**: to avoid macros, current implementation uses the don-documented functional core of `clojure.spec`: `every-impl`, `tuple-impl`, `map-spec-impl` & `nilable-impl`.
 
 ```clj
 (s/def ::age spec/pos-int?)
@@ -309,12 +313,12 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
   {::id integer?
    ::age ::age
    :boss boolean?
-   (st/req :name) string?
-   (st/opt :description) string?
+   (ds/req :name) string?
+   (ds/opt :description) string?
    :languages #{keyword?}
    :orders [{:id int?
              :description string?}]
-   :address (st/maybe
+   :address (ds/maybe
               {:street string?
                :zip string?})})
 
@@ -323,15 +327,15 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
   (dissoc person ::id))
 ```
 
-* to turn a data-spec into a Spec, call `spec-tools.core/data-spec` on it, providing a qualified keyword describing the root spec name - used to generate unique names for sub-specs that will be registered.
+* to turn a data-spec into a Spec, call `ds/spec` on it, providing a qualified keyword describing the root spec name - used to generate unique names for sub-specs that will be registered.
 
 ```clj
 ;; transform into specs
 (def person-spec
-  (st/data-spec ::person person))
+  (ds/spec ::person person))
 
 (def new-person-spec
-  (st/data-spec ::person new-person))
+  (ds/spec ::person new-person))
 ```
 
 * the following specs are now registered:

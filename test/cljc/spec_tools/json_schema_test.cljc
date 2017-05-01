@@ -2,6 +2,7 @@
   (:require [clojure.test :refer [deftest testing is]]
             [clojure.spec :as s]
             [spec-tools.core :as st]
+            [spec-tools.data-spec :as ds]
             [com.gfredericks.test.chuck.clojure-test :refer [checking]]
     #?(:clj
             [scjsv.core :as scjsv])
@@ -95,14 +96,14 @@
 (s/def ::age (s/and integer? #(> % 18)))
 
 (def person-spec
-  (st/data-spec
+  (ds/spec
     ::person
     {::id integer?
      :age ::age
      :name string?
      :likes {string? boolean?}
-     (st/req :languages) #{keyword?}
-     (st/opt :address) {:street string?
+     (ds/req :languages) #{keyword?}
+     (ds/opt :address) {:street string?
                         :zip string?}}))
 
 (deftest readme-test
@@ -139,6 +140,6 @@
                           :items {:type "array"
                                   :items {:type "string"}}}}}
          (jsc/transform
-           (st/data-spec
+           (ds/spec
              ::nested
              [[[[string?]]]])))))

@@ -169,19 +169,20 @@
         (swap! specs assoc spec s)
         @specs))))
 
-;; FIXME: uses ^:skip-wiki functions from clojure.spec
-(defn convert-specs!
-  "Collects all registered subspecs from a spec and
-  transforms their registry values into Spec Records.
-  Does not convert clojure.spec regex ops."
-  [spec]
-  (let [specs (visit spec (spec-collector))
-        report (atom #{})]
-    (doseq [[k v] specs]
-      (if (keyword? v)
-        (swap! report into (convert-specs! v))
-        (when-not (or (s/regex? v) (st/spec? v))
-          (let [s (st/create-spec {:spec v})]
-            (impl/register-spec! k s)
-            (swap! report conj k)))))
-    @report))
+;; TODO: uses ^:skip-wiki functions from clojure.spec
+(comment
+  (defn convert-specs!
+    "Collects all registered subspecs from a spec and
+    transforms their registry values into Spec Records.
+    Does not convert clojure.spec regex ops."
+    [spec]
+    (let [specs (visit spec (spec-collector))
+          report (atom #{})]
+      (doseq [[k v] specs]
+        (if (keyword? v)
+          (swap! report into (convert-specs! v))
+          (when-not (or (s/regex? v) (st/spec? v))
+            (let [s (st/create-spec {:spec v})]
+              (impl/register-spec! k s)
+              (swap! report conj k)))))
+      @report)))
