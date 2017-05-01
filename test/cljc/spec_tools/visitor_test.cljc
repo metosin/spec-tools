@@ -63,10 +63,11 @@
       (is (= (->> expected (map s/get-spec) set)
              (-> specs vals set))))
 
-    (testing "convert-specs! transforms all specs into Spec records"
-      (visitor/convert-specs! person-spec)
-      (is (true?
-            (->> expected
-                 (map s/get-spec)
-                 (remove keyword?)
-                 (every? st/spec?)))))))
+    (comment
+      (testing "convert-specs! transforms all specs into Spec records"
+        (visitor/convert-specs! person-spec)
+        (is (true?
+              (->> expected
+                   (map s/get-spec)
+                   (remove keyword?)
+                   (every? st/spec?))))))))

@@ -98,8 +98,6 @@ For most core predicates, `:type` can be resolved automatically using the `spec-
 
 For most core predicates, `:form` can be resolved automatically using the `spec-tools.form/resolve-form` multimethod.
 
-To transform registered specs into Spec Records, see `spec-tools.visitor/convert-specs!`.
-
 ### Predefined Spec Records
 
 Most `clojure.core` predicates have a predefined Spec Record instance in `spec-tools.spec`.
