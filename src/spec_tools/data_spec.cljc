@@ -108,7 +108,7 @@
                               (or (keyword? k)
                                   (wrapped-key? k)))
                             [k v])))]
-    (st/create-spec {:spec (map-of-spec (to-spec n k' false) (to-spec n v'))})
+    (st/create-spec {:spec (map-of-spec (spec n k' false) (spec n v'))})
     ;; keyword keys
     (let [m (reduce-kv
               (fn [acc k v]
@@ -123,7 +123,7 @@
                                 [kv (if (not= kv v) kv)]
                                 (let [k' (keyword (str (str (namespace n) "$" (name n)) "/" (name (unwrap-key kv))))]
                                   [k' k']))
-                      v' (if n' (wrap (to-spec n' v)))]
+                      v' (if n' (wrap (spec n' v)))]
                   (-> acc
                       (update rk (fnil conj []) k')
                       (cond-> v' (update ::defs (fnil conj []) [k' v'])))))
@@ -141,12 +141,12 @@
       (ex-info
         (str "only single maps allowed in nested " proto)
         {:k n :v v})))
-  (let [spec (to-spec n (first v))]
+  (let [spec (spec n (first v))]
     (st/create-spec {:spec (coll-of-spec spec proto)})))
 
-(defn to-spec
+(defn spec
   ([name x]
-    (to-spec name x true))
+    (spec name x true))
   ([name x coll-specs?]
    (cond
      (st/spec? x) x
@@ -167,11 +167,11 @@
   (s/def ::abba int?)
 
   #_(s/explain
-      (to-spec ::kikka {(s/or :number (s/int-in 100 600) :default #{:default}) string?})
+      (spec ::kikka {(s/or :number (s/int-in 100 600) :default #{:default}) string?})
       {300 "2"})
 
   (s/conform
-    (to-spec ::kikka {(s/or :number (s/int-in 100 600) :default #{:default}) string?})
+    (spec ::kikka {(s/or :number (s/int-in 100 600) :default #{:default}) string?})
     {200 "2"})
 
   (s/conform

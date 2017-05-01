@@ -97,7 +97,7 @@
                             :description string?}]
                   :address (ds/maybe {:street string?
                                       :zip string?})}
-          person-spec (ds/to-spec ::person person)
+          person-spec (ds/spec ::person person)
           person-keys-spec (st/spec
                              (s/keys
                                :req [::id ::age]
@@ -161,50 +161,50 @@
   (testing "top-level vector"
     (is (true?
           (s/valid?
-            (ds/to-spec ::vector [{:olipa {:kerran string?}}])
+            (ds/spec ::vector [{:olipa {:kerran string?}}])
             [{:olipa {:kerran "avaruus"}}
              {:olipa {:kerran "elämä"}}])))
     (is (false?
           (s/valid?
-            (ds/to-spec ::vector [{:olipa {:kerran string?}}])
+            (ds/spec ::vector [{:olipa {:kerran string?}}])
             [{:olipa {:kerran :muumuu}}]))))
 
   (testing "top-level set"
     (is (true?
           (s/valid?
-            (ds/to-spec ::vector #{{:olipa {:kerran string?}}})
+            (ds/spec ::vector #{{:olipa {:kerran string?}}})
             #{{:olipa {:kerran "avaruus"}}
               {:olipa {:kerran "elämä"}}})))
     (is (false?
           (s/valid?
-            (ds/to-spec ::vector #{{:olipa {:kerran string?}}})
+            (ds/spec ::vector #{{:olipa {:kerran string?}}})
             #{{:olipa {:kerran :muumuu}}}))))
 
   (testing "mega-nested"
     (is (true?
           (s/valid?
-            (ds/to-spec ::vector [[[[[[[[[[string?]]]]]]]]]])
+            (ds/spec ::vector [[[[[[[[[[string?]]]]]]]]]])
             [[[[[[[[[["kikka" "kakka" "kukka"]]]]]]]]]])))
     (is (false?
           (s/valid?
-            (ds/to-spec ::vector [[[[[[[[[[string?]]]]]]]]]])
+            (ds/spec ::vector [[[[[[[[[[string?]]]]]]]]]])
             [[[[[[[[[123]]]]]]]]]))))
 
   (testing "predicate keys"
     (is
       (true?
         (s/valid?
-          (ds/to-spec ::pred-keys {string? {keyword? [integer?]}})
+          (ds/spec ::pred-keys {string? {keyword? [integer?]}})
           {"winning numbers" {:are [1 12 46 45]}
            "empty?" {:is []}})))
     (is
       (false?
         (s/valid?
-          (ds/to-spec ::pred-keys {string? {keyword? [integer?]}})
+          (ds/spec ::pred-keys {string? {keyword? [integer?]}})
           {"invalid spec" "is this"}))))
 
   (testing "set keys"
-    (let [spec (ds/to-spec ::pred-keys {#{:one :two} string?})]
+    (let [spec (ds/spec ::pred-keys {#{:one :two} string?})]
       (is
         (= true
            (s/valid? spec {:one "beer"})
@@ -216,6 +216,6 @@
   (testing "map-of key conforming"
     (is (= {:thanks :alex}
            (st/conform
-             (ds/to-spec ::kikka {keyword? keyword?})
+             (ds/spec ::kikka {keyword? keyword?})
              {"thanks" "alex"}
              st/string-conforming)))))

@@ -96,7 +96,7 @@
 (s/def ::age (s/and integer? #(> % 18)))
 
 (def person-spec
-  (ds/to-spec
+  (ds/spec
     ::person
     {::id integer?
      :age ::age
@@ -140,6 +140,6 @@
                           :items {:type "array"
                                   :items {:type "string"}}}}}
          (jsc/transform
-           (ds/to-spec
+           (ds/spec
              ::nested
              [[[[string?]]]])))))

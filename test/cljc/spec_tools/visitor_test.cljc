@@ -37,7 +37,7 @@
             ::user (s/form ::user)}))))
 
 (def person-spec
-  (ds/to-spec
+  (ds/spec
     ::person
     {::id integer?
      :age ::age

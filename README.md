@@ -327,15 +327,15 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
   (dissoc person ::id))
 ```
 
-* to turn a data-spec into a Spec, call `ds/to-spec` on it, providing a qualified keyword describing the root spec name - used to generate unique names for sub-specs that will be registered.
+* to turn a data-spec into a Spec, call `ds/spec` on it, providing a qualified keyword describing the root spec name - used to generate unique names for sub-specs that will be registered.
 
 ```clj
 ;; transform into specs
 (def person-spec
-  (ds/to-spec ::person person))
+  (ds/spec ::person person))
 
 (def new-person-spec
-  (ds/to-spec ::person new-person))
+  (ds/spec ::person new-person))
 ```
 
 * the following specs are now registered:
