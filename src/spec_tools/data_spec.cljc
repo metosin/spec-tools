@@ -97,7 +97,7 @@
 (defn maybe? [x]
   (instance? Maybe x))
 
-(declare to-spec)
+(declare spec)
 
 (defn- -map-spec [n data]
   ;; predicate keys
