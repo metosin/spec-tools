@@ -22,6 +22,8 @@
 
 (defn- spec-dispatch [dispatch spec children] dispatch)
 
+(defn- namespaced-name [key] (str (namespace key) "/" (name key)))
+
 (defmulti accept-spec spec-dispatch :default ::default)
 
 (defn transform [spec] (visit spec accept-spec))
@@ -190,11 +192,13 @@
 
 (defmethod accept-spec 'clojure.spec/keys [dispatch spec children]
   (let [[_ & {:keys [req req-un opt opt-un]}] (visitor/extract-form spec)
-        names (map name (concat req req-un opt opt-un))
-        required (mapv name (concat req req-un))]
+        names-un    (map name (concat req-un opt-un))
+        names       (map namespaced-name (concat req opt))
+        required    (map namespaced-name req)
+        required-un (map name req-un)]
     {:type "object"
-     :properties (zipmap names children)
-     :required required}))
+     :properties (zipmap (concat names names-un) children)
+     :required (vec (concat required required-un))}))
 
 (defmethod accept-spec 'clojure.spec/or [dispatch spec children]
   {:anyOf children})
@@ -202,7 +206,10 @@
 (defmethod accept-spec 'clojure.spec/and [dispatch spec children]
   (simplify-all-of {:allOf children}))
 
-; merge
+(defmethod accept-spec 'clojure.spec/merge [dispatch spec children]
+  {:type "object"
+   :properties (apply merge (map :properties children))
+   :required (into [] (reduce into (sorted-set) (map :required children)))})
 
 (defmethod accept-spec 'clojure.spec/every [dispatch spec children]
   (let [form (visitor/extract-form spec)

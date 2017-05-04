@@ -40,7 +40,12 @@
            {:anyOf [{:type "integer"} {:type "string"}]}))
     (is (= (jsc/transform (s/and integer? pos?))
            {:allOf [{:type "integer"} {:minimum 0 :exclusiveMinimum true}]}))
-    ;; merge
+    (is (= (jsc/transform (s/merge (s/keys :req [::integer])
+                                   (s/keys :req [::string])))
+           {:type "object"
+            :properties {"spec-tools.json-schema-test/integer" {:type "integer"}
+                         "spec-tools.json-schema-test/string" {:type "string"}}
+            :required ["spec-tools.json-schema-test/integer" "spec-tools.json-schema-test/string"]}))
     (is (= (jsc/transform (s/every integer?)) {:type "array" :items {:type "integer"}}))
     (is (= (jsc/transform (s/every-kv string? integer?))
            {:type "object" :additionalProperties {:type "integer"}}))
@@ -108,9 +113,9 @@
 
 (deftest readme-test
   (is (= {:type "object"
-          :required ["id" "age" "name" "likes" "languages"]
+          :required ["spec-tools.json-schema-test/id" "age" "name" "likes" "languages"]
           :properties
-          {"id" {:type "integer"}
+          {"spec-tools.json-schema-test/id" {:type "integer"}
            "age" {:type "integer"}
            "name" {:type "string"}
            "likes" {:type "object" :additionalProperties {:type "boolean"}}
