@@ -17,7 +17,8 @@
     (int? x) x
     (string? x) (try
                   #?(:clj  (Long/parseLong x)
-                     :cljs (js/parseInt x 10))
+                     :cljs (let [x (js/parseInt x 10)]
+                             (if (js/isNaN x) ::s/invalid x)))
                   (catch #?(:clj Exception, :cljs js/Error) _
                     ::s/invalid))
     :else ::s/invalid))
@@ -27,7 +28,8 @@
     (double? x) x
     (string? x) (try
                   #?(:clj  (Double/parseDouble x)
-                     :cljs (js/parseFloat x))
+                     :cljs (let [x (js/parseFloat x)]
+                             (if (js/isNaN x) ::s/invalid x)))
                   (catch #?(:clj Exception, :cljs js/Error) _
                     ::s/invalid))
     :else ::s/invalid))
@@ -50,7 +52,10 @@
     (uuid? x) x
     (string? x) (try
                   #?(:clj  (UUID/fromString x)
-                     :cljs (uuid x))
+                     ;; http://stackoverflow.com/questions/7905929/how-to-test-valid-uuid-guid
+                     :cljs (if (re-find #"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" x)
+                             (uuid x)
+                             ::s/invalid))
                   (catch #?(:clj Exception, :cljs js/Error) _
                     ::s/invalid))
     :else ::s/invalid))
