@@ -116,7 +116,11 @@
 
     (testing "wrapped predicate work as a predicate"
       (is (true? (my-integer? 1)))
-      (is (false? (my-integer? "1"))))
+      (is (false? (my-integer? "1")))
+      (testing "ifn's work too"
+        (let [spec (st/spec #{1 2 3})]
+          (is (= 1 (spec 1)))
+          (is (= nil (spec "1"))))))
 
     (testing "wrapped spec does not work as a predicate"
       (let [my-spec (st/spec (s/keys :req [::age]))]

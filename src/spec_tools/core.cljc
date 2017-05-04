@@ -181,7 +181,7 @@
                            :val x
                            :via via
                            :in in}]))
-                     (when (= +invalid+ (if (and (fn? spec) (spec (s/conform* this x))) x +invalid+))
+                     (when (= +invalid+ (if (and (ifn? spec) (spec (s/conform* this x))) x +invalid+))
                        [{:path path
                          :pred (s/abbrev form)
                          :val x
@@ -206,8 +206,8 @@
     (let [info (extra-spec-map this)]
       `(spec-tools.core/spec ~form ~info)))
   IFn
-  #?(:clj  (invoke [this x] (if (fn? spec) (spec x) (fail-on-invoke this)))
-     :cljs (-invoke [this x] (if (fn? spec) (spec x) (fail-on-invoke this)))))
+  #?(:clj  (invoke [this x] (if (ifn? spec) (spec x) (fail-on-invoke this)))
+     :cljs (-invoke [this x] (if (ifn? spec) (spec x) (fail-on-invoke this)))))
 
 #?(:clj
    (defmethod print-method Spec
