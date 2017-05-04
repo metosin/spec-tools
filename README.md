@@ -458,8 +458,8 @@ Generating JSON Schemas from arbitrary specs (and Spec Records).
 
 (jsc/transform person-spec)
 ; {:type "object"
-;  :properties {"id" {:type "integer"}
-;               "age" {:type "integer", :format "int64", :minimum 1}
+;  :properties {"user/id" {:type "integer"}
+;               "user/age" {:type "integer", :format "int64", :minimum 1}
 ;               "boss" {:type "boolean"}
 ;               "name" {:type "string"}
 ;               "languages" {:type "array", :items {:type "string"}, :uniqueItems true}
@@ -474,7 +474,7 @@ Generating JSON Schemas from arbitrary specs (and Spec Records).
 ;                                   :required ["street" "zip"]}
 ;                                  {:type "null"}]}
 ;               "description" {:type "string"}}
-;  :required ["id" "age" "boss" "name" "languages" "orders" "address"]}
+;  :required ["user/id" "user/age" "boss" "name" "languages" "orders" "address"]}
 ```
 
 Extra data from Spec records is used to populate the data:
