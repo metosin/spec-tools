@@ -205,7 +205,7 @@
 (defmethod accept-spec 'clojure.spec/merge [dispatch spec children]
   {:type "object"
    :properties (apply merge (map :properties children))
-   :required (apply concat (map :required children))})
+   :required (into [] (reduce into #{} (map :required children)))})
 
 (defmethod accept-spec 'clojure.spec/every [dispatch spec children]
   (let [form (visitor/extract-form spec)
