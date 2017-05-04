@@ -45,7 +45,7 @@
            {:type "object"
             :properties {"spec-tools.json-schema-test/integer" {:type "integer"}
                          "spec-tools.json-schema-test/string" {:type "string"}}
-            :required ["spec-tools.json-schema-test/string" "spec-tools.json-schema-test/integer"]}))
+            :required ["spec-tools.json-schema-test/integer" "spec-tools.json-schema-test/string"]}))
     (is (= (jsc/transform (s/every integer?)) {:type "array" :items {:type "integer"}}))
     (is (= (jsc/transform (s/every-kv string? integer?))
            {:type "object" :additionalProperties {:type "integer"}}))
