@@ -40,7 +40,11 @@
            {:anyOf [{:type "integer"} {:type "string"}]}))
     (is (= (jsc/transform (s/and integer? pos?))
            {:allOf [{:type "integer"} {:minimum 0 :exclusiveMinimum true}]}))
-    ;; merge
+    (is (= (jsc/transform (s/merge (s/keys :req [::integer])
+                                   (s/keys :req [::string])))
+           {:type "object"
+            :properties {"integer" {:type "integer"} "string" {:type "string"}}
+            :required ["integer" "string"]}))
     (is (= (jsc/transform (s/every integer?)) {:type "array" :items {:type "integer"}}))
     (is (= (jsc/transform (s/every-kv string? integer?))
            {:type "object" :additionalProperties {:type "integer"}}))
