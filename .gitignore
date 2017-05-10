@@ -8,4 +8,5 @@ pom.xml.asc
 /.lein-*
 /.nrepl-port
 /.nrepl-history
-doc
+/doc
+/gh-pages

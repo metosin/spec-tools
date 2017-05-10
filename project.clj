@@ -6,16 +6,16 @@
             :distribution :repo
             :comments "same as Clojure"}
   :test-paths ["test/clj" "test/cljc"]
-  :codeina {:target "doc"
-            :src-uri "http://github.com/metosin/spec-tools/blob/master/"
-            :src-uri-prefix "#L"}
   :deploy-repositories [["releases" :clojars]]
+  :codox {:output-path "doc"
+          :source-uri "https://github.com/metosin/spec-tools{version}/{filepath}#L{line}"
+          :metadata {:doc/format :markdown}}
   :profiles {:dev {:plugins [[jonase/eastwood "0.2.3"]
                              [lein-tach "0.3.0"]
-                             [funcool/codeina "0.5.0"]
                              [lein-doo "0.1.7"]
                              [lein-cljsbuild "1.1.6"]
-                             [lein-cloverage "1.0.9"]]
+                             [lein-cloverage "1.0.9"]
+                             [lein-codox "0.10.3"]]
                    :jvm-opts ^:replace ["-server"]
                    ;:global-vars {*warn-on-reflection* true}
                    :dependencies [[org.clojure/clojure "1.9.0-alpha15"]
