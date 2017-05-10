@@ -2,7 +2,7 @@
 set -e
 case $1 in
     cljs)
-        lein "do" test-phantom once, test-node once
+        lein "do" test-phantom once, test-node once, test-advanced once
         ;;
     clj)
         lein test-clj

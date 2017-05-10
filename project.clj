@@ -31,6 +31,7 @@
             "perf" ["with-profile" "default,dev,perf"]
             "test-clj" ["all" "do" ["test"] ["check"]]
             "test-phantom" ["doo" "phantom" "test"]
+            "test-advanced" ["doo" "phantom" "advanced-test"]
             "test-node" ["doo" "node" "node-test"]}
   :cljsbuild {:builds [{:id "test"
                         :source-paths ["src" "test/cljc" "test/cljs"]
@@ -38,6 +39,12 @@
                                    :output-dir "target/out"
                                    :main spec-tools.doo-runner
                                    :optimizations :none}}
+                       {:id "advanced-test"
+                        :source-paths ["src" "test/cljc" "test/cljs"]
+                        :compiler {:output-to "target/advanced_out/test.js"
+                                   :output-dir "target/advanced_out"
+                                   :main spec-tools.doo-runner
+                                   :optimizations :advanced}}
                        ;; Node.js requires :target :nodejs, hence the separate
                        ;; build configuration.
                        {:id "node-test"
