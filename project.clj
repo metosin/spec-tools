@@ -8,7 +8,7 @@
   :test-paths ["test/clj" "test/cljc"]
   :deploy-repositories [["releases" :clojars]]
   :codox {:output-path "doc"
-          :source-uri "https://github.com/metosin/spec-tools{version}/{filepath}#L{line}"
+          :source-uri "https://github.com/metosin/spec-tools/{version}/{filepath}#L{line}"
           :metadata {:doc/format :markdown}}
   :profiles {:dev {:plugins [[jonase/eastwood "0.2.3"]
                              [lein-tach "0.3.0"]
