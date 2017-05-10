@@ -1,15 +1,23 @@
 (ns spec-tools.impl
   (:refer-clojure :exclude [resolve])
-  (:require [cljs.analyzer.api :refer [resolve]]
-            [spec-tools.form :as form]
-            [clojure.spec :as s]
-            [clojure.walk :as walk])
+  #?(:cljs (:require-macros [spec-tools.impl :refer [resolve]]))
+  (:require
+    #?(:cljs [cljs.analyzer.api])
+    [spec-tools.form :as form]
+    [clojure.spec :as s]
+    [clojure.walk :as walk])
   (:import
     #?@(:clj
         [(clojure.lang Var)])))
 
 (defn in-cljs? [env]
   (:ns env))
+
+(defmacro resolve
+  [env sym]
+  `(if (in-cljs? ~env)
+     ((clojure.core/resolve 'cljs.analyzer.api/resolve) ~env ~sym)
+     (clojure.core/resolve ~env ~sym)))
 
 (defn- cljs-sym [x]
   (if (map? x)
