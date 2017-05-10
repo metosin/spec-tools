@@ -1,9 +1,9 @@
 (ns spec-tools.impl
   (:refer-clojure :exclude [resolve])
-  (:require [cljs.analyzer.api :refer [resolve]]
-            [spec-tools.form :as form]
-            [clojure.spec :as s]
-            [clojure.walk :as walk])
+  (:require #?(:cljs [cljs.analyzer.api :refer [resolve]])
+    [spec-tools.form :as form]
+    [clojure.spec :as s]
+    [clojure.walk :as walk])
   (:import
     #?@(:clj
         [(clojure.lang Var)])))
@@ -43,8 +43,10 @@
       (conj (walk/postwalk-replace {s '%} form) '[%] (if cljs? 'cljs.core/fn 'clojure.core/fn)))
     expr))
 
-(defn cljs-resolve [env symbol]
-  (clojure.core/or (->> symbol (resolve env) cljs-sym) symbol))
+#?(:cljs
+   (defn cljs-resolve [env symbol]
+     (clojure.core/or (->> symbol (resolve env) cljs-sym) symbol))
+   :clj (declare cljs-resolve))
 
 (defn polish [x]
   (cond
