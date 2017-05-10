@@ -1,6 +1,8 @@
 (ns spec-tools.impl
   (:refer-clojure :exclude [resolve])
-  (:require #?(:cljs [cljs.analyzer.api :refer [resolve]])
+  #?(:cljs (:require-macros [spec-tools.impl :refer [resolve]]))
+  (:require
+    #?(:cljs [cljs.analyzer.api])
     [spec-tools.form :as form]
     [clojure.spec :as s]
     [clojure.walk :as walk])
@@ -10,6 +12,12 @@
 
 (defn in-cljs? [env]
   (:ns env))
+
+(defmacro resolve
+  [env sym]
+  `(if (in-cljs? ~env)
+     ((clojure.core/resolve 'cljs.analyzer.api/resolve) ~env ~sym)
+     (clojure.core/resolve ~env ~sym)))
 
 (defn- cljs-sym [x]
   (if (map? x)
@@ -43,10 +51,8 @@
       (conj (walk/postwalk-replace {s '%} form) '[%] (if cljs? 'cljs.core/fn 'clojure.core/fn)))
     expr))
 
-#?(:cljs
-   (defn cljs-resolve [env symbol]
-     (clojure.core/or (->> symbol (resolve env) cljs-sym) symbol))
-   :clj (declare cljs-resolve))
+(defn cljs-resolve [env symbol]
+  (clojure.core/or (->> symbol (resolve env) cljs-sym) symbol))
 
 (defn polish [x]
   (cond
