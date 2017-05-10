@@ -9,7 +9,7 @@
   :codeina {:target "doc"
             :src-uri "http://github.com/metosin/spec-tools/blob/master/"
             :src-uri-prefix "#L"}
-
+  :deploy-repositories [["releases" :clojars]]
   :profiles {:dev {:plugins [[jonase/eastwood "0.2.3"]
                              [lein-tach "0.3.0"]
                              [funcool/codeina "0.5.0"]
