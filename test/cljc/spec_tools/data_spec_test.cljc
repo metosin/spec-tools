@@ -1,6 +1,6 @@
 (ns spec-tools.data-spec-test
   (:require [clojure.test :refer [deftest testing is]]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
             [spec-tools.data-spec :as ds]
             [spec-tools.core :as st]
             [spec-tools.spec :as spec]))

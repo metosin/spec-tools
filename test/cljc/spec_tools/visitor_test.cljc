@@ -1,6 +1,6 @@
 (ns spec-tools.visitor-test
   (:require [clojure.test :refer [deftest testing is]]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
             [spec-tools.core :as st]
             [spec-tools.data-spec :as ds]
             [spec-tools.visitor :as visitor]))
@@ -14,7 +14,7 @@
 (deftest test-visit
   (is (= (visitor/visit #{1 2 3} collect) [:spec-tools.visitor/set 1 3 2]))
   (is (= (visitor/visit ::map collect)
-         '[clojure.spec/keys [clojure.core/string?] [clojure.core/integer?]])))
+         '[clojure.spec.alpha/keys [clojure.core/string?] [clojure.core/integer?]])))
 
 (s/def ::age number?)
 (s/def ::first-name string?)

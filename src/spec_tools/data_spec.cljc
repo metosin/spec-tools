@@ -3,7 +3,7 @@
   (:require [spec-tools.impl :as impl]
             [spec-tools.core :as st]
             [spec-tools.form :as form]
-            [clojure.spec :as s]))
+            [clojure.spec.alpha :as s]))
 
 ;;
 ;; functional clojure.spec
@@ -11,7 +11,7 @@
 
 (defn- coll-of-spec [pred type]
   (let [form (form/resolve-form pred)]
-    (clojure.spec/every-impl
+    (clojure.spec.alpha/every-impl
       form
       pred
       {:into type
@@ -24,7 +24,7 @@
 (defn- map-of-spec [kpred vpred]
   (let [forms (map form/resolve-form [kpred vpred])
         tuple (s/tuple-impl forms [kpred vpred])]
-    (clojure.spec/every-impl
+    (clojure.spec.alpha/every-impl
       `(s/tuple ~@forms)
       tuple
       {:into {}

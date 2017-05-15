@@ -1,6 +1,6 @@
 (ns spec-tools.core-test
   (:require [clojure.test :refer [deftest testing is are]]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
             [clojure.string :as str]
             [spec-tools.core :as st]
             [spec-tools.spec :as spec]
@@ -179,12 +179,12 @@
 (deftest reason-test
   (let [expected-problem {:path [] :pred 'pos-int?, :val -1, :via [], :in []}]
     (testing "explain-data"
-      (is (= #?(:clj  #:clojure.spec{:problems [expected-problem]}
+      (is (= #?(:clj  #:clojure.spec.alpha{:problems [expected-problem]}
                 :cljs #:cljs.spec{:problems [expected-problem]})
              (st/explain-data (st/spec pos-int?) -1)
              (s/explain-data (st/spec pos-int?) -1))))
     (testing "explain-data with reason"
-      (is (= #?(:clj  #:clojure.spec{:problems [(assoc expected-problem :reason "positive")]}
+      (is (= #?(:clj  #:clojure.spec.alpha{:problems [(assoc expected-problem :reason "positive")]}
                 :cljs #:cljs.spec{:problems [(assoc expected-problem :reason "positive")]})
              (st/explain-data (st/spec pos-int? {:reason "positive"}) -1)
              (s/explain-data (st/spec pos-int? {:reason "positive"}) -1))))))
@@ -377,7 +377,7 @@
     (is (contains? (type/types) :boolean)))
   (testing "available type-symbols"
     (is (not (empty? (type/type-symbols))))
-    (is (contains? (type/type-symbols) 'clojure.spec/keys))
+    (is (contains? (type/type-symbols) 'clojure.spec.alpha/keys))
     (is (contains? (type/type-symbols) 'clojure.core/integer?))))
 
 (deftest form-inference-test
