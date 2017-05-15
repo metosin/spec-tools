@@ -8,7 +8,9 @@ Clojure(Script) tools for [clojure.spec](http://clojure.org/about/spec). Like [S
 * [Spec Visitors](#spec-visitors)
 * [Generating JSON Schemas](#generating-json-schemas)
 
-Blogged: http://www.metosin.fi/blog/clojure-spec-as-a-runtime-transformation-engine/
+Blogs:
+* [Schema & Clojure Spec for the Web Developer](http://www.metosin.fi/blog/schema-spec-web-devs/)
+* [http://www.metosin.fi/blog/schema-spec-web-devs/](http://www.metosin.fi/blog/clojure-spec-as-a-runtime-transformation-engine/)
 
 Status: **Alpha** (as spec is still alpha too).
 
