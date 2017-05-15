@@ -180,12 +180,12 @@
   (let [expected-problem {:path [] :pred 'pos-int?, :val -1, :via [], :in []}]
     (testing "explain-data"
       (is (= #?(:clj  #:clojure.spec.alpha{:problems [expected-problem]}
-                :cljs #:cljs.spec{:problems [expected-problem]})
+                :cljs #:cljs.spec.alpha{:problems [expected-problem]})
              (st/explain-data (st/spec pos-int?) -1)
              (s/explain-data (st/spec pos-int?) -1))))
     (testing "explain-data with reason"
       (is (= #?(:clj  #:clojure.spec.alpha{:problems [(assoc expected-problem :reason "positive")]}
-                :cljs #:cljs.spec{:problems [(assoc expected-problem :reason "positive")]})
+                :cljs #:cljs.spec.alpha{:problems [(assoc expected-problem :reason "positive")]})
              (st/explain-data (st/spec pos-int? {:reason "positive"}) -1)
              (s/explain-data (st/spec pos-int? {:reason "positive"}) -1))))))
 

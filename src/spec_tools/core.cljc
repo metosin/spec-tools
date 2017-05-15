@@ -11,7 +11,7 @@
         :cljs [[goog.date.UtcDateTime]
                [cljs.reader]
                [clojure.test.check.generators]
-               [cljs.spec.impl.gen :as gen]]))
+               [cljs.spec.gen.alpha :as gen]]))
   (:import
     #?@(:clj
         [(clojure.lang AFn IFn Var)
@@ -65,7 +65,7 @@
      :cljs (cljs.reader/read-string s)))
 
 (def +invalid+ '::s/invalid)
-(def +problems+ #?(:clj :clojure.spec.alpha/problems, :cljs :cljs.spec/problems))
+(def +problems+ #?(:clj :clojure.spec.alpha/problems, :cljs :cljs.spec.alpha/problems))
 
 ;;
 ;; Dynamic conforming

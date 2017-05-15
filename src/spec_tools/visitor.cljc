@@ -16,7 +16,7 @@
 (defn- normalize-symbol [kw]
   (case (and (symbol? kw) (namespace kw))
     "cljs.core" (symbol "clojure.core" (name kw))
-    "cljs.spec" (symbol "clojure.spec.alpha" (name kw))
+    "cljs.spec.alpha" (symbol "clojure.spec.alpha" (name kw))
     kw))
 
 (defn extract-spec [spec]
@@ -46,7 +46,7 @@
 (defn- ++expand-symbol-cljs-spec-bug++ [x]
   (if (seq? x)
     (let [[k & rest] x]
-      (cons k (if (= k 'cljs.spec/tuple)
+      (cons k (if (= k 'cljs.spec.alpha/tuple)
                 (map expand-spec-ns rest)
                 rest)))
     (expand-spec-ns x)))
@@ -63,7 +63,7 @@
   * if the spec is a function call: a fully qualified symbol for the function
     with the following exceptions:
     - cljs.core symbols are converted to clojure.core symbols
-    - cljs.spec symbols are converted to clojure.spec symbols
+    - cljs.spec.alpha symbols are converted to clojure.spec symbols
   * if the spec is a set: :spec-tools.visitor/set
   * otherwise: the spec itself"
   spec-dispatch :default ::default)

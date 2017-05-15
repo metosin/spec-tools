@@ -27,7 +27,7 @@
   (or
     (if (symbol? x)
       (if-let [ns (get {"cljs.core" "clojure.core"
-                        "cljs.spec" "clojure.spec.alpha"} (namespace x))]
+                        "cljs.spec.alpha" "clojure.spec.alpha"} (namespace x))]
         (symbol ns (name x))))
     x))
 

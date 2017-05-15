@@ -188,7 +188,7 @@
         pred (when (seq? inner-spec) (first inner-spec))]
     ;; (s/map-of key-spec value-spec) expands to
     ;; (s/every (s/tuple key-spec value-spec) :into {} ...)
-    (and (= pred #?(:clj 'clojure.spec.alpha/tuple :cljs 'cljs.spec/tuple)) (= (get kwargs :into)) {})))
+    (and (= pred #?(:clj 'clojure.spec.alpha/tuple :cljs 'cljs.spec.alpha/tuple)) (= (get kwargs :into)) {})))
 
 (defmethod accept-spec 'clojure.spec.alpha/keys [dispatch spec children]
   (let [[_ & {:keys [req req-un opt opt-un]}] (visitor/extract-form spec)
