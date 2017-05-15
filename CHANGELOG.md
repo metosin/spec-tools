@@ -1,4 +1,4 @@
-## Unreleased
+## 0.2.0-SNAPSHOT
 
 * **BREAKING**: update spec to `alpha16`:
   * `clojure.spec` => `clojure.spec.alpha`, `cljs.spec` => `cljs.spec.alpha` etc.
