@@ -1,3 +1,5 @@
+**[compare](https://github.com/metosin/spec-tools/compare/0.2.0...master)**
+
 ## 0.2.0 (16.5.2017)
 
 * **BREAKING**: update spec to `alpha16`:
