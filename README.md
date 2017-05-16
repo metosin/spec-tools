@@ -18,7 +18,7 @@ Blogs:
 
 [![Clojars Project](http://clojars.org/metosin/spec-tools/latest-version.svg)](http://clojars.org/metosin/spec-tools)
 
-No dependencies, but requires Java 1.8, Clojure `1.9.0-alpha15` and ClojureScript `1.9.518`.
+Requires Java 1.8 & Clojure `1.9.0-alpha16` or ClojureScript `1.9.542`.
 
 ### Spec Records
 
@@ -73,7 +73,7 @@ The following are all equivalent:
 #### Example usage
 
 ```clj
-(require '[clojure.spec :as s])
+(require '[clojure.spec.alpha :as s])
 
 (def my-integer? (st/spec integer?))
 
@@ -134,7 +134,7 @@ Can be added to a Spec via the key `:reason`
 ; val: -1 fails predicate: pos-int?,  positive
 
 (s/explain-data (st/spec pos-int? {:reason "positive"}) -1)
-; #:clojure.spec{:problems [{:path [], :pred pos-int?, :val -1, :via [], :in [], :reason "positive"}]}
+; #:clojure.spec.alpha{:problems [{:path [], :pred pos-int?, :val -1, :via [], :in [], :reason "positive"}]}
 ```
 
 ## Dynamic conforming
@@ -143,7 +143,7 @@ Spec-tools loans from the awesome [Schema](https://github.com/plumatic/schema) b
 
 Spec Record conform is by default a no-op. Binding a dynamic var `spec-tools.core/*conforming*` with a function of `spec => spec-conformer` will cause the Spec to be conformed with the selected spec-conformer. `spec-tools.core` has helper functions for setting the binding: `explain`, `explain-data`, `conform` and `conform!`.
 
-Spec-conformers are arity2 functions taking the Spec Records and the value and should return either conformed value of `:clojure.spec/invalid`.
+Spec-conformers are arity2 functions taking the Spec Records and the value and should return either conformed value of `:clojure.spec.alpha/invalid`.
 
 ### Type based conforming
 
@@ -307,7 +307,7 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
     * can be functions, specs, qualified spec names or nested collections.
     * wrapping value into `ds/maybe` makes it `s/nillable`
 
-**NOTE**: to avoid macros, current implementation uses the don-documented functional core of `clojure.spec`: `every-impl`, `tuple-impl`, `map-spec-impl` & `nilable-impl`.
+**NOTE**: to avoid macros, current implementation uses the don-documented functional core of `clojure.spec.alpha`: `every-impl`, `tuple-impl`, `map-spec-impl` & `nilable-impl`.
 
 ```clj
 (s/def ::age spec/pos-int?)
@@ -427,7 +427,7 @@ A tool to walk over and transform specs using the [Visitor-pattern](https://en.w
 ;  => (spec-tools.core/spec clojure.core/string? {:type :string})
 ;
 ; :user$person/languages
-;  => (spec-tools.core/spec (clojure.spec/coll-of (spec-tools.core/spec clojure.core/keyword? {:type :keyword}) :into #{}) {:type :set})
+;  => (spec-tools.core/spec (clojure.spec.alpha/coll-of (spec-tools.core/spec clojure.core/keyword? {:type :keyword}) :into #{}) {:type :set})
 ;
 ; :user$person$orders/id
 ;  => (spec-tools.core/spec clojure.core/int? {:type :long})
@@ -436,7 +436,7 @@ A tool to walk over and transform specs using the [Visitor-pattern](https://en.w
 ;  => (spec-tools.core/spec clojure.core/string? {:type :string})
 ;
 ; :user$person/orders
-;  => (spec-tools.core/spec (clojure.spec/coll-of (spec-tools.core/spec (clojure.spec/keys :req-un [:user$person$orders/id :user$person$orders/description]) {:type :map, :keys #{:description :id}}) :into []) {:type :vector})
+;  => (spec-tools.core/spec (clojure.spec.alpha/coll-of (spec-tools.core/spec (clojure.spec.alpha/keys :req-un [:user$person$orders/id :user$person$orders/description]) {:type :map, :keys #{:description :id}}) :into []) {:type :vector})
 ;
 ; :user$person$address/street
 ;  => (spec-tools.core/spec clojure.core/string? {:type :string})
@@ -445,7 +445,7 @@ A tool to walk over and transform specs using the [Visitor-pattern](https://en.w
 ;  => (spec-tools.core/spec clojure.core/string? {:type :string})
 ;
 ; :user$person/address
-;  => (spec-tools.core/spec (clojure.spec/nilable (spec-tools.core/spec (clojure.spec/keys :req-un [:user$person$address/street :user$person$address/zip]) {:type :map, :keys #{:street :zip}})) {:type nil})
+;  => (spec-tools.core/spec (clojure.spec.alpha/nilable (spec-tools.core/spec (clojure.spec.alpha/keys :req-un [:user$person$address/street :user$person$address/zip]) {:type :map, :keys #{:street :zip}})) {:type nil})
 ;
 ; :user$person/description
 ;  => (spec-tools.core/spec clojure.core/string? {:type :string})

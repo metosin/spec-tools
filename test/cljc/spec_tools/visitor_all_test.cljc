@@ -1,6 +1,6 @@
 (ns spec-tools.visitor-all-test
   (:require [clojure.test :refer [deftest testing is]]
-            [clojure.spec :as s]
+            [clojure.spec.alpha :as s]
             [spec-tools.visitor :as visitor]))
 
 ;;

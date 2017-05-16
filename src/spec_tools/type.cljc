@@ -87,17 +87,17 @@
 #?(:clj (defmethod resolve-type 'clojure.core/ratio? [_] :ratio))
 #?(:clj (defmethod resolve-type 'clojure.core/bytes? [_] nil))
 
-(defmethod resolve-type :clojure.spec/unknown [_] nil)
+(defmethod resolve-type :clojure.spec.alpha/unknown [_] nil)
 
-(defmethod resolve-type 'clojure.spec/keys [_] :map)
+(defmethod resolve-type 'clojure.spec.alpha/keys [_] :map)
 
-(defmethod resolve-type 'clojure.spec/or [x] nil)
+(defmethod resolve-type 'clojure.spec.alpha/or [x] nil)
 
-(defmethod resolve-type 'clojure.spec/and [x] nil)
+(defmethod resolve-type 'clojure.spec.alpha/and [x] nil)
 
 ; merge
 
-(defmethod resolve-type 'clojure.spec/every [x]
+(defmethod resolve-type 'clojure.spec.alpha/every [x]
   (let [{:keys [into]} (apply hash-map (drop 2 x))]
     (cond
       (map? into) :map
@@ -106,14 +106,14 @@
 
 ; every-ks
 
-(defmethod resolve-type 'clojure.spec/coll-of [x]
+(defmethod resolve-type 'clojure.spec.alpha/coll-of [x]
   (let [{:keys [into]} (apply hash-map (drop 2 x))]
     (cond
       (map? into) :map
       (set? into) :set
       :else :vector)))
 
-(defmethod resolve-type 'clojure.spec/map-of [_] :map)
+(defmethod resolve-type 'clojure.spec.alpha/map-of [_] :map)
 
 ; *
 ; +
