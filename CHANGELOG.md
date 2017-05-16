@@ -1,4 +1,4 @@
-## 0.2.0-SNAPSHOT
+## 0.2.0 (16.5.2017)
 
 * **BREAKING**: update spec to `alpha16`:
   * `clojure.spec` => `clojure.spec.alpha`, `cljs.spec` => `cljs.spec.alpha` etc.
@@ -7,7 +7,7 @@
 
 ```clj
 [org.clojure/spec.alpha "0.1.108"]
-[org.clojure/clojure "1.9.0-alpha16"] is available but we use "1.9.0-alpha16"
+[org.clojure/clojure "1.9.0-alpha16"] is available but we use "1.9.0-alpha15"
 [org.clojure/clojurescript "1.9.542"] is available but we use "1.9.518"
 ```
 
