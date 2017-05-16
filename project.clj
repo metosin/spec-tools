@@ -11,7 +11,7 @@
           :source-uri "https://github.com/metosin/spec-tools/{version}/{filepath}#L{line}"
           :metadata {:doc/format :markdown}}
 
-  :dependencies [[org.clojure/spec.alpha "0.1.94"]]
+  :dependencies [[org.clojure/spec.alpha "0.1.108"]]
 
   :profiles {:dev {:plugins [[jonase/eastwood "0.2.3"]
                              [lein-tach "0.3.0"]
@@ -24,7 +24,7 @@
                    :dependencies [[org.clojure/clojure "1.9.0-alpha16"]
                                   [org.clojure/clojurescript "1.9.542"]
                                   [criterium "0.4.4"]
-                                  [prismatic/schema "1.1.5"]
+                                  [prismatic/schema "1.1.6"]
                                   [org.clojure/test.check "0.9.0"]
                                   [org.clojure/tools.namespace "0.2.11"]
                                   [com.gfredericks/test.chuck "0.2.7"]

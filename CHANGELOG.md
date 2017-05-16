@@ -6,7 +6,7 @@
 * updated deps:
 
 ```clj
-[org.clojure/spec.alpha "0.1.94"]
+[org.clojure/spec.alpha "0.1.108"]
 [org.clojure/clojure "1.9.0-alpha16"] is available but we use "1.9.0-alpha16"
 [org.clojure/clojurescript "1.9.542"] is available but we use "1.9.518"
 ```
