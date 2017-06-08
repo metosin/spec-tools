@@ -177,7 +177,7 @@
              (s/form spec))))))
 
 (deftest reason-test
-  (let [expected-problem {:path [] :pred 'pos-int?, :val -1, :via [], :in []}]
+  (let [expected-problem {:path [] :pred `pos-int?, :val -1, :via [], :in []}]
     (testing "explain-data"
       (is (= #?(:clj  #:clojure.spec.alpha{:problems [expected-problem]}
                 :cljs #:cljs.spec.alpha{:problems [expected-problem]})
@@ -242,7 +242,7 @@
       (catch #?(:clj Exception, :cljs js/Error) e
         (let [data (ex-data e)]
           (is (= {:type ::st/conform
-                  :problems [{:path [], :pred 'integer?, :val "12", :via [::age], :in []}]
+                  :problems [{:path [], :pred `integer?, :val "12", :via [::age], :in []}]
                   :spec :spec-tools.core-test/age
                   :value "12"}
                  data)))))))
@@ -250,7 +250,7 @@
 (deftest explain-tests
   (testing "without conforming"
     (is (= st/+invalid+ (st/conform spec/int? "12")))
-    (is (= {::s/problems [{:path [], :pred 'int?, :val "12", :via [], :in []}]}
+    (is (= {::s/problems [{:path [], :pred `int?, :val "12", :via [], :in []}]}
            (st/explain-data spec/int? "12")))
     (is (= "val: \"12\" fails predicate: int?\n"
            (with-out-str (st/explain spec/int? "12")))))

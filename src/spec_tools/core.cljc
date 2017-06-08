@@ -172,9 +172,7 @@
                      ;; https://dev.clojure.org/jira/browse/CLJ-2115 would help
                      (let [conformed (s/conform* this x)
                            [explain? val] (if (= conformed +invalid+)
-                                            (if (= (conform this x) +invalid+)
-                                              [true x]
-                                              [false (s/unform spec conformed)])
+                                            [(= (conform this x) +invalid+) x]
                                             [true (s/unform spec conformed)])]
                        (if explain?
                          (s/explain* (s/specize* spec) path via in val)
