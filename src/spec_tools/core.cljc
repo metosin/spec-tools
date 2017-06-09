@@ -171,19 +171,19 @@
                      ;; conform would succeed - we'll short-circuit it here.
                      ;; https://dev.clojure.org/jira/browse/CLJ-2115 would help
                      (let [conformed (s/conform* this x)
-                           [valid? val] (if (and (= conformed +invalid+)
-                                                 (not= (conform this x) +invalid+))
-                                          [false x] [true (s/unform spec conformed)])]
-                       (if valid?
+                           [explain? val] (if (= conformed +invalid+)
+                                            [(= (conform this x) +invalid+) x]
+                                            [true (s/unform spec conformed)])]
+                       (if explain?
                          (s/explain* (s/specize* spec) path via in val)
                          [{:path path
-                           :pred (s/abbrev form)
-                           :val x
+                           :pred form
+                           :val val
                            :via via
                            :in in}]))
-                     (when (= +invalid+ (if (and (ifn? spec) (spec (s/conform* this x))) x +invalid+))
+                     (if (= +invalid+ (s/conform* this x))
                        [{:path path
-                         :pred (s/abbrev form)
+                         :pred form
                          :val x
                          :via via
                          :in in}]))

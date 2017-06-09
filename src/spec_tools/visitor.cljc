@@ -43,14 +43,6 @@
 (defn- expand-spec-ns [x]
   (if-not (namespace x) (symbol "clojure.core" (name x)) x))
 
-(defn- ++expand-symbol-cljs-spec-bug++ [x]
-  (if (seq? x)
-    (let [[k & rest] x]
-      (cons k (if (= k 'cljs.spec.alpha/tuple)
-                (map expand-spec-ns rest)
-                rest)))
-    (expand-spec-ns x)))
-
 (defmulti visit
   "Walk a spec definition. Takes two arguments, the spec and the accept
   function, and returns the result of calling the accept function.
@@ -89,12 +81,12 @@
 
 (defmethod visit 'clojure.spec.alpha/every [spec accept]
   (let [[_ inner-spec] (extract-form spec)]
-    (accept 'clojure.spec.alpha/every spec [(visit (++expand-symbol-cljs-spec-bug++ inner-spec) accept)])))
+    (accept 'clojure.spec.alpha/every spec [(visit inner-spec accept)])))
 
 (defmethod visit 'clojure.spec.alpha/every-kv [spec accept]
   (let [[_ inner-spec1 inner-spec2] (extract-form spec)]
     (accept 'clojure.spec.alpha/every-kv spec (mapv
-                                          #(visit (++expand-symbol-cljs-spec-bug++ %) accept)
+                                          #(visit % accept)
                                           [inner-spec1 inner-spec2]))))
 
 (defmethod visit 'clojure.spec.alpha/coll-of [spec accept]
@@ -121,7 +113,7 @@
 
 (defmethod visit 'clojure.spec.alpha/? [spec accept]
   (let [[_ inner-spec] (extract-form spec)]
-    (accept 'clojure.spec.alpha/? spec [(visit (++expand-symbol-cljs-spec-bug++ inner-spec) accept)])))
+    (accept 'clojure.spec.alpha/? spec [(visit inner-spec accept)])))
 
 (defmethod visit 'clojure.spec.alpha/alt [spec accept]
   (let [[_ & {:as inner-spec-map}] (extract-form spec)]

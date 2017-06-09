@@ -177,17 +177,27 @@
              (s/form spec))))))
 
 (deftest reason-test
-  (let [expected-problem {:path [] :pred 'pos-int?, :val -1, :via [], :in []}]
+  (let [expected-problem {:path [] :pred `pos-int?, :val -1, :via [], :in []}]
     (testing "explain-data"
-      (is (= #?(:clj  #:clojure.spec.alpha{:problems [expected-problem]}
-                :cljs #:cljs.spec.alpha{:problems [expected-problem]})
-             (st/explain-data (st/spec pos-int?) -1)
-             (s/explain-data (st/spec pos-int?) -1))))
+      (let [spec (st/spec pos-int?)]
+        (is (= #?(:clj  #:clojure.spec.alpha{:problems [expected-problem]
+                                             :spec spec
+                                             :value -1}
+                  :cljs #:cljs.spec.alpha{:problems [expected-problem]
+                                          :spec spec
+                                          :value -1})
+               (st/explain-data spec -1)
+               (s/explain-data spec -1)))))
     (testing "explain-data with reason"
-      (is (= #?(:clj  #:clojure.spec.alpha{:problems [(assoc expected-problem :reason "positive")]}
-                :cljs #:cljs.spec.alpha{:problems [(assoc expected-problem :reason "positive")]})
-             (st/explain-data (st/spec pos-int? {:reason "positive"}) -1)
-             (s/explain-data (st/spec pos-int? {:reason "positive"}) -1))))))
+      (let [spec (st/spec pos-int? {:reason "positive"})]
+        (is (= #?(:clj  #:clojure.spec.alpha{:problems [(assoc expected-problem :reason "positive")]
+                                             :spec spec
+                                             :value -1}
+                  :cljs #:cljs.spec.alpha{:problems [(assoc expected-problem :reason "positive")]
+                                          :spec spec
+                                          :value -1})
+               (st/explain-data spec -1)
+               (s/explain-data spec -1)))))))
 
 (deftest spec-tools-conform-test
   (testing "in default mode"
@@ -242,18 +252,24 @@
       (catch #?(:clj Exception, :cljs js/Error) e
         (let [data (ex-data e)]
           (is (= {:type ::st/conform
-                  :problems [{:path [], :pred 'integer?, :val "12", :via [::age], :in []}]
+                  :problems [{:path [], :pred `integer?, :val "12", :via [::age], :in []}]
                   :spec :spec-tools.core-test/age
                   :value "12"}
                  data)))))))
 
 (deftest explain-tests
   (testing "without conforming"
-    (is (= st/+invalid+ (st/conform spec/int? "12")))
-    (is (= {::s/problems [{:path [], :pred 'int?, :val "12", :via [], :in []}]}
-           (st/explain-data spec/int? "12")))
-    (is (= "val: \"12\" fails predicate: int?\n"
-           (with-out-str (st/explain spec/int? "12")))))
+    (let [expected-problem {:path [], :pred `int?, :val "12", :via [], :in []}]
+      (is (= st/+invalid+ (st/conform spec/int? "12")))
+      (is (= #?(:clj  #:clojure.spec.alpha{:problems [expected-problem]
+                                           :spec spec/int?
+                                           :value "12"}
+                :cljs #:cljs.spec.alpha{:problems [expected-problem]
+                                        :spec spec/int?
+                                        :value "12"})
+             (st/explain-data spec/int? "12")))
+      (is (any? (with-out-str (st/explain spec/int? "12"))))
+      (is (any? (with-out-str (st/explain spec/int? "12" nil))))))
   (testing "with conforming"
     (is (= 12 (st/conform spec/int? "12" st/string-conforming)))
     (is (= nil (st/explain-data spec/int? "12" st/string-conforming)))

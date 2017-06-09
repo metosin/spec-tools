@@ -5,6 +5,8 @@
             [spec-tools.core :as st]
             [spec-tools.spec :as spec]))
 
+(def ignoring-spec #(dissoc % ::s/spec))
+
 (deftest coll-of-spec-tests
   (let [spec (s/coll-of string? :into [])
         impl (#'ds/coll-of-spec string? [])]
@@ -15,8 +17,9 @@
     (is (= nil
            (s/explain-data spec ["1"])
            (s/explain-data impl ["1"])))
-    (is (= (s/explain-data spec [1])
-           (s/explain-data impl [1])))
+    (comment "CLJ-CLJ-2168"
+             (is (= (ignoring-spec (s/explain-data spec [1]))
+                    (ignoring-spec (s/explain-data impl [1])))))
     (is (= ["1"]
            (s/conform spec ["1"])
            (s/conform impl ["1"])))))
@@ -59,8 +62,8 @@
     (is (= nil
            (s/explain-data spec {::int 1, :bool true})
            (s/explain-data impl {::int 1, :bool true})))
-    (is (= (s/explain-data spec {::int "1"})
-           (s/explain-data impl {::int "1"})))
+    (is (= (ignoring-spec (s/explain-data spec {::int "1"}))
+           (ignoring-spec (s/explain-data impl {::int "1"}))))
     (is (= {::int 1, :bool true, :kikka "kakka"}
            (s/conform spec {::int 1, :bool true, :kikka "kakka"})
            (s/conform impl {::int 1, :bool true, :kikka "kakka"})))))
@@ -77,8 +80,8 @@
            (s/explain-data spec nil)
            (s/explain-data impl "1")
            (s/explain-data impl nil)))
-    (is (= (s/explain-data spec [1])
-           (s/explain-data impl [1])))
+    (is (= (ignoring-spec (s/explain-data spec [1]))
+           (ignoring-spec (s/explain-data impl [1]))))
     (is (= "1"
            (s/conform spec "1")
            (s/conform impl "1")))))
@@ -219,3 +222,6 @@
              (ds/spec ::kikka {keyword? keyword?})
              {"thanks" "alex"}
              st/string-conforming)))))
+
+(deftest pithyless-test
+  (is (st/explain-data (ds/spec ::foo {:foo string?}) {:foo 42})))
