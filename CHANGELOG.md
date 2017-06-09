@@ -1,4 +1,4 @@
-## 0.2.1-SNAPSHOT
+## 0.2.1 (9.7.2917)
 
 * fixed `explain*` for Spec Records
 
