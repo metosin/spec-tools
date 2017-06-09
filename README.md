@@ -18,7 +18,7 @@ Blogs:
 
 [![Clojars Project](http://clojars.org/metosin/spec-tools/latest-version.svg)](http://clojars.org/metosin/spec-tools)
 
-Requires Java 1.8 & Clojure `1.9.0-alpha16` or ClojureScript `1.9.542`.
+Requires Java 1.8 & Clojure `1.9.0-alpha17` and/or ClojureScript `1.9.562`.
 
 ### Spec Records
 
