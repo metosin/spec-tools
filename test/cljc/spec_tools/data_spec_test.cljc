@@ -17,8 +17,7 @@
     (is (= nil
            (s/explain-data spec ["1"])
            (s/explain-data impl ["1"])))
-    (comment
-      "CLJ-"
+    (comment "CLJ-CLJ-2168"
       (is (= (ignoring-spec (s/explain-data spec [1]))
              (ignoring-spec (s/explain-data impl [1])))))
     (is (= ["1"]
