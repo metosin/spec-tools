@@ -1,3 +1,15 @@
+## 0.2.1-SNAPSHOT
+
+* fixed `explain*` for Spec Records
+
+* updated deps:
+
+```clj
+[org.clojure/clojure "0.1.123"] is available but we use "0.1.108"
+[org.clojure/clojure "1.9.0-alpha17"] is available but we use "1.9.0-alpha16"
+[org.clojure/clojurescript "1.9.562"] is available but we use "1.9.542"
+```
+
 **[compare](https://github.com/metosin/spec-tools/compare/0.2.0...master)**
 
 ## 0.2.0 (16.5.2017)
