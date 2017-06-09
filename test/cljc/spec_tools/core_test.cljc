@@ -268,9 +268,8 @@
                                         :spec spec/int?
                                         :value "12"})
              (st/explain-data spec/int? "12")))
-      #_(is (.startsWith
-            (with-out-str (st/explain spec/int? "12"))
-            "val: \"12\" fails predicate: int?\n"))))
+      (is (any? (with-out-str (st/explain spec/int? "12"))))
+      (is (any? (with-out-str (st/explain spec/int? "12" nil))))))
   (testing "with conforming"
     (is (= 12 (st/conform spec/int? "12" st/string-conforming)))
     (is (= nil (st/explain-data spec/int? "12" st/string-conforming)))
