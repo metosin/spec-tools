@@ -203,8 +203,8 @@
   (with-gen* [this gfn]
     (assoc this :gen gfn))
   (describe* [this]
-    (let [info (extra-spec-map this)]
-      `(spec-tools.core/spec ~form ~info)))
+    (let [data (merge {:spec form} (extra-spec-map this))]
+      `(spec-tools.core/spec ~data)))
   IFn
   #?(:clj  (invoke [this x] (if (ifn? spec) (spec x) (fail-on-invoke this)))
      :cljs (-invoke [this x] (if (ifn? spec) (spec x) (fail-on-invoke this)))))

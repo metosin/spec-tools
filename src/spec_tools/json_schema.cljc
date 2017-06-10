@@ -268,15 +268,15 @@
     {:minimum minimum :maximum maximum}))
 
 (defmethod accept-spec ::visitor/spec [dispatch spec children]
-  (let [spec (visitor/extract-spec spec)
+  (let [[_ data] (visitor/extract-form spec)
         json-schema-meta (reduce-kv
                            (fn [acc k v]
                              (if (= "json-schema" (namespace k))
                                (assoc acc (keyword (name k)) v)
                                acc))
                            {}
-                           (into {} spec))
-        extra-info (-> spec
+                           (into {} data))
+        extra-info (-> data
                        (select-keys [:name :description])
                        (set/rename-keys {:name :title}))]
     (merge (unwrap children) extra-info json-schema-meta)))
