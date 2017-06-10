@@ -1,6 +1,6 @@
-## UNRELEASED
+## 0.2.2-SNAPSHOT
 
-* Spec Record `describe*` uses the map syntax, e.g. `(st/spec clojure.core/string? {}` => `(st/spec {:spec clojure.core/string?}`
+* Spec Record `describe*` uses the map syntax, e.g. `(st/spec clojure.core/string? {}` => `(st/spec {:spec clojure.core/string?})`
 
 ## 0.2.1 (9.7.2917)
 
