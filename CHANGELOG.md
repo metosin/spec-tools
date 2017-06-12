@@ -10,7 +10,7 @@
 [org.clojure/clojurescript "1.9.562"] is available but we use "1.9.542"
 ```
 
-**[compare](https://github.com/metosin/spec-tools/compare/0.2.0...master)**
+**[compare](https://github.com/metosin/spec-tools/compare/0.2.0...0.2.1)**
 
 ## 0.2.0 (2017-05-16)
 
@@ -25,7 +25,7 @@
 [org.clojure/clojurescript "1.9.542"] is available but we use "1.9.518"
 ```
 
-**[compare](https://github.com/metosin/spec-tools/compare/0.1.1...master)**
+**[compare](https://github.com/metosin/spec-tools/compare/0.1.1...0.2.0)**
 
 ## 0.1.1 (2017-05-10)
 
