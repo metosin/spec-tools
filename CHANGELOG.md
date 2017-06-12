@@ -1,4 +1,4 @@
-## 0.2.1 (9.7.2917)
+## 0.2.1 (2017-06-09)
 
 * fixed `explain*` for Spec Records
 
@@ -12,7 +12,7 @@
 
 **[compare](https://github.com/metosin/spec-tools/compare/0.2.0...master)**
 
-## 0.2.0 (16.5.2017)
+## 0.2.0 (2017-05-16)
 
 * **BREAKING**: update spec to `alpha16`:
   * `clojure.spec` => `clojure.spec.alpha`, `cljs.spec` => `cljs.spec.alpha` etc.
