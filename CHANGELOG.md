@@ -4,7 +4,7 @@
 
 * Spec Records inherit `::s/name` from underlaying specs, fixes [#56](https://github.com/metosin/spec-tools/issues/56)
 
-## 0.2.1 (9.7.2917)
+## 0.2.1 (2017-06-09)
 
 * fixed `explain*` for Spec Records
 
@@ -16,9 +16,9 @@
 [org.clojure/clojurescript "1.9.562"] is available but we use "1.9.542"
 ```
 
-**[compare](https://github.com/metosin/spec-tools/compare/0.2.0...master)**
+**[compare](https://github.com/metosin/spec-tools/compare/0.2.0...0.2.1)**
 
-## 0.2.0 (16.5.2017)
+## 0.2.0 (2017-05-16)
 
 * **BREAKING**: update spec to `alpha16`:
   * `clojure.spec` => `clojure.spec.alpha`, `cljs.spec` => `cljs.spec.alpha` etc.
@@ -31,7 +31,7 @@
 [org.clojure/clojurescript "1.9.542"] is available but we use "1.9.518"
 ```
 
-**[compare](https://github.com/metosin/spec-tools/compare/0.1.1...master)**
+**[compare](https://github.com/metosin/spec-tools/compare/0.1.1...0.2.0)**
 
 ## 0.1.1 (2017-05-10)
 
