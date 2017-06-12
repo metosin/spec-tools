@@ -12,7 +12,7 @@
         impl (#'ds/coll-of-spec string? [])]
     (is (= (s/form spec)
            (s/form impl)))
-    (is (= `(s/coll-of (st/spec string? {:type :string}) :into [])
+    (is (= `(s/coll-of (st/spec {:spec string? :type :string}) :into [])
            (s/form (#'ds/coll-of-spec spec/string? []))))
     (is (= nil
            (s/explain-data spec ["1"])
@@ -30,8 +30,8 @@
     (is (= (s/form spec)
            (s/form impl)))
     (is (= `(s/map-of
-              (st/spec string? {:type :string})
-              (st/spec string? {:type :string})
+              (st/spec {:spec string? :type :string})
+              (st/spec {:spec string? :type :string})
               :conform-keys true)
            (s/form (#'ds/map-of-spec spec/string? spec/string?))))
     (is (= nil
@@ -73,7 +73,7 @@
         impl (#'ds/nilable-spec string?)]
     (is (= (s/form spec)
            (s/form impl)))
-    (is (= `(s/nilable (st/spec string? {:type :string}))
+    (is (= `(s/nilable (st/spec {:spec string? :type :string}))
            (s/form (#'ds/nilable-spec spec/string?))))
     (is (= nil
            (s/explain-data spec "1")

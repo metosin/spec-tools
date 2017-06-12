@@ -19,10 +19,6 @@
     "cljs.spec.alpha" (symbol "clojure.spec.alpha" (name kw))
     kw))
 
-(defn extract-spec [spec]
-  (let [[_ form opts] (if (seq? spec) spec (s/form spec))]
-    (assoc opts :form form)))
-
 (defn extract-form [spec]
   (if (seq? spec) spec (s/form spec)))
 
@@ -141,7 +137,7 @@
     (accept 'clojure.spec.alpha/nilable spec [(visit inner-spec accept)])))
 
 (defmethod visit 'spec-tools.core/spec [spec accept]
-  (let [[_ inner-spec] (extract-form spec)]
+  (let [[_ {inner-spec :spec}] (extract-form spec)]
     (accept ::spec spec [(visit inner-spec accept)])))
 
 (defmethod visit ::default [spec accept]

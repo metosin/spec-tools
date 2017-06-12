@@ -22,13 +22,13 @@ Requires Java 1.8 & Clojure `1.9.0-alpha17` and/or ClojureScript `1.9.562`.
 
 ### Spec Records
 
-Clojure Spec is implemented using reified protocols, making extending specs non-trivial. Spec-tools introduces Spec Records that wrap the spec predicates and are easy to modify and extend. They satisfy the Spec protocols (`Spec` & `Specize`) and implement the `IFn` so they can be used as normal function predicates. Specs are created with `spec-tools.core/spec` macro of with the underlying `spec-tools.core/create-spec` function.
+To support spec metadata and extensions like [dynamic conforming](#dynamic-conforming), Spec-tools introduces extendable Spec Records, `Spec`s. They wrap specs and act like specs or 1-arity functions. Specs are created with `spec-tools.core/spec` macro of with the underlying `spec-tools.core/create-spec` function.
 
- The following keys having a special meaning:
+The following Spec keys having a special meaning:
 
 | Key                | Description                                                                 |
 | -------------------|-----------------------------------------------------------------------------|
-| `:spec`            | The wrapped spec predicate.                                                 |
+| `:spec`            | The wrapped spec (predicate).                                               |
 | `:form`            | The wrapped spec form.                                                      |
 | `:type`            | Type hint of the Spec, mostly auto-resolved. Used in runtime conformation.  |
 | `:name`            | Name of the spec. Maps to `title` in JSON Schema.                           |
@@ -139,7 +139,7 @@ Can be added to a Spec via the key `:reason`
 
 ## Dynamic conforming
 
-Spec-tools loans from the awesome [Schema](https://github.com/plumatic/schema) by separating specs (what) from conformers (how). Spec Records contain a dynamical conformer, which can be instructed at runtime to use a suitable conforming function for that spec. This enables Specs to conform differently in different runtime condition, e.g. when reading data from JSON vs Transit.
+Spec-tools loans from the awesome [Schema](https://github.com/plumatic/schema) by separating specs (what) from conformers (how). Spec Record has a dynamical conformer, which can be instructed at runtime to use a suitable conforming function for that spec. This enables same Specs to conform differently in different runtime conditions, e.g. when reading data from JSON vs Transit.
 
 Spec Record conform is by default a no-op. Binding a dynamic var `spec-tools.core/*conforming*` with a function of `spec => spec-conformer` will cause the Spec to be conformed with the selected spec-conformer. `spec-tools.core` has helper functions for setting the binding: `explain`, `explain-data`, `conform` and `conform!`.
 
@@ -158,18 +158,6 @@ The following type-based conforming are found in `spec-tools.core`:
 | `strip-extra-keys-conforming`   | Strips out extra keys of `s/keys` Specs.                                                                                 |
 | `fail-on-extra-keys-conforming` | Fails if `s/keys` Specs have extra keys.                                                                                 |
 | `nil`                           | No extra conforming ([EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format)). |
-
-Type-based conforming mappings are defined as data, so they are easy to combine and extend:
-
-```clj
-(require '[spec-tools.conform :as conform])
-
-(def strict-json-conforming
-  (st/type-conforming
-    (merge
-      conform/json-type-conforming
-      conform/strip-extra-keys-type-conforming)))
-```
 
 #### Conforming examples
 
@@ -284,6 +272,24 @@ Inspired by the [Schema-tools](https://github.com/metosin/schema-tools), there a
 
 (st/conform spec/keyword? "kikka" my-string-conforming)
 ; :AKKIK
+```
+
+### Data Macros
+
+* see http://www.metosin.fi/blog/clojure-spec-as-a-runtime-transformation-engine/#data-macros
+
+### Composing conforming
+
+Type-based conforming mappings are defined as data, so they are easy to combine and extend:
+
+```clj
+(require '[spec-tools.conform :as conform])
+
+(def strict-json-conforming
+  (st/type-conforming
+    (merge
+      conform/json-type-conforming
+      conform/strip-extra-keys-type-conforming)))
 ```
 
 ### Data Specs
@@ -408,47 +414,66 @@ A tool to walk over and transform specs using the [Visitor-pattern](https://en.w
 ```clj
 (require '[spec-tools.visitor :as visitor])
 
-(visitor/visit
-  person-spec
-  (fn [_ spec _]
-    (if-let [s (s/get-spec spec)]
-      (println spec "\n =>" (s/form s) "\n"))))
+;; visitor to collect all registered specs
+(let [specs (atom {})]
+  (visitor/visit
+    person-spec
+    (fn [_ spec _]
+      (if-let [s (s/get-spec spec)]
+        (swap! specs assoc spec (s/form s))
+        @specs))))
 
-; :user/id
-;  => (spec-tools.core/spec clojure.core/integer? {:type :long})
-;
-; :user/age
-;  => (spec-tools.core/spec clojure.core/pos-int? {:type :long})
-;
-; :user$person/boss
-;  => (spec-tools.core/spec clojure.core/boolean? {:type :boolean})
-;
-; :user$person/name
-;  => (spec-tools.core/spec clojure.core/string? {:type :string})
-;
-; :user$person/languages
-;  => (spec-tools.core/spec (clojure.spec.alpha/coll-of (spec-tools.core/spec clojure.core/keyword? {:type :keyword}) :into #{}) {:type :set})
-;
-; :user$person$orders/id
-;  => (spec-tools.core/spec clojure.core/int? {:type :long})
-;
-; :user$person$orders/description
-;  => (spec-tools.core/spec clojure.core/string? {:type :string})
-;
-; :user$person/orders
-;  => (spec-tools.core/spec (clojure.spec.alpha/coll-of (spec-tools.core/spec (clojure.spec.alpha/keys :req-un [:user$person$orders/id :user$person$orders/description]) {:type :map, :keys #{:description :id}}) :into []) {:type :vector})
-;
-; :user$person$address/street
-;  => (spec-tools.core/spec clojure.core/string? {:type :string})
-;
-; :user$person$address/zip
-;  => (spec-tools.core/spec clojure.core/string? {:type :string})
-;
-; :user$person/address
-;  => (spec-tools.core/spec (clojure.spec.alpha/nilable (spec-tools.core/spec (clojure.spec.alpha/keys :req-un [:user$person$address/street :user$person$address/zip]) {:type :map, :keys #{:street :zip}})) {:type nil})
-;
-; :user$person/description
-;  => (spec-tools.core/spec clojure.core/string? {:type :string})
+; {:user/id (spec-tools.core/spec
+;             {:spec clojure.core/integer?
+;              :type :long})
+;  :user/age (spec-tools.core/spec
+;              {:spec clojure.core/pos-int?
+;               :type :long})
+;  :user$person/boss (spec-tools.core/spec
+;                      {:spec clojure.core/boolean?
+;                       :type :boolean})
+;  :user$person/name (spec-tools.core/spec
+;                      {:spec clojure.core/string?
+;                       :type :string})
+;  :user$person/languages (spec-tools.core/spec
+;                           {:spec (clojure.spec.alpha/coll-of
+;                                    (spec-tools.core/spec
+;                                      {:spec clojure.core/keyword?
+;                                       :type :keyword})
+;                                    :into #{})
+;                            :type :set})
+;  :user$person$orders/id (spec-tools.core/spec
+;                           {:spec clojure.core/int?
+;                            :type :long})
+;  :user$person$orders/description (spec-tools.core/spec
+;                                    {:spec clojure.core/string?
+;                                     :type :string})
+;  :user$person/orders (spec-tools.core/spec
+;                        {:spec (clojure.spec.alpha/coll-of
+;                                 (spec-tools.core/spec
+;                                   {:spec (clojure.spec.alpha/keys
+;                                            :req-un [:user$person$orders/id :user$person$orders/description])
+;                                    :type :map
+;                                    :keys #{:id :description}})
+;                                 :into [])
+;                         :type :vector})
+;  :user$person$address/street (spec-tools.core/spec
+;                                {:spec clojure.core/string?
+;                                 :type :string})
+;  :user$person$address/zip (spec-tools.core/spec
+;                             {:spec clojure.core/string?
+;                              :type :string})
+;  :user$person/address (spec-tools.core/spec
+;                         {:spec (clojure.spec.alpha/nilable
+;                                  (spec-tools.core/spec
+;                                    {:spec (clojure.spec.alpha/keys
+;                                             :req-un [:user$person$address/street :user$person$address/zip])
+;                                     :type :map
+;                                     :keys #{:street :zip}}))
+;                          :type nil})
+;  :user$person/description (spec-tools.core/spec
+;                             {:spec clojure.core/string?
+;                              :type :string})}
 ```
 
 **NOTE**: due to [CLJ-2152](http://dev.clojure.org/jira/browse/CLJ-2152), `s/&` & `s/keys*` can't be visited.

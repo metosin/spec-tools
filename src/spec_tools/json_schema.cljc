@@ -181,15 +181,6 @@
 (defmethod accept-spec ::visitor/set [dispatch spec children]
   {:enum children})
 
-(defn- is-map-of?
-  "Predicate to check if spec looks like an expansion of clojure.spec.alpha/map-of."
-  [spec]
-  (let [[_ inner-spec & {:as kwargs}] (visitor/extract-form spec)
-        pred (when (seq? inner-spec) (first inner-spec))]
-    ;; (s/map-of key-spec value-spec) expands to
-    ;; (s/every (s/tuple key-spec value-spec) :into {} ...)
-    (and (= pred #?(:clj 'clojure.spec.alpha/tuple :cljs 'cljs.spec.alpha/tuple)) (= (get kwargs :into)) {})))
-
 (defmethod accept-spec 'clojure.spec.alpha/keys [dispatch spec children]
   (let [[_ & {:keys [req req-un opt opt-un]}] (visitor/extract-form spec)
         names-un    (map name (concat req-un opt-un))
@@ -214,13 +205,10 @@
 (defmethod accept-spec 'clojure.spec.alpha/every [dispatch spec children]
   (let [form (visitor/extract-form spec)
         type (type/resolve-type form)]
-    ;; Special case handling of s/map-of, which expands to s/every
-    (if (is-map-of? spec)
-      {:type "object" :additionalProperties (get-in (unwrap children) [:items 1])}
-      (case type
-        :map {:type "object", :additionalProperties (unwrap children)}
-        :set {:type "array", :uniqueItems true, :items (unwrap children)}
-        :vector {:type "array", :items (unwrap children)}))))
+    (case type
+      :map {:type "object", :additionalProperties (unwrap children)}
+      :set {:type "array", :uniqueItems true, :items (unwrap children)}
+      :vector {:type "array", :items (unwrap children)})))
 
 (defmethod accept-spec 'clojure.spec.alpha/every-kv [dispatch spec children]
   {:type "object", :additionalProperties (second children)})
@@ -268,15 +256,15 @@
     {:minimum minimum :maximum maximum}))
 
 (defmethod accept-spec ::visitor/spec [dispatch spec children]
-  (let [spec (visitor/extract-spec spec)
+  (let [[_ data] (visitor/extract-form spec)
         json-schema-meta (reduce-kv
                            (fn [acc k v]
                              (if (= "json-schema" (namespace k))
                                (assoc acc (keyword (name k)) v)
                                acc))
                            {}
-                           (into {} spec))
-        extra-info (-> spec
+                           (into {} data))
+        extra-info (-> data
                        (select-keys [:name :description])
                        (set/rename-keys {:name :title}))]
     (merge (unwrap children) extra-info json-schema-meta)))

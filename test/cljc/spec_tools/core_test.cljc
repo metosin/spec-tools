@@ -55,6 +55,9 @@
                (st/create-spec {:spec integer?, :form `integer?})
                (st/create-spec {:spec integer?, :form `integer?, :type :long}))))
 
+      (testing "::s/name is retained"
+        (is (= ::age (::s/name (meta (st/create-spec {:spec ::age}))))))
+
       (testing "anonymous functions"
 
         (testing ":form default to ::s/unknown"
@@ -84,35 +87,35 @@
 
         (st/spec integer?)
         `(spec-tools.core/spec
-           integer?
-           {:type :long})
+           {:spec integer?
+            :type :long})
 
         (st/spec #{pos? neg?})
         `(spec-tools.core/spec
-           #{neg? pos?}
-           {:type nil})
+           {:spec #{neg? pos?}
+            :type nil})
 
         (st/spec ::string)
         `(spec-tools.core/spec
-           string?
-           {:type :string})
+           {:spec string?
+            :type :string})
 
         (st/spec ::lat)
         `(spec-tools.core/spec
-           (spec-tools.core/spec
-             double?
-             {:type :double})
-           {:type nil})
+           {:spec (spec-tools.core/spec
+                    {:spec double?
+                     :type :double})
+            :type nil})
 
         (st/spec (fn [x] (> x 10)))
         `(spec-tools.core/spec
-           (clojure.core/fn [~'x] (> ~'x 10))
-           {:type nil})
+           {:spec (clojure.core/fn [~'x] (> ~'x 10))
+            :type nil})
 
         (st/spec #(> % 10))
         `(spec-tools.core/spec
-           (clojure.core/fn [~'%] (> ~'% 10))
-           {:type nil})))
+           {:spec (clojure.core/fn [~'%] (> ~'% 10))
+            :type nil})))
 
     (testing "wrapped predicate work as a predicate"
       (is (true? (my-integer? 1)))
@@ -137,18 +140,18 @@
 
       (testing "fully qualifed predicate symbol is returned with s/form"
         (is (= ['spec-tools.core/spec
-                #?(:clj  'clojure.core/integer?
-                   :cljs 'cljs.core/integer?)
-                {:type :long}] (s/form my-integer?)))
-        (is (= ['spec 'integer? {:type :long}] (s/describe my-integer?))))
+                {:spec #?(:clj  'clojure.core/integer?
+                          :cljs 'cljs.core/integer?)
+                 :type :long}] (s/form my-integer?)))
+        (is (= ['spec {:spec 'integer? :type :long}] (s/describe my-integer?))))
 
       (testing "type resolution"
         (is (= (st/spec integer?)
                (st/spec integer? {:type :long}))))
 
       (testing "serialization"
-        (let [spec (st/spec integer? {:description "cool", :type ::integer})]
-          (is (= `(st/spec integer? {:description "cool", :type ::integer})
+        (let [spec (st/spec {:spec integer? :description "cool", :type ::integer})]
+          (is (= `(st/spec {:spec integer? :description "cool", :type ::integer})
                  (s/form spec)
                  (st/deserialize (st/serialize spec))))))
 
@@ -172,7 +175,7 @@
       (is (= "kikka" (:description spec)))
       (is (true? (s/valid? spec 1)))
       (is (false? (s/valid? spec "1")))
-      (is (= `(st/spec integer? {:description "kikka", :type nil})
+      (is (= `(st/spec {:spec integer? :description "kikka", :type nil})
              (st/deserialize (st/serialize spec))
              (s/form spec))))))
 
