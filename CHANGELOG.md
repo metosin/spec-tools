@@ -2,6 +2,8 @@
 
 * Spec Record `describe*` uses the map syntax, e.g. `(st/spec clojure.core/string? {}` => `(st/spec {:spec clojure.core/string?})`
 
+* Spec Records inherit `::s/name` from underlaying specs, fixes [#56](https://github.com/metosin/spec-tools/issues/56)
+
 ## 0.2.1 (9.7.2917)
 
 * fixed `explain*` for Spec Records

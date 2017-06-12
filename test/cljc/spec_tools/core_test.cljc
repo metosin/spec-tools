@@ -55,6 +55,9 @@
                (st/create-spec {:spec integer?, :form `integer?})
                (st/create-spec {:spec integer?, :form `integer?, :type :long}))))
 
+      (testing "::s/name is retained"
+        (is (= ::age (::s/name (meta (st/create-spec {:spec ::age}))))))
+
       (testing "anonymous functions"
 
         (testing ":form default to ::s/unknown"

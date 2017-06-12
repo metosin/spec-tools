@@ -268,9 +268,11 @@
         info (extract-extra-info form)
         type (if-not (contains? m :type)
                (type/resolve-type form)
-               type)]
-    (map->Spec
-      (merge m info {:spec spec :form form, :type type}))))
+               type)
+        name (-> spec meta ::s/name)
+        record (map->Spec
+                 (merge m info {:spec spec :form form, :type type}))]
+    (cond-> record name (with-meta {::s/name name}))))
 
 #?(:clj
    (defmacro spec
