@@ -34,7 +34,7 @@ The following Spec keys having a special meaning:
 | `:name`            | Name of the spec. Maps to `title` in JSON Schema.                           |
 | `:description`     | Description of the spec. Maps to `description` in JSON Schema.              |
 | `:gen`             | Generator function for the Spec (set via `s/with-gen`)                      |
-| `:keys`            | Set of map keys that the spec defines. Extracted from `s/keys` Specs.       |
+| `:keys`            | Set of map keys that the spec defines. Extracted from `s/keys` Specs.       |
 | `:reason`          | Value is added to `s/explain-data` problems under key `:reason`             |
 | `:json-schema/...` | Extra data that is merged with unqualifed keys into json-schema             |
 
@@ -143,7 +143,7 @@ Spec-tools loans from the awesome [Schema](https://github.com/plumatic/schema) b
 
 Spec Record conform is by default a no-op. Binding a dynamic var `spec-tools.core/*conforming*` with a function of `spec => spec-conformer` will cause the Spec to be conformed with the selected spec-conformer. `spec-tools.core` has helper functions for setting the binding: `explain`, `explain-data`, `conform` and `conform!`.
 
-Spec-conformers are arity2 functions taking the Spec Records and the value and should return either conformed value of `:clojure.spec.alpha/invalid`.
+Spec-conformers are arity2 functions taking the Spec Records and the value and should return either conformed value or `:clojure.spec.alpha/invalid`.
 
 ### Type based conforming
 
@@ -313,7 +313,7 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
     * can be functions, specs, qualified spec names or nested collections.
     * wrapping value into `ds/maybe` makes it `s/nillable`
 
-**NOTE**: to avoid macros, current implementation uses the don-documented functional core of `clojure.spec.alpha`: `every-impl`, `tuple-impl`, `map-spec-impl` & `nilable-impl`.
+**NOTE**: to avoid macros, current implementation uses the undocumented functional core of `clojure.spec.alpha`: `every-impl`, `tuple-impl`, `map-spec-impl` & `nilable-impl`.
 
 ```clj
 (s/def ::age spec/pos-int?)
