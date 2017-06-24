@@ -409,16 +409,16 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
 
 ### Spec Visitors
 
-A tool to walk over and transform specs using the [Visitor-pattern](https://en.wikipedia.org/wiki/Visitor_pattern). There is a example visitor to collect all the registered specs linked to a spec. The [JSON Schema -generation](#generating-json-schemas) uses this.
+A tool to walk over and transform specs using the [Visitor-pattern](https://en.wikipedia.org/wiki/Visitor_pattern). Main entry point is the `spec-tools.visitor/visit` function, extendable via `spec-tools.visitor/visit-spec` multimethod. There is an example implementation for recursively collecting nested specs. Also, the [Spec to JSON Schema -converter](#generating-json-schemas) is implemented using the visitor.
 
 ```clj
 (require '[spec-tools.visitor :as visitor])
 
-;; visitor to collect all registered specs
+;; visitor to recursively collect all registered spec forms
 (let [specs (atom {})]
   (visitor/visit
     person-spec
-    (fn [_ spec _]
+    (fn [_ spec _ _]
       (if-let [s (s/get-spec spec)]
         (swap! specs assoc spec (s/form s))
         @specs))))
