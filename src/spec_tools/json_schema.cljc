@@ -2,7 +2,9 @@
   "Tools for converting specs into JSON Schemata."
   (:require [spec-tools.visitor :as visitor]
             [spec-tools.type :as type]
-            [clojure.set :as set]))
+            [clojure.spec.alpha :as s]
+            [clojure.set :as set]
+            [spec-tools.core :as st]))
 
 (defn- only-entry? [key a-map] (= [key] (keys a-map)))
 
@@ -19,10 +21,12 @@
   {:pre [(= 1 (count coll))]}
   (first coll))
 
-
 (defn- spec-dispatch [dispatch _ _ _] dispatch)
 
-(defn- namespaced-name [key] (str (namespace key) "/" (name key)))
+(defn- namespaced-name [key]
+  (if-let [nn (namespace key)]
+    (str nn "/" (name key))
+    (name key)))
 
 (defmulti accept-spec spec-dispatch :default ::default)
 
@@ -185,15 +189,22 @@
 (defmethod accept-spec ::visitor/set [dispatch spec children _]
   {:enum children})
 
+(defn maybe-with-title [schema spec]
+  (if-let [title (st/spec-name spec)]
+    (assoc schema :title (namespaced-name title))
+    schema))
+
 (defmethod accept-spec 'clojure.spec.alpha/keys [_ spec children _]
   (let [[_ & {:keys [req req-un opt opt-un]}] (visitor/extract-form spec)
         names-un    (map name (concat req-un opt-un))
         names       (map namespaced-name (concat req opt))
         required    (map namespaced-name req)
         required-un (map name req-un)]
-    {:type "object"
-     :properties (zipmap (concat names names-un) children)
-     :required (vec (concat required required-un))}))
+    (maybe-with-title
+      {:type "object"
+       :properties (zipmap (concat names names-un) children)
+       :required (vec (concat required required-un))}
+      spec)))
 
 (defmethod accept-spec 'clojure.spec.alpha/or [_ _ children _]
   {:anyOf children})
@@ -210,15 +221,17 @@
   (let [form (visitor/extract-form spec)
         type (type/resolve-type form)]
     (case type
-      :map {:type "object", :additionalProperties (unwrap children)}
+      :map (maybe-with-title
+             {:type "object", :additionalProperties (unwrap children)}
+             spec)
       :set {:type "array", :uniqueItems true, :items (unwrap children)}
       :vector {:type "array", :items (unwrap children)})))
 
-(defmethod accept-spec 'clojure.spec.alpha/every-kv [_ _ children _]
-  {:type "object", :additionalProperties (second children)})
+(defmethod accept-spec 'clojure.spec.alpha/every-kv [_ spec children _]
+  (maybe-with-title {:type "object", :additionalProperties (second children)} spec))
 
-(defmethod accept-spec ::visitor/map-of [_ _ children _]
-  {:type "object", :additionalProperties (second children)})
+(defmethod accept-spec ::visitor/map-of [_ spec children _]
+  (maybe-with-title {:type "object", :additionalProperties (second children)} spec))
 
 (defmethod accept-spec ::visitor/set-of [_ _ children _]
   {:type "array", :items (unwrap children), :uniqueItems true})
@@ -273,5 +286,5 @@
                        (set/rename-keys {:name :title}))]
     (merge (unwrap children) extra-info json-schema-meta)))
 
-(defmethod accept-spec ::default [_ spec _ _]
+(defmethod accept-spec ::default [_ _ _ _]
   {})

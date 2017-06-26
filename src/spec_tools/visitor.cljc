@@ -23,6 +23,12 @@
 (defn extract-form [spec]
   (if (seq? spec) spec (s/form spec)))
 
+(defn unwrap
+  "Unwrap [x] to x. Asserts that coll has exactly one element."
+  [coll]
+  {:pre [(= 1 (count coll))]}
+  (first coll))
+
 (defn- spec-dispatch
   [spec accept options]
   (cond
@@ -36,7 +42,7 @@
     (set? spec) ::set
     (seq? spec) (normalize-symbol (first (strip-fn-if-needed spec)))
     (symbol? spec) (normalize-symbol spec)
-    :else (form/resolve-form spec)))
+    :else (normalize-symbol (form/resolve-form spec))))
 
 (defmulti visit-spec spec-dispatch :default ::default)
 

@@ -11,6 +11,7 @@
 (s/def ::integer integer?)
 (s/def ::string string?)
 (s/def ::set #{1 2 3})
+(s/def ::keys (s/keys :req-un [::integer]))
 
 (deftest simple-spec-test
   (testing "primitive predicates"
@@ -36,6 +37,11 @@
            {:type "object"
             :properties {"integer" {:type "integer"} "string" {:type "string"}}
             :required ["integer"]}))
+    (is (= (jsc/transform ::keys)
+           {:type "object",
+            :properties {"integer" {:type "integer"}},
+            :required ["integer"],
+            :title "spec-tools.json-schema-test/keys"}))
     (is (= (jsc/transform (s/or :int integer? :string string?))
            {:anyOf [{:type "integer"} {:type "string"}]}))
     (is (= (jsc/transform (s/and integer? pos?))
