@@ -5,14 +5,21 @@
             [spec-tools.data-spec :as ds]
             [spec-tools.visitor :as visitor]))
 
+(deftest namespaced-name-test
+  (is (= nil (visitor/namespaced-name nil)))
+  (is (= "kikka" (visitor/namespaced-name :kikka)))
+  (is (= "spec-tools.visitor-test/kikka" (visitor/namespaced-name ::kikka))))
+
 (s/def ::str string?)
 (s/def ::int integer?)
 (s/def ::map (s/keys :req [::str] :opt [::int]))
 
-(defn collect [dispatch _ children] `[~dispatch ~@children])
+(defn collect [dispatch _ children _] `[~dispatch ~@children])
 
 (deftest test-visit
+  (is (= (visitor/visit #(pos? %) collect) [::s/unknown]))
   (is (= (visitor/visit #{1 2 3} collect) [:spec-tools.visitor/set 1 3 2]))
+  (is (= (visitor/visit int? collect) ['clojure.core/int?]))
   (is (= (visitor/visit ::map collect)
          '[clojure.spec.alpha/keys [clojure.core/string?] [clojure.core/integer?]])))
 
@@ -25,7 +32,7 @@
 ; https://gist.github.com/shafeeq/c2ded8e71579a26e44c2191536e01c0d
 (deftest recursive-visit
   (let [specs (atom {})
-        collect (fn [_ spec _]
+        collect (fn [_ spec _ _]
                   (if-let [registered (s/get-spec spec)]
                     (swap! specs assoc spec (s/form registered))
                     @specs))]

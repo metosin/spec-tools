@@ -30,6 +30,26 @@
   (is (= spec/boolean? (st/coerce-spec spec/boolean?)))
   (is (thrown? #?(:clj Exception, :cljs js/Error) (st/coerce-spec ::INVALID))))
 
+(s/def ::regex (s/or :int int? :string string?))
+(s/def ::spec (s/spec int?))
+
+(deftest spec-name-test
+  (is (= nil (st/spec-name #{1 2})))
+  (is (= :kikka (st/spec-name :kikka)))
+  (is (= ::regex (st/spec-name (s/get-spec ::regex))))
+  (is (= ::spec (st/spec-name (s/get-spec ::spec))))
+  (is (= ::overridden (st/spec-name
+                        (st/spec
+                          {:spec (s/get-spec ::spec)
+                           :name ::overridden})))))
+
+(deftest spec-description-test
+  (is (= nil (st/spec-description #{1 2})))
+  (is (= "description" (st/spec-description
+                         (st/spec
+                           {:spec (s/get-spec ::spec)
+                            :description "description"})))))
+
 (deftest spec?-test
   (testing "spec"
     (let [spec (s/spec integer?)]

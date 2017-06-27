@@ -221,6 +221,30 @@
 (defn spec? [x]
   (if (instance? Spec x) x))
 
+(defn spec-name
+  "Returns a spec name. Like the private clojure.spec.alpha/spec-name"
+  [spec]
+  (cond
+    (ident? spec) spec
+
+    (s/regex? spec) (::s/name spec)
+
+    (and (spec? spec) (:name spec)) (:name spec)
+
+    #?(:clj  (instance? clojure.lang.IObj spec)
+       :cljs (implements? IMeta spec))
+    (-> (meta spec) ::s/name)
+
+    :else nil))
+
+(defn spec-description
+  "Returns a spec description."
+  [spec]
+  (cond
+    (and (spec? spec) (:description spec)) (:description spec)
+
+    :else nil))
+
 ;; TODO: use http://dev.clojure.org/jira/browse/CLJ-2112
 (defmulti collect-info (fn [dispath _] dispath) :default ::default)
 (defmethod collect-info ::default [_ _] nil)

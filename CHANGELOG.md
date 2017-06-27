@@ -1,3 +1,25 @@
+## UNRELEASED
+
+* **BREAKING**: More configurable Spec Visitor
+  * `spec-tools.visitor/visit takes optionally 4th argument, an options-map, passed into all sub-visits & accepts
+  * changed the extension multimethod from `visit` to `visit-spec` (to better support static analysis for arity errors)
+  * the `accept` function is now 4-arity (was 3-arity), taking the options-map as 4th argument
+  * the `spec-tools.json-schema/transform` also has optional 4-arity with the options-map as 4th argument
+
+* visitor (and by so, json-schema generation) supports also direct predicate specs, via form inference:
+
+```clj
+(require '[spec-tools.json-schema :as json-schema])
+
+(json-schema/transform int?)
+; {:type "integer", :format "int64"}
+```
+
+* added `spec-tools.core/spec-name`, to resolve spec name, like `clojure.spec.alpha/spec-name` but non-private & understands Spec Records.
+* added `spec-tools.core/spec-description`, to resolve spec description, understands Spec Records.
+
+* JSON Schema generation set `:title` for Object Schemas based on `st/spec-name`.
+
 ## 0.2.2 (2017-06-12)
 
 * Spec Record `describe*` uses the map syntax, e.g. `(st/spec clojure.core/string? {}` => `(st/spec {:spec clojure.core/string?})`
