@@ -15,12 +15,6 @@
       (and (= (count subspecs) 1) (only-entry? :allOf spec)) (first subspecs)
       :else (assoc spec :allOf subspecs))))
 
-(defn- unwrap
-  "Unwrap [x] to x. Asserts that coll has exactly one element."
-  [coll]
-  {:pre [(= 1 (count coll))]}
-  (first coll))
-
 (defn- spec-dispatch [dispatch _ _ _] dispatch)
 
 (defmulti accept-spec spec-dispatch :default ::default)
@@ -216,9 +210,9 @@
   (let [form (visitor/extract-form spec)
         type (type/resolve-type form)]
     (case type
-      :map (maybe-with-title {:type "object", :additionalProperties (unwrap children)} spec)
-      :set {:type "array", :uniqueItems true, :items (unwrap children)}
-      :vector {:type "array", :items (unwrap children)})))
+      :map (maybe-with-title {:type "object", :additionalProperties (visitor/unwrap children)} spec)
+      :set {:type "array", :uniqueItems true, :items (visitor/unwrap children)}
+      :vector {:type "array", :items (visitor/unwrap children)})))
 
 (defmethod accept-spec 'clojure.spec.alpha/every-kv [_ spec children _]
   (maybe-with-title {:type "object", :additionalProperties (second children)} spec))
@@ -227,19 +221,19 @@
   (maybe-with-title {:type "object", :additionalProperties (second children)} spec))
 
 (defmethod accept-spec ::visitor/set-of [_ _ children _]
-  {:type "array", :items (unwrap children), :uniqueItems true})
+  {:type "array", :items (visitor/unwrap children), :uniqueItems true})
 
 (defmethod accept-spec ::visitor/vector-of [_ _ children _]
-  {:type "array", :items (unwrap children)})
+  {:type "array", :items (visitor/unwrap children)})
 
 (defmethod accept-spec 'clojure.spec.alpha/* [_ _ children _]
-  {:type "array" :items (unwrap children)})
+  {:type "array" :items (visitor/unwrap children)})
 
 (defmethod accept-spec 'clojure.spec.alpha/+ [_ _ children _]
-  {:type "array" :items (unwrap children) :minItems 1})
+  {:type "array" :items (visitor/unwrap children) :minItems 1})
 
 (defmethod accept-spec 'clojure.spec.alpha/? [_ _ children _]
-  {:type "array" :items (unwrap children) :minItems 0})
+  {:type "array" :items (visitor/unwrap children) :minItems 0})
 
 (defmethod accept-spec 'clojure.spec.alpha/alt [_ _ children _]
   {:anyOf children})
@@ -261,7 +255,7 @@
 ; keys*
 
 (defmethod accept-spec 'clojure.spec.alpha/nilable [_ _ children _]
-  {:oneOf [(unwrap children) {:type "null"}]})
+  {:oneOf [(visitor/unwrap children) {:type "null"}]})
 
 ;; this is just a function in clojure.spec?
 (defmethod accept-spec 'clojure.spec.alpha/int-in-range? [_ spec _ _]
@@ -280,7 +274,7 @@
         extra-info (-> data
                        (select-keys [:name :description])
                        (set/rename-keys {:name :title}))]
-    (merge (unwrap children) extra-info json-schema-meta)))
+    (merge (visitor/unwrap children) extra-info json-schema-meta)))
 
 (defmethod accept-spec ::default [_ _ _ _]
   {})
