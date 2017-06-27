@@ -216,9 +216,7 @@
   (let [form (visitor/extract-form spec)
         type (type/resolve-type form)]
     (case type
-      :map (maybe-with-title
-             {:type "object", :additionalProperties (unwrap children)}
-             spec)
+      :map (maybe-with-title {:type "object", :additionalProperties (unwrap children)} spec)
       :set {:type "array", :uniqueItems true, :items (unwrap children)}
       :vector {:type "array", :items (unwrap children)})))
 
