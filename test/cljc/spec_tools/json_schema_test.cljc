@@ -68,12 +68,10 @@
            {:anyOf [{:type "integer"} {:type "string"}]}))
     (is (= (jsc/transform (s/cat :int integer? :string string?))
            {:type "array"
-            :minItems 2
-            :maxItems 2
             :items {:anyOf [{:type "integer"} {:type "string"}]}}))
     ;; & is broken (http://dev.clojure.org/jira/browse/CLJ-2152)
     (is (= (jsc/transform (s/tuple integer? string?))
-           {:type "array" :items [{:type "integer"} {:type "string"}] :minItems 2 :maxItems 2}))
+           {:type "array" :items [{:type "integer"} {:type "string"}]}))
     ;; keys* is broken (http://dev.clojure.org/jira/browse/CLJ-2152)
     (is (= (jsc/transform (s/map-of string? clojure.core/integer?))
            {:type "object" :additionalProperties {:type "integer"}}))

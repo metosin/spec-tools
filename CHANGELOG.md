@@ -20,6 +20,8 @@
 
 * JSON Schema generation set `:title` for Object Schemas based on `st/spec-name`.
 
+* `s/cat` & `s/alt` don't set `:minItems` and `:maxItems` as they are Regexs.
+
 ## 0.2.2 (2017-06-12)
 
 * Spec Record `describe*` uses the map syntax, e.g. `(st/spec clojure.core/string? {}` => `(st/spec {:spec clojure.core/string?})`

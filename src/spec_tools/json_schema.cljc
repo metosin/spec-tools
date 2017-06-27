@@ -240,17 +240,13 @@
 
 (defmethod accept-spec 'clojure.spec.alpha/cat [_ _ children _]
   {:type "array"
-   :minItems (count children)
-   :maxItems (count children)
    :items {:anyOf children}})
 
 ; &
 
 (defmethod accept-spec 'clojure.spec.alpha/tuple [_ _ children _]
   {:type "array"
-   :items children
-   :minItems (count children)
-   :maxItems (count children)})
+   :items children})
 
 ; keys*
 
