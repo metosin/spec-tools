@@ -4,9 +4,9 @@
             [spec-tools.core :as st]
             [spec-tools.data-spec :as ds]
             [com.gfredericks.test.chuck.clojure-test :refer [checking]]
+            [spec-tools.json-schema :as jsc]
     #?(:clj
-            [scjsv.core :as scjsv])
-            [spec-tools.json-schema :as jsc]))
+            [scjsv.core :as scjsv])))
 
 (s/def ::integer integer?)
 (s/def ::string string?)
@@ -73,7 +73,7 @@
             :items {:anyOf [{:type "integer"} {:type "string"}]}}))
     ;; & is broken (http://dev.clojure.org/jira/browse/CLJ-2152)
     (is (= (jsc/transform (s/tuple integer? string?))
-           {:type "array" :items [{:type "integer"} {:type "string"}] :minItems 2}))
+           {:type "array" :items [{:type "integer"} {:type "string"}] :minItems 2 :maxItems 2}))
     ;; keys* is broken (http://dev.clojure.org/jira/browse/CLJ-2152)
     (is (= (jsc/transform (s/map-of string? clojure.core/integer?))
            {:type "object" :additionalProperties {:type "integer"}}))

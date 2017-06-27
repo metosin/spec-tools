@@ -255,7 +255,10 @@
 ; &
 
 (defmethod accept-spec 'clojure.spec.alpha/tuple [_ _ children _]
-  {:type "array" :items children :minItems (count children)})
+  {:type "array"
+   :items children
+   :minItems (count children)
+   :maxItems (count children)})
 
 ; keys*
 
