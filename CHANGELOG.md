@@ -1,4 +1,4 @@
-## UNRELEASED
+## 0.3.0-SNAPSHOT
 
 * **BREAKING**: More configurable Spec Visitor
   * `spec-tools.visitor/visit takes optionally 4th argument, an options-map, passed into all sub-visits & accepts
