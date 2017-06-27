@@ -55,7 +55,8 @@
 (defn visit
   "Walk a spec definition. Takes 2-3 arguments, the spec and the accept
   function, and optionally a options map, and returns the result of
-  calling the accept function.
+  calling the accept function. Options map can be used to pass in context-
+  spesific information to to sub-visits & accepts.
 
   The accept function is called with 4 arguments: the dispatch term for the
   spec (see below), the spec itself, vector with the results of

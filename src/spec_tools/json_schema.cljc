@@ -184,7 +184,7 @@
 (defmethod accept-spec ::visitor/set [dispatch spec children _]
   {:enum children})
 
-(defn maybe-with-title [schema spec]
+(defn- maybe-with-title [schema spec]
   (if-let [title (st/spec-name spec)]
     (assoc schema :title (visitor/namespaced-name title))
     schema))
