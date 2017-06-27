@@ -233,7 +233,17 @@
 
     #?(:clj  (instance? clojure.lang.IObj spec)
        :cljs (implements? IMeta spec))
-    (-> (meta spec) ::s/name)))
+    (-> (meta spec) ::s/name)
+
+    :else nil))
+
+(defn spec-description
+  "Returns a spec description."
+  [spec]
+  (cond
+    (and (spec? spec) (:description spec)) (:description spec)
+
+    :else nil))
 
 ;; TODO: use http://dev.clojure.org/jira/browse/CLJ-2112
 (defmulti collect-info (fn [dispath _] dispath) :default ::default)

@@ -9,6 +9,7 @@
 * visitor (and by so, json-schema generation) supports also direct predicate specs, via form inference:
 
 * added `spec-tools.core/spec-name`, to resolve spec name, like `clojure.spec.alpha/spec-name` but non-private & understands Spec Records.
+* added `spec-tools.core/spec-description`, to resolve spec description, understands Spec Records.
 
 * JSON Schema generation set `:title` for Object Schemas based on `st/spec-name`.
 

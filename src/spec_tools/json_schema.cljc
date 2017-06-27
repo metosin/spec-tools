@@ -23,11 +23,6 @@
 
 (defn- spec-dispatch [dispatch _ _ _] dispatch)
 
-(defn- namespaced-name [key]
-  (if-let [nn (namespace key)]
-    (str nn "/" (name key))
-    (name key)))
-
 (defmulti accept-spec spec-dispatch :default ::default)
 
 (defn transform
@@ -191,14 +186,14 @@
 
 (defn maybe-with-title [schema spec]
   (if-let [title (st/spec-name spec)]
-    (assoc schema :title (namespaced-name title))
+    (assoc schema :title (visitor/namespaced-name title))
     schema))
 
 (defmethod accept-spec 'clojure.spec.alpha/keys [_ spec children _]
   (let [[_ & {:keys [req req-un opt opt-un]}] (visitor/extract-form spec)
         names-un    (map name (concat req-un opt-un))
-        names       (map namespaced-name (concat req opt))
-        required    (map namespaced-name req)
+        names       (map visitor/namespaced-name (concat req opt))
+        required    (map visitor/namespaced-name req)
         required-un (map name req-un)]
     (maybe-with-title
       {:type "object"

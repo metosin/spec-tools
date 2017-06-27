@@ -23,6 +23,12 @@
 (defn extract-form [spec]
   (if (seq? spec) spec (s/form spec)))
 
+(defn namespaced-name [key]
+  (if key
+    (if-let [nn (namespace key)]
+      (str nn "/" (name key))
+      (name key))))
+
 (defn unwrap
   "Unwrap [x] to x. Asserts that coll has exactly one element."
   [coll]
