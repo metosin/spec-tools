@@ -17,6 +17,7 @@
 (defn collect [dispatch _ children _] `[~dispatch ~@children])
 
 (deftest test-visit
+  (is (= (visitor/visit #(pos? %) collect) [::s/unknown]))
   (is (= (visitor/visit #{1 2 3} collect) [:spec-tools.visitor/set 1 3 2]))
   (is (= (visitor/visit int? collect) ['clojure.core/int?]))
   (is (= (visitor/visit ::map collect)
