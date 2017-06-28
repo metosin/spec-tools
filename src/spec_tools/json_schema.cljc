@@ -180,14 +180,14 @@
 
 (defn- maybe-with-title [schema spec]
   (if-let [title (st/spec-name spec)]
-    (assoc schema :title (visitor/namespaced-name title))
+    (assoc schema :title (visitor/qualified-name title))
     schema))
 
 (defmethod accept-spec 'clojure.spec.alpha/keys [_ spec children _]
   (let [[_ & {:keys [req req-un opt opt-un]}] (visitor/extract-form spec)
         names-un    (map name (concat req-un opt-un))
-        names       (map visitor/namespaced-name (concat req opt))
-        required    (map visitor/namespaced-name req)
+        names       (map visitor/qualified-name (concat req opt))
+        required    (map visitor/qualified-name req)
         required-un (map name req-un)]
     (maybe-with-title
       {:type "object"

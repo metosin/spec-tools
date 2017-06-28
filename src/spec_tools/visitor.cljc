@@ -23,11 +23,20 @@
 (defn extract-form [spec]
   (if (seq? spec) spec (s/form spec)))
 
-(defn namespaced-name [key]
+(defn qualified-name [key]
   (if key
     (if-let [nn (namespace key)]
       (str nn "/" (name key))
       (name key))))
+
+(defn nilable-spec? [spec]
+  (boolean
+    (some-> spec
+            s/form
+            seq
+            first
+            #{'clojure.spec.alpha/nilable
+              'cljs.spec.alpha/nilable})))
 
 (defn unwrap
   "Unwrap [x] to x. Asserts that coll has exactly one element."

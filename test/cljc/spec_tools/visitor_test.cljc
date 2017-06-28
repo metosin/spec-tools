@@ -6,9 +6,9 @@
             [spec-tools.visitor :as visitor]))
 
 (deftest namespaced-name-test
-  (is (= nil (visitor/namespaced-name nil)))
-  (is (= "kikka" (visitor/namespaced-name :kikka)))
-  (is (= "spec-tools.visitor-test/kikka" (visitor/namespaced-name ::kikka))))
+  (is (= nil (visitor/qualified-name nil)))
+  (is (= "kikka" (visitor/qualified-name :kikka)))
+  (is (= "spec-tools.visitor-test/kikka" (visitor/qualified-name ::kikka))))
 
 (s/def ::str string?)
 (s/def ::int integer?)

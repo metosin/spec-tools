@@ -87,6 +87,15 @@
     [(:spec x) (dissoc x :spec)]
     [x {}]))
 
+(defn nilable-spec? [spec]
+  (boolean
+    (some-> spec
+            s/form
+            seq
+            first
+            #{'clojure.spec.alpha/nilable
+              'cljs.spec.alpha/nilable})))
+
 ;;
 ;; FIXME: using ^:skip-wiki functions from clojure.spec. might break.
 ;;
