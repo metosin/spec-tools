@@ -2,6 +2,7 @@
   (:require [clojure.walk :as walk]
             [spec-tools.json-schema :as json-schema]
             [spec-tools.visitor :as visitor]
+            [spec-tools.impl :as impl]
             [spec-tools.core :as st]))
 
 ;;
@@ -52,7 +53,7 @@
 
 (defmethod accept-spec 'clojure.spec.alpha/nilable [_ _ children {:keys [type in]}]
   (let [k (if (and (= type :parameter) (not= in :body)) :allowEmptyValue :x-nullable)]
-    (assoc (visitor/unwrap children) k true)))
+    (assoc (impl/unwrap children) k true)))
 
 (defmethod accept-spec ::default [dispatch spec children options]
   (json-schema/accept-spec dispatch spec children options))
@@ -77,9 +78,9 @@
 (defmethod extract-parameter :body [_ spec]
   (let [schema (transform spec {:in :body, :type :parameter})]
     [{:in "body"
-      :name (-> spec st/spec-name visitor/qualified-name (or ""))
+      :name (-> spec st/spec-name impl/qualified-name (or ""))
       :description ""
-      :required (not (visitor/nilable-spec? spec))
+      :required (not (impl/nilable-spec? spec))
       :schema schema}]))
 
 (defmethod extract-parameter :default [in spec]
@@ -102,7 +103,7 @@
 (defmulti expand (fn [k _ _ _] k) :default ::extension)
 
 (defmethod expand ::extension [k v _ _]
-  {(keyword (str "x-" (visitor/qualified-name k))) v})
+  {(keyword (str "x-" (impl/qualified-name k))) v})
 
 (defmethod expand ::schema [_ v _ _]
   {:schema (transform v {:type :schema})})
