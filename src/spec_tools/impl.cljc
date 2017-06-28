@@ -12,6 +12,8 @@
 (defn in-cljs? [env]
   (:ns env))
 
+;; ClojureScript 1.9.655 and later have a resolve macro - maybe this can be
+;; eventually converted to use it.
 (defmacro resolve
   [env sym]
   `(if (in-cljs? ~env)
@@ -50,8 +52,9 @@
       (conj (walk/postwalk-replace {s '%} form) '[%] (if cljs? 'cljs.core/fn 'clojure.core/fn)))
     expr))
 
-(defn cljs-resolve [env symbol]
-  (clojure.core/or (->> symbol (resolve env) cljs-sym) symbol))
+#?(:clj
+   (defn cljs-resolve [env symbol]
+     (clojure.core/or (->> symbol (resolve env) cljs-sym) symbol)))
 
 (defn polish [x]
   (cond
@@ -66,17 +69,18 @@
   (let [{:keys [req opt req-un opt-un]} (some->> form (rest) (apply hash-map))]
     (flatten (map polish (concat req opt req-un opt-un)))))
 
-(defn resolve-form [env pred]
-  (let [cljs? (in-cljs? env)
-        res (if cljs? (partial cljs-resolve env) clojure.core/resolve)]
-    (->> pred
-         (walk/postwalk
-           (fn [x]
-             (if (symbol? x)
-               (or (some->> x res ->sym) x)
-               x)))
-         (unfn cljs?)
-         #_(walk/postwalk clojure-core-symbol-or-any))))
+#?(:clj
+   (defn resolve-form [env pred]
+     (let [cljs? (in-cljs? env)
+           res (if cljs? (partial cljs-resolve env) clojure.core/resolve)]
+       (->> pred
+            (walk/postwalk
+             (fn [x]
+               (if (symbol? x)
+                 (or (some->> x res ->sym) x)
+                 x)))
+            (unfn cljs?)
+            #_(walk/postwalk clojure-core-symbol-or-any)))))
 
 (defn extract-pred-and-info [x]
   (if (map? x)
