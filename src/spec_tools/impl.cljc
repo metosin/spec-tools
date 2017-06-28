@@ -79,13 +79,51 @@
                (if (symbol? x)
                  (or (some->> x res ->sym) x)
                  x)))
-            (unfn cljs?)
-            #_(walk/postwalk clojure-core-symbol-or-any)))))
+            (unfn cljs?)))))
 
 (defn extract-pred-and-info [x]
   (if (map? x)
     [(:spec x) (dissoc x :spec)]
     [x {}]))
+
+(defn strip-fn-if-needed [form]
+  (let [head (first form)]
+    ;; Deal with the form (clojure.core/fn [%] (foo ... %))
+    ;; We should just use core.match...
+    (if (and (= (count form) 3) (= head #?(:clj 'clojure.core/fn :cljs 'cljs.core/fn)))
+      (nth form 2)
+      form)))
+
+(defn normalize-symbol [kw]
+  (case (and (symbol? kw) (namespace kw))
+    "cljs.core" (symbol "clojure.core" (name kw))
+    "cljs.spec.alpha" (symbol "clojure.spec.alpha" (name kw))
+    kw))
+
+(defn extract-form [spec]
+  (if (seq? spec) spec (s/form spec)))
+
+(defn qualified-name [key]
+  (if key
+    (if-let [nn (namespace key)]
+      (str nn "/" (name key))
+      (name key))))
+
+(defn nilable-spec? [spec]
+  (let [form (and spec (s/form spec))]
+    (boolean
+      (if-not (= form ::s/unknown)
+        (some-> form
+                seq
+                first
+                #{'clojure.spec.alpha/nilable
+                  'cljs.spec.alpha/nilable})))))
+
+(defn unwrap
+  "Unwrap [x] to x. Asserts that coll has exactly one element."
+  [coll]
+  {:pre [(= 1 (count coll))]}
+  (first coll))
 
 ;;
 ;; FIXME: using ^:skip-wiki functions from clojure.spec. might break.
@@ -93,3 +131,4 @@
 
 (defn register-spec! [k s]
   (s/def-impl k (s/form s) s))
+

@@ -2,7 +2,7 @@
   "Tools for converting specs into JSON Schemata."
   (:require [spec-tools.visitor :as visitor]
             [spec-tools.type :as type]
-            [clojure.spec.alpha :as s]
+            [spec-tools.impl :as impl]
             [clojure.set :as set]
             [spec-tools.core :as st]))
 
@@ -180,14 +180,14 @@
 
 (defn- maybe-with-title [schema spec]
   (if-let [title (st/spec-name spec)]
-    (assoc schema :title (visitor/namespaced-name title))
+    (assoc schema :title (impl/qualified-name title))
     schema))
 
 (defmethod accept-spec 'clojure.spec.alpha/keys [_ spec children _]
-  (let [[_ & {:keys [req req-un opt opt-un]}] (visitor/extract-form spec)
+  (let [[_ & {:keys [req req-un opt opt-un]}] (impl/extract-form spec)
         names-un    (map name (concat req-un opt-un))
-        names       (map visitor/namespaced-name (concat req opt))
-        required    (map visitor/namespaced-name req)
+        names       (map impl/qualified-name (concat req opt))
+        required    (map impl/qualified-name req)
         required-un (map name req-un)]
     (maybe-with-title
       {:type "object"
@@ -207,12 +207,12 @@
    :required (into [] (reduce into (sorted-set) (map :required children)))})
 
 (defmethod accept-spec 'clojure.spec.alpha/every [_ spec children _]
-  (let [form (visitor/extract-form spec)
+  (let [form (impl/extract-form spec)
         type (type/resolve-type form)]
     (case type
-      :map (maybe-with-title {:type "object", :additionalProperties (visitor/unwrap children)} spec)
-      :set {:type "array", :uniqueItems true, :items (visitor/unwrap children)}
-      :vector {:type "array", :items (visitor/unwrap children)})))
+      :map (maybe-with-title {:type "object", :additionalProperties (impl/unwrap children)} spec)
+      :set {:type "array", :uniqueItems true, :items (impl/unwrap children)}
+      :vector {:type "array", :items (impl/unwrap children)})))
 
 (defmethod accept-spec 'clojure.spec.alpha/every-kv [_ spec children _]
   (maybe-with-title {:type "object", :additionalProperties (second children)} spec))
@@ -221,19 +221,19 @@
   (maybe-with-title {:type "object", :additionalProperties (second children)} spec))
 
 (defmethod accept-spec ::visitor/set-of [_ _ children _]
-  {:type "array", :items (visitor/unwrap children), :uniqueItems true})
+  {:type "array", :items (impl/unwrap children), :uniqueItems true})
 
 (defmethod accept-spec ::visitor/vector-of [_ _ children _]
-  {:type "array", :items (visitor/unwrap children)})
+  {:type "array", :items (impl/unwrap children)})
 
 (defmethod accept-spec 'clojure.spec.alpha/* [_ _ children _]
-  {:type "array" :items (visitor/unwrap children)})
+  {:type "array" :items (impl/unwrap children)})
 
 (defmethod accept-spec 'clojure.spec.alpha/+ [_ _ children _]
-  {:type "array" :items (visitor/unwrap children) :minItems 1})
+  {:type "array" :items (impl/unwrap children) :minItems 1})
 
 (defmethod accept-spec 'clojure.spec.alpha/? [_ _ children _]
-  {:type "array" :items (visitor/unwrap children) :minItems 0})
+  {:type "array" :items (impl/unwrap children) :minItems 0})
 
 (defmethod accept-spec 'clojure.spec.alpha/alt [_ _ children _]
   {:anyOf children})
@@ -251,15 +251,15 @@
 ; keys*
 
 (defmethod accept-spec 'clojure.spec.alpha/nilable [_ _ children _]
-  {:oneOf [(visitor/unwrap children) {:type "null"}]})
+  {:oneOf [(impl/unwrap children) {:type "null"}]})
 
 ;; this is just a function in clojure.spec?
 (defmethod accept-spec 'clojure.spec.alpha/int-in-range? [_ spec _ _]
-  (let [[_ minimum maximum _] (visitor/strip-fn-if-needed spec)]
+  (let [[_ minimum maximum _] (impl/strip-fn-if-needed spec)]
     {:minimum minimum :maximum maximum}))
 
 (defmethod accept-spec ::visitor/spec [_ spec children _]
-  (let [[_ data] (visitor/extract-form spec)
+  (let [[_ data] (impl/extract-form spec)
         json-schema-meta (reduce-kv
                            (fn [acc k v]
                              (if (= "json-schema" (namespace k))
@@ -270,7 +270,7 @@
         extra-info (-> data
                        (select-keys [:name :description])
                        (set/rename-keys {:name :title}))]
-    (merge (visitor/unwrap children) extra-info json-schema-meta)))
+    (merge (impl/unwrap children) extra-info json-schema-meta)))
 
 (defmethod accept-spec ::default [_ _ _ _]
   {})

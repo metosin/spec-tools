@@ -5,11 +5,6 @@
             [spec-tools.data-spec :as ds]
             [spec-tools.visitor :as visitor]))
 
-(deftest namespaced-name-test
-  (is (= nil (visitor/namespaced-name nil)))
-  (is (= "kikka" (visitor/namespaced-name :kikka)))
-  (is (= "spec-tools.visitor-test/kikka" (visitor/namespaced-name ::kikka))))
-
 (s/def ::str string?)
 (s/def ::int integer?)
 (s/def ::map (s/keys :req [::str] :opt [::int]))
