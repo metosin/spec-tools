@@ -130,7 +130,10 @@
 ;;
 
 (defn swagger-spec
-  "Transforms a spec-swagger spec into a swagger2 spec."
+  "Transforms data into a swagger2 spec. Input data must conform
+  to the Swagger2 Spec (http://swagger.io/specification/) with a
+  exception that it can have any qualified keywords that are expanded
+  with the `spec-tools.swagger.core/expand` multimethod."
   ([x]
    (swagger-spec x nil))
   ([x options]

@@ -538,7 +538,7 @@ Related:
   * `:type` - a target type, either `:parameter` ([Parameter Object](http://swagger.io/specification/#parameterObject)) or `:schema` ([Schema Object](http://swagger.io/specification/#schemaObject)). If value is not defined, `:schema` is assumed.
   * `:in` - a parameter subtype, which is one of: `:query`, `:header`, `:path`, `:body` or `:formData`. See [Parameter Object](http://swagger.io/specification/#parameterObject) for details.
 
-**NOTE**: As `clojure.spec` is more powerful than the Swagger2 JSON Schema, we are losing some data in the transformation. Spec-swagger tries to retain all the informatin, via vendor extensions.
+**NOTE**: As `clojure.spec` is more powerful than the Swagger2 JSON Schema, we are losing some data in the transformation. We try to retain all the informatin, via vendor extensions.
 
 ```clj
 (swagger/transform float?)
@@ -562,9 +562,9 @@ Related:
 
 #### Swagger Spec generation
 
-`swagger/swagger-spec` function takes an spec-swagger data map and transforms it into a valid [Swagger2 Spec](http://swagger.io/specification/) format. Rules:
+`swagger/swagger-spec` function takes an extended swagger2 spec as map and transforms it into a valid [Swagger2 Spec](http://swagger.io/specification/) format. Rules:
 
-* by default, spec-swagger data is passed through, allowing any valid swagger data to be used
+* by default, data is passed through, allowing any valid swagger data to be used
 * for qualified map keys, `swagger/expand` multimethod is invoked with the key, value and the map as arguments
   * dispatches on the key, defaulting to `::swagger/extension`
   * returns a map that get's merged in to original map, without the dispatched key

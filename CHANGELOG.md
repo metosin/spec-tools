@@ -1,5 +1,8 @@
 ## 0.3.0-SNAPSHOT
 
+* Swagger2 integration.
+  * moved code from `spec-swagger.swagger2` into `spec-tools.swagger`
+
 * **BREAKING**: More configurable Spec Visitor
   * `spec-tools.visitor/visit takes optionally 4th argument, an options-map, passed into all sub-visits & accepts
   * changed the extension multimethod from `visit` to `visit-spec` (to better support static analysis for arity errors)
@@ -21,6 +24,8 @@
 * JSON Schema generation set `:title` for Object Schemas based on `st/spec-name`.
 
 * `s/cat` & `s/alt` don't set `:minItems` and `:maxItems` as they are Regexs.
+
+* moved many helper functions to `spec-tools.impl`
 
 ## 0.2.2 (2017-06-12)
 
