@@ -21,7 +21,7 @@ Blogs:
 
 Requires Java 1.8 & Clojure `1.9.0-alpha17` and/or ClojureScript `1.9.660`.
 
-### Spec Records
+# Spec Records
 
 To support spec metadata and extensions like [dynamic conforming](#dynamic-conforming), Spec-tools introduces extendable Spec Records, `Spec`s. They wrap specs and act like specs or 1-arity functions. Specs are created with `spec-tools.core/spec` macro of with the underlying `spec-tools.core/create-spec` function.
 
@@ -39,7 +39,7 @@ The following Spec keys having a special meaning:
 | `:reason`          | Value is added to `s/explain-data` problems under key `:reason`             |
 | `:json-schema/...` | Extra data that is merged with unqualifed keys into json-schema             |
 
-#### Creating Specs
+## Creating Specs
 
 The following are all equivalent:
 
@@ -71,7 +71,7 @@ The following are all equivalent:
 ;       :form clojure.core/integer?}
 ```
 
-#### Example usage
+### Example usage
 
 ```clj
 (require '[clojure.spec.alpha :as s])
@@ -103,7 +103,7 @@ For most core predicates, `:type` can be resolved automatically using the `spec-
 
 For most core predicates, `:form` can be resolved automatically using the `spec-tools.form/resolve-form` multimethod.
 
-### Predefined Spec Records
+## Predefined Spec Records
 
 Most `clojure.core` predicates have a predefined Spec Record instance in `spec-tools.spec`.
 
@@ -126,7 +126,7 @@ spec/boolean?
 ;       :description "It's a bool"}
 ```
 
-### Custom errors
+## Custom errors
 
 Can be added to a Spec via the key `:reason`
 
@@ -138,7 +138,7 @@ Can be added to a Spec via the key `:reason`
 ; #:clojure.spec.alpha{:problems [{:path [], :pred pos-int?, :val -1, :via [], :in [], :reason "positive"}]}
 ```
 
-## Dynamic conforming
+# Dynamic conforming
 
 Spec-tools loans from the awesome [Schema](https://github.com/plumatic/schema) by separating specs (what) from conformers (how). Spec Record has a dynamical conformer, which can be instructed at runtime to use a suitable conforming function for that spec. This enables same Specs to conform differently in different runtime conditions, e.g. when reading data from JSON vs Transit.
 
@@ -146,7 +146,7 @@ Spec Record conform is by default a no-op. Binding a dynamic var `spec-tools.cor
 
 Spec-conformers are arity2 functions taking the Spec Records and the value and should return either conformed value or `:clojure.spec.alpha/invalid`.
 
-### Type based conforming
+## Type based conforming
 
 A common way to do dynamic conforming is to select conformer based on the spec's `:type`. By default, the following types are supported (and mostly, auto-resolved): `:long`, `:double`, `:boolean`, `:string`, `:keyword`, `:symbol`, `:uuid`, `:uri`, `:bigdec`, `:date`, `:ratio`, `:map`, `:set` and `:vector`.
 
@@ -160,7 +160,7 @@ The following type-based conforming are found in `spec-tools.core`:
 | `fail-on-extra-keys-conforming` | Fails if `s/keys` Specs have extra keys.                                                                                 |
 | `nil`                           | No extra conforming ([EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format)). |
 
-#### Conforming examples
+## Conforming examples
 
 ```clj
 (s/def ::age (s/and spec/integer? #(> % 18)))
@@ -180,7 +180,7 @@ The following type-based conforming are found in `spec-tools.core`:
 ; 20
 ```
 
-#### More complex example
+## More complex example
 
 ```clj
 (s/def ::name string?)
@@ -218,7 +218,7 @@ The following type-based conforming are found in `spec-tools.core`:
 ;  :birthdate #inst"1968-01-02T15:04:05.000-00:00"}
 ```
 
-#### Map Conforming
+## Map Conforming
 
 To strip out extra keys from a keyset:
 
@@ -249,7 +249,7 @@ Inspired by the [Schema-tools](https://github.com/metosin/schema-tools), there a
 ;  :address {:street "Satamakatu"}}
 ```
 
-#### Custom conforming
+## Custom conforming
 
 ```clj
 (require '[clojure.string :as str])
@@ -275,11 +275,11 @@ Inspired by the [Schema-tools](https://github.com/metosin/schema-tools), there a
 ; :AKKIK
 ```
 
-### Data Macros
+## Data Macros
 
 * see http://www.metosin.fi/blog/clojure-spec-as-a-runtime-transformation-engine/#data-macros
 
-### Composing conforming
+## Composing conforming
 
 Type-based conforming mappings are defined as data, so they are easy to combine and extend:
 
@@ -293,7 +293,7 @@ Type-based conforming mappings are defined as data, so they are easy to combine 
       conform/strip-extra-keys-type-conforming)))
 ```
 
-### Data Specs
+# Data Specs
 
 ```clj
 (require '[spec-tools.data-spec :as ds])
@@ -408,7 +408,7 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
 ;  :address nil}
 ```
 
-### Spec Visitors
+# Spec Visitors
 
 A tool to walk over and transform specs using the [Visitor-pattern](https://en.wikipedia.org/wiki/Visitor_pattern). Main entry point is the `spec-tools.visitor/visit` function, extendable via `spec-tools.visitor/visit-spec` multimethod. There is an example implementation for recursively collecting nested specs. Also, the [Spec to JSON Schema -converter](#generating-json-schemas) is implemented using the visitor.
 
@@ -479,7 +479,7 @@ A tool to walk over and transform specs using the [Visitor-pattern](https://en.w
 
 **NOTE**: due to [CLJ-2152](http://dev.clojure.org/jira/browse/CLJ-2152), `s/&` & `s/keys*` can't be visited.
 
-### Generating JSON Schemas
+# Generating JSON Schemas
 
 Generating JSON Schemas from arbitrary specs (and Spec Records).
 
@@ -522,7 +522,7 @@ Extra data from Spec records is used to populate the data:
 ;  :default 42}
 ```
 
-### Swagger2 Integration
+# Swagger2 Integration
 
 Related:
 * https://github.com/metosin/ring-swagger/issues/95
@@ -531,7 +531,7 @@ Related:
 (require '[spec-tools.swagger.core :as swagger])
 ```
 
-#### Spec transformations
+## Spec transformations
 
 `swagger/transform` converts specs into Swagger2 JSON Schema. Transformation can be customized with the following optional options:
 
@@ -560,7 +560,7 @@ Related:
 ;                    {:type "string"}]}}
 ```
 
-#### Swagger Spec generation
+## Swagger Spec generation
 
 `swagger/swagger-spec` function takes an extended swagger2 spec as map and transforms it into a valid [Swagger2 Spec](http://swagger.io/specification/) format. Rules:
 
@@ -571,7 +571,7 @@ Related:
 
 Predifined dispatch keys below.
 
-#### `::swagger/extension`
+### `::swagger/extension`
 
 Transforms the the key into valid [swagger vendor extension](http://swagger.io/specification/#vendorExtensions) by prepending a `x-` to it's namespace. Value is not touched.
 
@@ -581,7 +581,7 @@ Transforms the the key into valid [swagger vendor extension](http://swagger.io/s
 ; {:x-my/thing 42}
 ```
 
-#### `::swagger/schema`
+### `::swagger/schema`
 
 Value should be a `clojure.spec.alpha/Spec` or name of a spec. Returns a map with key `:schema` and value transformed into swagger json schema format. Mostly used under [Response Object](http://swagger.io/specification/#responsesObject).
 
@@ -607,7 +607,7 @@ Value should be a `clojure.spec.alpha/Spec` or name of a spec. Returns a map wit
 ;        :required ["name"]}}}}}}}
 ```
 
-#### `::swagger/parameters`
+### `::swagger/parameters`
 
 Value should be a map with optional keys `:body`, `:query`, `:path`, `:header` and `:formData`. For all but `:body`, the value should be a `s/keys` spec (describing the ring parameters). With `:body`, the value can be any `clojure.spec.alpha/Spec` or name of a spec.
 
@@ -639,7 +639,7 @@ Returns a map with key `:parameters` with value of vector of swagger [Parameter 
 ;                :required ["name"]}}]}}}}
 ```
 
-#### Full example
+## Full example
 
 ```clj
 (require '[spec-tools.swagger.core :as swagger])
@@ -713,11 +713,11 @@ Returns a map with key `:parameters` with value of vector of swagger [Parameter 
 ;                                                     :required ["id" "name" "address"]}}]}}}}
 ```
 
-### OpenAPI3 Integration
+# OpenAPI3 Integration
 
 **TODO**
 
-## License
+# License
 
 Copyright © 2016-2017 [Metosin Oy](http://www.metosin.fi)
 
