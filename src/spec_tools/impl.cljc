@@ -120,13 +120,14 @@
       (name key))))
 
 (defn nilable-spec? [spec]
-  (boolean
-    (some-> spec
-            s/form
-            seq
-            first
-            #{'clojure.spec.alpha/nilable
-              'cljs.spec.alpha/nilable})))
+  (let [form (and spec (s/form spec))]
+    (boolean
+      (if-not (= form ::s/unknown)
+        (some-> form
+                seq
+                first
+                #{'clojure.spec.alpha/nilable
+                  'cljs.spec.alpha/nilable})))))
 
 (defn unwrap
   "Unwrap [x] to x. Asserts that coll has exactly one element."
