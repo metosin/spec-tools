@@ -79,8 +79,7 @@
                (if (symbol? x)
                  (or (some->> x res ->sym) x)
                  x)))
-            (unfn cljs?)
-            #_(walk/postwalk clojure-core-symbol-or-any)))))
+            (unfn cljs?)))))
 
 (defn extract-pred-and-info [x]
   (if (map? x)
