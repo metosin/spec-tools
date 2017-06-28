@@ -86,15 +86,6 @@
     [(:spec x) (dissoc x :spec)]
     [x {}]))
 
-(defn nilable-spec? [spec]
-  (boolean
-    (some-> spec
-            s/form
-            seq
-            first
-            #{'clojure.spec.alpha/nilable
-              'cljs.spec.alpha/nilable})))
-
 (defn strip-fn-if-needed [form]
   (let [head (first form)]
     ;; Deal with the form (clojure.core/fn [%] (foo ... %))
