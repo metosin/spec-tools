@@ -562,7 +562,7 @@ Related:
 
 ### Swagger Spec generation
 
-`swagger/swagger-spec` function takes an extended swagger2 spec as map and transforms it into a valid [Swagger2 Spec](http://swagger.io/specification/) format. Rules:
+`swagger/swagger-spec` function takes an extended swagger2 spec as map and transforms it into a valid [Swagger Object](http://swagger.io/specification/#swaggerObject). Rules:
 
 * by default, data is passed through, allowing any valid swagger data to be used
 * for qualified map keys, `swagger/expand` multimethod is invoked with the key, value and the map as arguments

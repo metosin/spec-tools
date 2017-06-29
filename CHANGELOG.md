@@ -1,7 +1,9 @@
 ## 0.3.0-SNAPSHOT
 
-* Swagger2 integration.
-  * moved code from `spec-swagger.swagger2` into `spec-tools.swagger`
+* Swagger2 integration (moved from [spec-swagger](https://github.com/metosin/spec-swagger))
+  * `spec-tools.swagger.core/transform` to transform Specs into Swagger [Parameter Objects](http://swagger.io/specification/#parameterObject)) or [Schema Objects](http://swagger.io/specification/#schemaObject))
+  * `spec-tools.swagger.core/swagger-spec` to create valid [Swagger Object](http://swagger.io/specification/#swaggerObject).
+  * see [the docs](https://github.com/metosin/spec-tools#swagger2-integration) for details.
 
 * **BREAKING**: More configurable Spec Visitor
   * `spec-tools.visitor/visit takes optionally 4th argument, an options-map, passed into all sub-visits & accepts
