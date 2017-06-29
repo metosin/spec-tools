@@ -195,6 +195,11 @@
 
   (testing "::parameters"
     (is (= {:parameters [{:in "query"
+                          :name "name2"
+                          :description "this survives the merge"
+                          :type "string"
+                          :required true}
+                         {:in "query"
                           :name "name"
                           :description ""
                           :type "string"
@@ -228,7 +233,16 @@
                                                         :x-nullable true}},
                                    :required ["street" "city"]}}]}
            (swagger/swagger-spec
-             {::swagger/parameters
+             {:parameters [{:in "query"
+                            :name "name"
+                            :description "this will be overridden"
+                            :required false}
+                           {:in "query"
+                            :name "name2"
+                            :description "this survives the merge"
+                            :type "string"
+                            :required true}]
+              ::swagger/parameters
               {:query (s/keys :opt-un [::name ::street ::city])
                :path (s/keys :req [::id])
                :body ::address}})))))

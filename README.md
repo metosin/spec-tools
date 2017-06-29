@@ -611,14 +611,24 @@ Value should be a `clojure.spec.alpha/Spec` or name of a spec. Returns a map wit
 
 Value should be a map with optional keys `:body`, `:query`, `:path`, `:header` and `:formData`. For all but `:body`, the value should be a `s/keys` spec (describing the ring parameters). With `:body`, the value can be any `clojure.spec.alpha/Spec` or name of a spec.
 
-Returns a map with key `:parameters` with value of vector of swagger [Parameter Objects](http://swagger.io/specification/#parameterObject).
+Returns a map with key `:parameters` with value of vector of swagger [Parameter Objects](http://swagger.io/specification/#parameterObject), merged over the existing `:parameters`. Duplicate parameters (with identical `:in` and `:name` are overridden)
 
 ```clj
 (swagger/swagger-spec
   {:paths
    {"echo"
     {:post
-     {::swagger/parameters
+     {:parameters
+      [{:in "query"
+        :name "name"
+        :description "overridden"
+        :required false}
+       {:in "query"
+        :name "name2"
+        :description "merged"
+        :type "string"
+        :required true}]
+      ::swagger/parameters
       {:query (s/keys :opt-un [::name])
        :body ::user}}}}})
 ; {:paths
@@ -626,6 +636,11 @@ Returns a map with key `:parameters` with value of vector of swagger [Parameter 
 ;   {:post
 ;    {:parameters
 ;     [{:in "query"
+;       :name "name2"
+;       :description "merged"
+;       :type "string"
+;       :required true}
+;      {:in "query"
 ;       :name ""
 ;       :description ""
 ;       :type "string"

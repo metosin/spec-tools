@@ -108,8 +108,21 @@
 (defmethod expand ::schema [_ v _ _]
   {:schema (transform v {:type :schema})})
 
-(defmethod expand ::parameters [_ v _ _]
-  {:parameters (into [] (mapcat (fn [[in spec]] (extract-parameter in spec)) v))})
+(defmethod expand ::parameters [_ v acc _]
+  (let [old (or (:parameters acc) [])
+        new (mapcat (fn [[in spec]] (extract-parameter in spec)) v)
+        merged (reverse
+                   (first
+                     (reduce
+                       (fn [[ps cache :as acc] p]
+                         (let [c (select-keys p [:in :name])]
+                           (if-not (cache c)
+                             [(conj ps p) (conj cache c)]
+                             acc)))
+                       [[] #{}]
+                       (reverse
+                         (into old new)))))]
+    {:parameters merged}))
 
 (defn expand-qualified-keywords [x f options]
   (walk/postwalk
