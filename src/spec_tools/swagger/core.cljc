@@ -131,18 +131,20 @@
     {:parameters merged}))
 
 (defn expand-qualified-keywords [x f options]
-  (walk/postwalk
-    (fn [x]
-      (if (map? x)
-        (reduce-kv
-          (fn [acc k v]
-            (if (qualified-keyword? k)
-              (-> acc (dissoc k) (merge (f k v acc options)))
-              acc))
-          x
-          x)
-        x))
-    x))
+  ;; inline qualified-keywords? to work with clojure 1.8
+  (let [qualified? #(boolean (and (keyword? %) (namespace %) true))]
+    (walk/postwalk
+      (fn [x]
+        (if (map? x)
+          (reduce-kv
+            (fn [acc k v]
+              (if (qualified? k)
+                (-> acc (dissoc k) (merge (f k v acc options)))
+                acc))
+            x
+            x)
+          x))
+      x)))
 
 ;;
 ;; generate the swagger spec
