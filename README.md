@@ -524,7 +524,7 @@ Extra data from Spec records is used to populate the data:
 
 ## Swagger2 Integration
 
-A standalone converter for Specs to Swagger2 (JSON) Schemas. Can be used as standalone but will be later available as [ring-swagger](https://clojars.org/metosin/ring-swagger) module. See https://github.com/metosin/ring-swagger/issues/95.
+A converter from Specs to Swagger2 (JSON) Schemas. Can be used as standalone but will be later available as [ring-swagger](https://clojars.org/metosin/ring-swagger) module. See https://github.com/metosin/ring-swagger/issues/95.
 
 ```clj
 (require '[spec-tools.swagger.core :as swagger])
