@@ -1,4 +1,4 @@
-## 0.3.0-SNAPSHOT
+## 0.3.0 (30.6.2017)
 
 * Swagger2 integration (moved from [spec-swagger](https://github.com/metosin/spec-swagger))
   * `spec-tools.swagger.core/transform` to transform Specs into Swagger [Parameter Objects](http://swagger.io/specification/#parameterObject) and [Schema Objects](http://swagger.io/specification/#schemaObject)
