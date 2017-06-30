@@ -178,21 +178,6 @@
            (swagger/swagger-spec
              {:my/thing 42}))))
 
-  (testing "::schema"
-    (is (= {:schema
-            {:type "object",
-             :title "spec-tools.swagger.core-test/user"
-             :properties {"id" {:type "string"},
-                          "name" {:type "string"},
-                          "address" {:type "object",
-                                     :title "spec-tools.swagger.core-test/address"
-                                     :properties {"street" {:type "string"}
-                                                  "city" {:enum [:tre :hki], :type "string", :x-nullable true}},
-                                     :required ["street" "city"]}},
-             :required ["id" "name" "address"]}}
-           (swagger/swagger-spec
-             {::swagger/schema ::user}))))
-
   (testing "::parameters"
     (is (= {:parameters [{:in "query"
                           :name "name2"
@@ -245,7 +230,33 @@
               ::swagger/parameters
               {:query (s/keys :opt-un [::name ::street ::city])
                :path (s/keys :req [::id])
-               :body ::address}})))))
+               :body ::address}}))))
+
+  (testing "::responses"
+    (is (= {:responses
+            {200 {:schema
+                  {:type "object"
+                   :properties
+                   {"id" {:type "string"}
+                    "name" {:type "string"}
+                    "address" {:type "object"
+                               :properties {"street" {:type "string"}
+                                            "city" {:enum [:tre :hki]
+                                                    :type "string"
+                                                    :x-nullable true}}
+                               :required ["street" "city"]
+                               :title "spec-tools.swagger.core-test/address"}}
+                   :required ["id" "name" "address"]
+                   :title "spec-tools.swagger.core-test/user"}
+                  :description ""}
+             404 {:schema {}
+                  :description "Ohnoes."}
+             500 {:description "fail"}}}
+           (swagger/swagger-spec
+             {:responses {404 {:description "fail"}
+                          500 {:description "fail"}}
+              ::swagger/responses {200 {:schema ::user}
+                                   404 {:description "Ohnoes."}}})))))
 
 #?(:clj
    (deftest test-schema-validation

@@ -105,23 +105,29 @@
 (defmethod expand ::extension [k v _ _]
   {(keyword (str "x-" (impl/qualified-name k))) v})
 
-(defmethod expand ::schema [_ v _ _]
-  {:schema (transform v {:type :schema})})
+(defmethod expand ::responses [_ v acc _]
+  {:responses
+   (into
+     (or (:responses acc) {})
+     (for [[status response] v]
+       [status (-> response
+                   (update :schema transform {:type :schema})
+                   (update :description (fnil identity "")))]))})
 
 (defmethod expand ::parameters [_ v acc _]
   (let [old (or (:parameters acc) [])
         new (mapcat (fn [[in spec]] (extract-parameter in spec)) v)
-        merged (reverse
-                   (first
-                     (reduce
-                       (fn [[ps cache :as acc] p]
-                         (let [c (select-keys p [:in :name])]
-                           (if-not (cache c)
-                             [(conj ps p) (conj cache c)]
-                             acc)))
-                       [[] #{}]
-                       (reverse
-                         (into old new)))))]
+        merged (->> (into old new)
+                    (reverse)
+                    (reduce
+                      (fn [[ps cache :as acc] p]
+                        (let [c (select-keys p [:in :name])]
+                          (if-not (cache c)
+                            [(conj ps p) (conj cache c)]
+                            acc)))
+                      [[] #{}])
+                    (first)
+                    (reverse))]
     {:parameters merged}))
 
 (defn expand-qualified-keywords [x f options]

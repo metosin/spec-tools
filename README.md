@@ -524,8 +524,7 @@ Extra data from Spec records is used to populate the data:
 
 ## Swagger2 Integration
 
-Related:
-* https://github.com/metosin/ring-swagger/issues/95
+A standalone converter for Specs to Swagger2 (JSON) Schemas. Can be used as standalone but will be later available as [ring-swagger](https://clojars.org/metosin/ring-swagger) module. See https://github.com/metosin/ring-swagger/issues/95.
 
 ```clj
 (require '[spec-tools.swagger.core :as swagger])
@@ -548,7 +547,7 @@ Related:
 (swagger/transform (s/nilable string?))
 ; {:type "string", :x-nullable true}
 
-;; special syntax just for parameters
+;; swagger2 parameter syntax
 (swagger/transform (s/nilable string?) {:type :parameter})
 ; {:type "string", :allowEmptyValue true}
 
@@ -581,35 +580,9 @@ Transforms the the key into valid [swagger vendor extension](http://swagger.io/s
 ; {:x-my/thing 42}
 ```
 
-#### `::swagger/schema`
-
-Value should be a `clojure.spec.alpha/Spec` or name of a spec. Returns a map with key `:schema` and value transformed into swagger json schema format. Mostly used under [Response Object](http://swagger.io/specification/#responsesObject).
-
-```clj
-(s/def ::name string?)
-(s/def ::user (s/keys :req-un [::name]))
-
-(swagger/swagger-spec
-  {:paths
-   {"echo"
-    {:post
-     {:responses
-      {200
-       {::swagger/schema ::user}}}}}})
-; {:paths
-;  {"echo"
-;   {:post
-;    {:responses
-;     {200
-;      {:schema
-;       {:type "object"
-;        :properties {"name" {:type "string"}}
-;        :required ["name"]}}}}}}}
-```
-
 #### `::swagger/parameters`
 
-Value should be a map with optional keys `:body`, `:query`, `:path`, `:header` and `:formData`. For all but `:body`, the value should be a `s/keys` spec (describing the ring parameters). With `:body`, the value can be any `clojure.spec.alpha/Spec` or name of a spec.
+Value should be a map with optional keys `:body`, `:query`, `:path`, `:header` and `:formData`. For all but `:body`, the value should be a `s/keys` spec (describing the ring parameters). With `:body`, the value can be any `clojure.spec.alpha/Spec`.
 
 Returns a map with key `:parameters` with value of vector of swagger [Parameter Objects](http://swagger.io/specification/#parameterObject), merged over the existing `:parameters`. Duplicate parameters (with identical `:in` and `:name` are overridden)
 
@@ -619,15 +592,16 @@ Returns a map with key `:parameters` with value of vector of swagger [Parameter 
    {"echo"
     {:post
      {:parameters
-      [{:in "query"
+      [;; existing parameter, will be overriddden
+       {:in "query"
         :name "name"
-        :description "overridden"
         :required false}
+       ;; unique parameter, will remain
        {:in "query"
         :name "name2"
-        :description "merged"
         :type "string"
         :required true}]
+      ;; the spec-parameters
       ::swagger/parameters
       {:query (s/keys :opt-un [::name])
        :body ::user}}}}})
@@ -650,8 +624,37 @@ Returns a map with key `:parameters` with value of vector of swagger [Parameter 
 ;       :description ""
 ;       :required true
 ;       :schema {:type "object"
+;                :title "user/user"
 ;                :properties {"name" {:type "string"}}
 ;                :required ["name"]}}]}}}}
+```
+
+#### `::swagger/responses`
+
+Value should a [Swagger2 Responses Definition Object](https://swagger.io/specification/#responsesDefinitionsObject) with Spec or Spec as the `:schema`. Returns a map with key `:responses` with `:schemas` transformed into [Swagger2 Schema Objects](https://swagger.io/specification/#schemaObject), merged over existing `:responses`.
+
+
+```clj
+(s/def ::name string?)
+(s/def ::user (s/keys :req-un [::name]))
+
+(swagger/swagger-spec
+  {:responses {404 {:description "fail"}
+               500 {:description "fail"}}
+   ::swagger/responses
+   {200 {:schema ::user
+         :description "Found it!"}
+    404 {:description "Ohnoes."}}})
+; {:responses
+;  {200 {:schema
+;        {:type "object",
+;         :properties {"name" {:type "string"}},
+;         :required ["name"],
+;         :title "user/user"},
+;        :description "Found it!"}
+;   404 {:description "Ohnoes."
+;        :schema {}},
+;   500 {:description "fail"}}}
 ```
 
 ### Full example
