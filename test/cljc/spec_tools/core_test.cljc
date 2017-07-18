@@ -409,6 +409,8 @@
 (deftest type-inference-test
   (testing "works for core predicates"
     (is (= :long (type/resolve-type `integer?))))
+  (testing "works for conjunctive predicates"
+    (is (= :long (type/resolve-type `(s/and integer? #(> % 42))))))
   (testing "unknowns return nil"
     (is (= nil (type/resolve-type #(> % 2)))))
   (testing "available types"
