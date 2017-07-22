@@ -1,3 +1,7 @@
+## 0.3.1-SNAPSHOT
+
+* resolve `:type` from first predicate of `s/and`, thanks to [Andy Chambers](https://github.com/cddr)
+
 ## 0.3.0 (30.6.2017)
 
 * Swagger2 integration (moved from [spec-swagger](https://github.com/metosin/spec-swagger))
