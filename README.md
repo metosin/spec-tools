@@ -12,8 +12,9 @@ Clojure(Script) tools for [clojure.spec](http://clojure.org/about/spec). Like [S
 Status: **Alpha** (as spec is still alpha too).
 
 Blogs:
-* [Schema & Clojure Spec for the Web Developer](http://www.metosin.fi/blog/schema-spec-web-devs/)
+* [Clojure.spec with Ring (& Swagger)](http://www.metosin.fi/blog/clojure-spec-with-ring-and-swagger/)
 * [Clojure.spec as a Runtime Transformation Engine](http://www.metosin.fi/blog/clojure-spec-as-a-runtime-transformation-engine/)
+* [Schema & Clojure Spec for the Web Developer](http://www.metosin.fi/blog/schema-spec-web-devs/)
 
 ## Latest version
 
@@ -145,6 +146,8 @@ Spec-tools loans from the awesome [Schema](https://github.com/plumatic/schema) b
 Spec Record conform is by default a no-op. Binding a dynamic var `spec-tools.core/*conforming*` with a function of `spec => spec-conformer` will cause the Spec to be conformed with the selected spec-conformer. `spec-tools.core` has helper functions for setting the binding: `explain`, `explain-data`, `conform` and `conform!`.
 
 Spec-conformers are arity2 functions taking the Spec Records and the value and should return either conformed value or `:clojure.spec.alpha/invalid`.
+
+There is a [CLJ-2116](https://dev.clojure.org/jira/browse/CLJ-2116) to provide better support with `clojure.spec`.
 
 ### Type based conforming
 
