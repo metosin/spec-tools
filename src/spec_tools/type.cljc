@@ -93,7 +93,9 @@
 
 (defmethod resolve-type 'clojure.spec.alpha/or [x] nil)
 
-(defmethod resolve-type 'clojure.spec.alpha/and [x] nil)
+(defmethod resolve-type 'clojure.spec.alpha/and [x]
+  (let [[_ predicate & _] x]
+    (resolve-type predicate)))
 
 ; merge
 
