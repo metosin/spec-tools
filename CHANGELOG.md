@@ -1,6 +1,7 @@
-## 0.3.1-SNAPSHOT
+## 0.3.1 (27.7.2017)
 
 * resolve `:type` from first predicate of `s/and`, thanks to [Andy Chambers](https://github.com/cddr)
+* better error messages when trying to create non-homogeneous data-specs for Vectors & Sets
 
 ## 0.3.0 (30.6.2017)
 
