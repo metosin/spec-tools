@@ -139,14 +139,18 @@
   (when-not (= 1 (count v))
     (throw
       (ex-info
-        (str "only single maps allowed in nested " proto)
-        {:k n :v v})))
+        (str "data-spec collection " proto
+             " should be homogeneous, " (count v)
+             " values found")
+        {:name n
+         :proto proto
+         :values v})))
   (let [spec (spec n (first v))]
     (st/create-spec {:spec (coll-of-spec spec proto)})))
 
 (defn spec
   ([name x]
-    (spec name x true))
+   (spec name x true))
   ([name x coll-specs?]
    (cond
      (st/spec? x) x
