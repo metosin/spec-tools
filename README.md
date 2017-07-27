@@ -306,7 +306,8 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
 
 * Just data, no macros
 * Can be transformed into vanilla specs with valid forms (via form inference)
-* Vectors and Sets are homogeneous, and must contains exactly one spec
+* Supports nested Maps `{}`, Vectors `[]` and Sets `#{}`
+  * Vectors and Sets are homogeneous, and must contains exactly one spec
 * Maps have either a single spec key (homogeneous keys) or any number keyword keys.
   * With homogeneous keys, keys are also conformed
   * Map (keyword) keys
@@ -318,6 +319,8 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
     * wrapping value into `ds/maybe` makes it `s/nillable`
 
 **NOTE**: to avoid macros, current implementation uses the undocumented functional core of `clojure.spec.alpha`: `every-impl`, `tuple-impl`, `map-spec-impl` & `nilable-impl`.
+
+**NOTE**: To use enums with data-specs, you need to wrap them: `(s/spec #{:S :M :L})`
 
 ```clj
 (s/def ::age spec/pos-int?)
