@@ -224,4 +224,4 @@
              st/string-conforming)))))
 
 (deftest pithyless-test
-  (is (st/explain-data (ds/spec ::foo {:foo string?}) {:foo 42})))
+  (is (map? (st/explain-data (ds/spec ::foo {:foo string?}) {:foo 42}))))
