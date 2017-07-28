@@ -192,7 +192,7 @@ The following type-based conforming are found in `spec-tools.core`:
 (s/def ::languages
   (s/coll-of
     (s/and spec/keyword? #{:clj :cljs})
-    :into {}))
+    :into #{}))
 
 (s/def ::user
   (s/keys
