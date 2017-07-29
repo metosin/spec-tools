@@ -1,5 +1,5 @@
 (ns spec-tools.spec
-  (:refer-clojure :exclude [any? some? number? integer? int? pos-int? neg-int? nat-int?
+  (:refer-clojure :exclude [any? some? number? pos? neg? integer? int? pos-int? neg-int? nat-int?
                             float? double? boolean? string? ident? simple-ident? qualified-ident?
                             keyword? simple-keyword? qualified-keyword? symbol? simple-symbol?
                             qualified-symbol? uuid? uri? bigdec? inst? seqable? indexed?
@@ -11,6 +11,8 @@
 (def any? (st/spec clojure.core/any?))
 (def some? (st/spec clojure.core/some?))
 (def number? (st/spec clojure.core/number?))
+(def pos? (st/spec clojure.core/pos?))
+(def neg? (st/spec clojure.core/neg?))
 (def integer? (st/spec clojure.core/integer?))
 (def int? (st/spec clojure.core/int?))
 (def pos-int? (st/spec clojure.core/pos-int?))

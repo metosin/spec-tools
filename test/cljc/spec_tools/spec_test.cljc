@@ -8,6 +8,8 @@
     spec/any? clojure.core/any?
     spec/some? clojure.core/some?
     spec/number? clojure.core/number?
+    spec/pos? clojure.core/pos?
+    spec/neg? clojure.core/neg?
     spec/integer? clojure.core/integer?
     spec/int? clojure.core/int?
     spec/pos-int? clojure.core/pos-int?

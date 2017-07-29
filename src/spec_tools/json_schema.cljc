@@ -38,6 +38,10 @@
 ; number? (one-of [(large-integer) (double)])
 (defmethod accept-spec 'clojure.core/number? [_ _ _ _] {:type "number" :format "double"})
 
+(defmethod accept-spec 'clojure.core/pos? [_ _ _ _] {:minimum 0 :exclusiveMinimum true})
+
+(defmethod accept-spec 'clojure.core/neg? [_ _ _ _] {:maximum 0 :exclusiveMaximum true})
+
 ; integer? (large-integer)
 (defmethod accept-spec 'clojure.core/integer? [_ _ _ _] {:type "integer"})
 
@@ -171,9 +175,6 @@
 
 ; bytes? (bytes)
 (defmethod accept-spec 'clojure.core/ratio? [_ _ _ _] {:type "string" :format "byte"})
-
-(defmethod accept-spec 'clojure.core/pos? [_ _ _ _] {:minimum 0 :exclusiveMinimum true})
-(defmethod accept-spec 'clojure.core/neg? [_ _ _ _] {:maximum 0 :exclusiveMaximum true})
 
 (defmethod accept-spec ::visitor/set [dispatch spec children _]
   {:enum children})
