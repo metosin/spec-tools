@@ -3,6 +3,7 @@
             [clojure.spec.alpha :as s]
             [spec-tools.core :as st]
             [spec-tools.data-spec :as ds]
+            [spec-tools.spec :as spec]
             [com.gfredericks.test.chuck.clojure-test :refer [checking]]
             [spec-tools.json-schema :as jsc]
     #?(:clj
@@ -45,6 +46,8 @@
     (is (= (jsc/transform (s/or :int integer? :string string?))
            {:anyOf [{:type "integer"} {:type "string"}]}))
     (is (= (jsc/transform (s/and integer? pos?))
+           {:allOf [{:type "integer"} {:minimum 0 :exclusiveMinimum true}]}))
+    (is (= (jsc/transform (s/and spec/integer? pos?))
            {:allOf [{:type "integer"} {:minimum 0 :exclusiveMinimum true}]}))
     (is (= (jsc/transform (s/merge (s/keys :req [::integer])
                                    (s/keys :req [::string])))

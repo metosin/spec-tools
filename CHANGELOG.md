@@ -1,3 +1,7 @@
+## 0.3.2 (29.7.2017)
+
+* map `spec-tools.spec` predicate symbols into `clojure.core` counterparts for JSON Schema / Swagger mappings.
+
 ## 0.3.1 (27.7.2017)
 
 * resolve `:type` from first predicate of `s/and`, thanks to [Andy Chambers](https://github.com/cddr)

@@ -96,6 +96,7 @@
 
 (defn normalize-symbol [kw]
   (case (and (symbol? kw) (namespace kw))
+    "spec-tools.spec" (symbol "clojure.core" (name kw))
     "cljs.core" (symbol "clojure.core" (name kw))
     "cljs.spec.alpha" (symbol "clojure.spec.alpha" (name kw))
     kw))

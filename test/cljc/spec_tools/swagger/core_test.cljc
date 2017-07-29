@@ -3,6 +3,7 @@
     [clojure.test :refer [deftest testing is are]]
     [spec-tools.swagger.core :as swagger]
     [clojure.spec.alpha :as s]
+    [spec-tools.spec :as spec]
     #?(:clj
     [ring.swagger.validator :as v])))
 
@@ -63,6 +64,12 @@
                :format "int64"}
               {:minimum 0
                :exclusiveMinimum true}]}
+
+   (s/and spec/int?)
+   {:type "integer"
+    :format "int64",
+    :x-allOf [{:type "integer"
+               :format "int64"}]}
 
    (s/or :int int? :pos pos?)
    {:type "integer"
