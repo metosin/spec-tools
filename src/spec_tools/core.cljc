@@ -6,8 +6,8 @@
             [spec-tools.conform :as conform]
             [clojure.spec.alpha :as s]
     #?@(:clj  [
-            [clojure.spec.gen.alpha :as gen]
-            [clojure.edn]]
+               [clojure.spec.gen.alpha :as gen]
+               [clojure.edn]]
         :cljs [[goog.date.UtcDateTime]
                [cljs.reader]
                [clojure.test.check.generators]
@@ -280,6 +280,8 @@
           :xx/yy  any qualified keys can be added (optional)"
   [{:keys [spec type form] :as m}]
   (assert spec "missing spec predicate")
+  (when (qualified-keyword? spec)
+    (assert (s/get-spec spec) (str " Unable to resolve spec: " (:spec m))))
   (let [spec (if (qualified-keyword? spec)
                (s/get-spec spec) spec)
         form (or (if (qualified-keyword? form)
