@@ -74,6 +74,9 @@
                (st/create-spec {:spec integer? :type :long})
                (st/create-spec {:spec integer?, :form `integer?})
                (st/create-spec {:spec integer?, :form `integer?, :type :long}))))
+      (testing "fails"
+        (is (thrown? #?(:clj AssertionError, :cljs js/Error)
+              (st/create-spec {:spec :un-existent/keyword-spec}))))
 
       (testing "::s/name is retained"
         (is (= ::age (::s/name (meta (st/create-spec {:spec ::age}))))))
