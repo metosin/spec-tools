@@ -37,18 +37,21 @@
             "test-phantom" ["doo" "phantom" "test"]
             "test-advanced" ["doo" "phantom" "advanced-test"]
             "test-node" ["doo" "node" "node-test"]}
+  ;; Below, :process-shim false is workaround for <https://github.com/bensu/doo/pull/141>
   :cljsbuild {:builds [{:id "test"
                         :source-paths ["src" "test/cljc" "test/cljs"]
                         :compiler {:output-to "target/out/test.js"
                                    :output-dir "target/out"
                                    :main spec-tools.doo-runner
-                                   :optimizations :none}}
+                                   :optimizations :none
+                                   :process-shim false}}
                        {:id "advanced-test"
                         :source-paths ["src" "test/cljc" "test/cljs"]
                         :compiler {:output-to "target/advanced_out/test.js"
                                    :output-dir "target/advanced_out"
                                    :main spec-tools.doo-runner
-                                   :optimizations :advanced}}
+                                   :optimizations :advanced
+                                   :process-shim false}}
                        ;; Node.js requires :target :nodejs, hence the separate
                        ;; build configuration.
                        {:id "node-test"
@@ -57,4 +60,5 @@
                                    :output-dir "target/node_out"
                                    :main spec-tools.doo-runner
                                    :optimizations :none
-                                   :target :nodejs}}]})
+                                   :target :nodejs
+                                   :process-shim false}}]})
