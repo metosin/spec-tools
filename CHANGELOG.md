@@ -1,4 +1,4 @@
-## 0.3.3-SNAPSHOT
+## 0.3.3 (1.9.2017)
 
 * `spec-tools.core/create-spec` fails with qualified keyword if they don't link to a spec, thanks to [Camilo Roca](https://github.com/carocad)
 
