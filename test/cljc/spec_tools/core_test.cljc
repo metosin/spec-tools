@@ -76,7 +76,7 @@
                (st/create-spec {:spec integer?, :form `integer?, :type :long}))))
       (testing "fails"
         (is (thrown? #?(:clj AssertionError, :cljs js/Error)
-              (st/create-spec {:spec :un-existent/keyword-spec}))))
+                     (st/create-spec {:spec :un-existent/keyword-spec}))))
 
       (testing "::s/name is retained"
         (is (= ::age (::s/name (meta (st/create-spec {:spec ::age}))))))
@@ -393,21 +393,49 @@
     (testing "my-conforming"
       (is (= :AKKIK (st/conform spec/keyword? "kikka" my-conforming))))))
 
-(deftest extract-extra-info-test
+(s/def ::collect-info-spec (s/keys
+                             :req [::age]
+                             :req-un [::lat]
+                             :opt [::truth]
+                             :opt-un [::uuid]))
+
+(deftest collect-info-test
+  (testing "doesn't fail with ::s/unknown"
+    (is (= nil
+           (type/collect-info
+             ::s/unknown))))
+
   (testing "all keys types are extracted"
-    (is (= {:keys #{::age :lat ::truth :uuid}}
-           (st/extract-extra-info
-             (s/form (s/keys
-                       :req [::age]
-                       :req-un [::lat]
-                       :opt [::truth]
-                       :opt-un [::uuid]))))))
+    (is (= {:type :map
+            :keys #{::age :lat ::truth :uuid}}
+
+           ;; named spec
+           (type/collect-info
+             ::collect-info-spec)
+
+           ;; spec
+           (type/collect-info
+             (s/keys
+               :req [::age]
+               :req-un [::lat]
+               :opt [::truth]
+               :opt-un [::uuid]))
+
+           ;; form
+           (type/collect-info
+             (s/form
+               (s/keys
+                 :req [::age]
+                 :req-un [::lat]
+                 :opt [::truth]
+                 :opt-un [::uuid]))))))
 
   (testing "ands and ors are flattened"
-    (is (= {:keys #{::age ::lat ::uuid}}
-           (st/extract-extra-info
-             (s/form (s/keys
-                       :req [(or ::age (and ::uuid ::lat))])))))))
+    (is (= {:type :map
+            :keys #{::age ::lat ::uuid}}
+           (type/collect-info
+             (s/keys
+               :req [(or ::age (and ::uuid ::lat))]))))))
 
 (deftest type-inference-test
   (testing "works for core predicates"
