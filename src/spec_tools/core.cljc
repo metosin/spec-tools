@@ -1,7 +1,7 @@
 (ns spec-tools.core
   #?(:cljs (:require-macros [spec-tools.core :refer [spec]]))
   (:require [spec-tools.impl :as impl]
-            [spec-tools.type :as type]
+            [spec-tools.info :as info]
             [spec-tools.form :as form]
             [spec-tools.conform :as conform]
             [clojure.spec.alpha :as s]
@@ -272,7 +272,7 @@
                    (if-not (= form ::s/unknown) form))
                  (form/resolve-form spec)
                  ::s/unknown)
-        info (type/collect-info form)
+        info (info/extract form)
         type (if-not (contains? m :type) (:type info) type)
         name (-> spec meta ::s/name)
         record (map->Spec

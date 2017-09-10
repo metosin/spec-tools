@@ -4,7 +4,7 @@
             [clojure.string :as str]
             [spec-tools.core :as st]
             [spec-tools.spec :as spec]
-            [spec-tools.type :as type]
+            [spec-tools.info :as info]
             [spec-tools.form :as form]
             [spec-tools.conform :as conform]))
 
@@ -402,7 +402,7 @@
 (deftest collect-info-test
   (testing "doesn't fail with ::s/unknown"
     (is (= nil
-           (type/collect-info
+           (info/extract
              ::s/unknown))))
 
   (testing "all keys types are extracted"
@@ -410,11 +410,11 @@
             :keys #{::age :lat ::truth :uuid}}
 
            ;; named spec
-           (type/collect-info
+           (info/extract
              ::collect-info-spec)
 
            ;; spec
-           (type/collect-info
+           (info/extract
              (s/keys
                :req [::age]
                :req-un [::lat]
@@ -422,7 +422,7 @@
                :opt-un [::uuid]))
 
            ;; form
-           (type/collect-info
+           (info/extract
              (s/form
                (s/keys
                  :req [::age]
@@ -433,24 +433,24 @@
   (testing "ands and ors are flattened"
     (is (= {:type :map
             :keys #{::age ::lat ::uuid}}
-           (type/collect-info
+           (info/extract
              (s/keys
                :req [(or ::age (and ::uuid ::lat))]))))))
 
 (deftest type-inference-test
   (testing "works for core predicates"
-    (is (= :long (type/resolve-type `integer?))))
+    (is (= :long (:type (info/extract `integer?)))))
   (testing "works for conjunctive predicates"
-    (is (= :long (type/resolve-type `(s/and integer? #(> % 42))))))
+    (is (= :long (:type (info/extract `(s/and integer? #(> % 42)))))))
   (testing "unknowns return nil"
-    (is (= nil (type/resolve-type #(> % 2)))))
+    (is (= nil (:type (info/extract #(> % 2))))))
   (testing "available types"
-    (is (not (empty? (type/types))))
-    (is (contains? (type/types) :boolean)))
+    (is (not (empty? (info/types))))
+    (is (contains? (info/types) :boolean)))
   (testing "available type-symbols"
-    (is (not (empty? (type/type-symbols))))
-    (is (contains? (type/type-symbols) 'clojure.spec.alpha/keys))
-    (is (contains? (type/type-symbols) 'clojure.core/integer?))))
+    (is (not (empty? (info/type-symbols))))
+    (is (contains? (info/type-symbols) 'clojure.spec.alpha/keys))
+    (is (contains? (info/type-symbols) 'clojure.core/integer?))))
 
 (deftest form-inference-test
   (testing "works for core predicates"

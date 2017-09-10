@@ -2,7 +2,7 @@
   "Tools for walking spec definitions."
   (:require [clojure.spec.alpha :as s]
             [spec-tools.core :as st]
-            [spec-tools.type :as type]
+            [spec-tools.info :as info]
             [spec-tools.impl :as impl]
             [spec-tools.form :as form]))
 
@@ -41,9 +41,9 @@
   * if the spec is a set: :spec-tools.visitor/set
   * otherwise: the spec itself"
   ([spec accept]
-    (visit spec accept nil))
+   (visit spec accept nil))
   ([spec accept options]
-    (visit-spec spec accept options)))
+   (visit-spec spec accept options)))
 
 (defmethod visit-spec ::set [spec accept options]
   (accept ::set spec (vec (if (keyword? spec) (impl/extract-form spec) spec)) options))
@@ -77,7 +77,7 @@
 (defmethod visit-spec 'clojure.spec.alpha/coll-of [spec accept options]
   (let [form (impl/extract-form spec)
         pred (second form)
-        type (type/resolve-type form)
+        {:keys [type]} (info/extract form)
         dispatch (case type
                    :map ::map-of
                    :set ::set-of

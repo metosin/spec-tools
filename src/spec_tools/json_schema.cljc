@@ -1,7 +1,7 @@
 (ns spec-tools.json-schema
   "Tools for converting specs into JSON Schemata."
   (:require [spec-tools.visitor :as visitor]
-            [spec-tools.type :as type]
+            [spec-tools.info :as info]
             [spec-tools.impl :as impl]
             [clojure.set :as set]
             [spec-tools.core :as st]))
@@ -186,9 +186,9 @@
 
 (defmethod accept-spec 'clojure.spec.alpha/keys [_ spec children _]
   (let [[_ & {:keys [req req-un opt opt-un]}] (impl/extract-form spec)
-        names-un    (map name (concat req-un opt-un))
-        names       (map impl/qualified-name (concat req opt))
-        required    (map impl/qualified-name req)
+        names-un (map name (concat req-un opt-un))
+        names (map impl/qualified-name (concat req opt))
+        required (map impl/qualified-name req)
         required-un (map name req-un)]
     (maybe-with-title
       {:type "object"
@@ -209,7 +209,7 @@
 
 (defmethod accept-spec 'clojure.spec.alpha/every [_ spec children _]
   (let [form (impl/extract-form spec)
-        type (type/resolve-type form)]
+        {:keys [type]} (info/extract form)]
     (case type
       :map (maybe-with-title {:type "object", :additionalProperties (impl/unwrap children)} spec)
       :set {:type "array", :uniqueItems true, :items (impl/unwrap children)}
