@@ -121,8 +121,7 @@
 (defmethod extract-from-form 'clojure.spec.alpha/or [_ _])
 
 (defmethod extract-from-form 'clojure.spec.alpha/and [_ form]
-  (let [[_ predicate & _] form]
-    (extract predicate)))
+  (extract (second form)))
 
 ; merge
 
