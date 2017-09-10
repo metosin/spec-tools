@@ -100,7 +100,7 @@ my-integer?
 ;       :description "It's a int"}
 ```
 
-For most core predicates, `:type` can be resolved automatically using the `spec-tools.type/resolve-type` multimethod.
+For most core predicates, `:type` can be resolved automatically using the `spec-tools.info/extract-from-form` multimethod.
 
 For most core predicates, `:form` can be resolved automatically using the `spec-tools.form/resolve-form` multimethod.
 

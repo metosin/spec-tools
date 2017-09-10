@@ -1,3 +1,9 @@
+## 0.4.0-SNAPSHOT
+
+* **BREAKING**: `spec-tools.type` is now `spec-tools.info` with public api of:
+  * `extract`: given a spec name, form or instance, maybe returns a spec info map with resolved `:type` and optionally other info, e.g. `:keys` for `s/keys` specs.
+  * `extract-from-form`: multimethod to extract info out of a form
+
 ## 0.3.3 (1.9.2017)
 
 * `spec-tools.core/create-spec` fails with qualified keyword if they don't link to a spec, thanks to [Camilo Roca](https://github.com/carocad)
