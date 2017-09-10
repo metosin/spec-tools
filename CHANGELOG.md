@@ -3,6 +3,7 @@
 * **BREAKING**: `spec-tools.type` is now `spec-tools.info` with public api of:
   * `extract`: given a spec name, form or instance, maybe returns a spec info map with resolved `:type` and optionally other info, e.g. `:keys` for `s/keys` specs.
   * `extract-from-form`: multimethod to extract info out of a form
+* Spec Records of `s/and` are fully resolved now, fixes https://github.com/metosin/compojure-api/issues/336
 
 ## 0.3.3 (1.9.2017)
 
