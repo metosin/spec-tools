@@ -4,7 +4,7 @@
             [clojure.string :as str]
             [spec-tools.core :as st]
             [spec-tools.spec :as spec]
-            [spec-tools.info :as info]
+            [spec-tools.parse :as info]
             [spec-tools.form :as form]
             [spec-tools.conform :as conform]))
 
@@ -402,7 +402,7 @@
 (deftest collect-info-test
   (testing "doesn't fail with ::s/unknown"
     (is (= nil
-           (info/extract
+           (info/parse-spec
              ::s/unknown))))
 
   (testing "all keys types are extracted"
@@ -410,11 +410,11 @@
             :keys #{::age :lat ::truth :uuid}}
 
            ;; named spec
-           (info/extract
+           (info/parse-spec
              ::collect-info-spec)
 
            ;; spec
-           (info/extract
+           (info/parse-spec
              (s/keys
                :req [::age]
                :req-un [::lat]
@@ -422,7 +422,7 @@
                :opt-un [::uuid]))
 
            ;; form
-           (info/extract
+           (info/parse-spec
              (s/form
                (s/keys
                  :req [::age]
@@ -433,17 +433,17 @@
   (testing "ands and ors are flattened"
     (is (= {:type :map
             :keys #{::age ::lat ::uuid}}
-           (info/extract
+           (info/parse-spec
              (s/keys
                :req [(or ::age (and ::uuid ::lat))]))))))
 
 (deftest type-inference-test
   (testing "works for core predicates"
-    (is (= :long (:type (info/extract `integer?)))))
+    (is (= :long (:type (info/parse-spec `integer?)))))
   (testing "works for conjunctive predicates"
-    (is (= :long (:type (info/extract `(s/and integer? #(> % 42)))))))
+    (is (= :long (:type (info/parse-spec `(s/and integer? #(> % 42)))))))
   (testing "unknowns return nil"
-    (is (= nil (:type (info/extract #(> % 2))))))
+    (is (= nil (:type (info/parse-spec #(> % 2))))))
   (testing "available types"
     (is (not (empty? (info/types))))
     (is (contains? (info/types) :boolean)))

@@ -2,7 +2,7 @@
   "Tools for walking spec definitions."
   (:require [clojure.spec.alpha :as s]
             [spec-tools.core :as st]
-            [spec-tools.info :as info]
+            [spec-tools.parse :as parse]
             [spec-tools.impl :as impl]
             [spec-tools.form :as form]))
 
@@ -77,7 +77,7 @@
 (defmethod visit-spec 'clojure.spec.alpha/coll-of [spec accept options]
   (let [form (impl/extract-form spec)
         pred (second form)
-        {:keys [type]} (info/extract form)
+        {:keys [type]} (parse/parse-spec form)
         dispatch (case type
                    :map ::map-of
                    :set ::set-of
