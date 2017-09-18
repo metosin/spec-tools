@@ -90,7 +90,7 @@
 ;;
 
 (defn strip-extra-keys [{:keys [keys]} x]
-  (if (map? x)
+  (if (and keys (map? x))
     (select-keys x keys)
     x))
 
