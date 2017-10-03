@@ -1,13 +1,13 @@
 (ns spec-tools.core
   #?(:cljs (:require-macros [spec-tools.core :refer [spec]]))
   (:require [spec-tools.impl :as impl]
-            [spec-tools.type :as type]
+            [spec-tools.parse :as parse]
             [spec-tools.form :as form]
             [spec-tools.conform :as conform]
             [clojure.spec.alpha :as s]
     #?@(:clj  [
-               [clojure.spec.gen.alpha :as gen]
-               [clojure.edn]]
+            [clojure.spec.gen.alpha :as gen]
+            [clojure.edn]]
         :cljs [[goog.date.UtcDateTime]
                [cljs.reader]
                [clojure.test.check.generators]
@@ -242,26 +242,7 @@
   [spec]
   (cond
     (and (spec? spec) (:description spec)) (:description spec)
-
     :else nil))
-
-;; TODO: use http://dev.clojure.org/jira/browse/CLJ-2112
-(defmulti collect-info (fn [dispath _] dispath) :default ::default)
-(defmethod collect-info ::default [_ _] nil)
-
-;; and's and or's are just flattened
-(defmethod collect-info 'clojure.spec.alpha/keys [_ form]
-  (let [{:keys [req opt req-un opt-un]} (some->> form (rest) (apply hash-map))]
-    {:keys (set
-             (flatten
-               (concat
-                 (map impl/polish (concat req opt))
-                 (map impl/polish-un (concat req-un opt-un)))))}))
-
-(defn extract-extra-info [form]
-  (if (seq? form)
-    (let [dispatch (impl/clojure-core-symbol-or-any (first form))]
-      (collect-info dispatch form))))
 
 (defn create-spec
   "Creates a Spec intance from a map containing the following keys:
@@ -291,10 +272,8 @@
                    (if-not (= form ::s/unknown) form))
                  (form/resolve-form spec)
                  ::s/unknown)
-        info (extract-extra-info form)
-        type (if-not (contains? m :type)
-               (type/resolve-type form)
-               type)
+        info (parse/parse-spec form)
+        type (if-not (contains? m :type) (:type info) type)
         name (-> spec meta ::s/name)
         record (map->Spec
                  (merge m info {:spec spec :form form, :type type}))]

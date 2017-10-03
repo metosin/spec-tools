@@ -1,3 +1,10 @@
+## 0.4.0-SNAPSHOT
+
+* **BREAKING**: `spec-tools.type` is now `spec-tools.parse` with public api of:
+  * `parse-spec`: given a spec name, form or instance, maybe returns a spec info map with resolved `:type` and optionally other info, e.g. `:keys` for `s/keys` specs.
+  * `parse-form`: multimethod to parse info out of a form
+* Spec Records of `s/and` are fully resolved now, fixes https://github.com/metosin/compojure-api/issues/336
+
 ## 0.3.3 (1.9.2017)
 
 * `spec-tools.core/create-spec` fails with qualified keyword if they don't link to a spec, thanks to [Camilo Roca](https://github.com/carocad)

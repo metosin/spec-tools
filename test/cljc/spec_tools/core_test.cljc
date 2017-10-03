@@ -4,7 +4,7 @@
             [clojure.string :as str]
             [spec-tools.core :as st]
             [spec-tools.spec :as spec]
-            [spec-tools.type :as type]
+            [spec-tools.parse :as info]
             [spec-tools.form :as form]
             [spec-tools.conform :as conform]))
 
@@ -76,7 +76,7 @@
                (st/create-spec {:spec integer?, :form `integer?, :type :long}))))
       (testing "fails"
         (is (thrown? #?(:clj AssertionError, :cljs js/Error)
-              (st/create-spec {:spec :un-existent/keyword-spec}))))
+                     (st/create-spec {:spec :un-existent/keyword-spec}))))
 
       (testing "::s/name is retained"
         (is (= ::age (::s/name (meta (st/create-spec {:spec ::age}))))))
@@ -393,36 +393,64 @@
     (testing "my-conforming"
       (is (= :AKKIK (st/conform spec/keyword? "kikka" my-conforming))))))
 
-(deftest extract-extra-info-test
+(s/def ::collect-info-spec (s/keys
+                             :req [::age]
+                             :req-un [::lat]
+                             :opt [::truth]
+                             :opt-un [::uuid]))
+
+(deftest collect-info-test
+  (testing "doesn't fail with ::s/unknown"
+    (is (= nil
+           (info/parse-spec
+             ::s/unknown))))
+
   (testing "all keys types are extracted"
-    (is (= {:keys #{::age :lat ::truth :uuid}}
-           (st/extract-extra-info
-             (s/form (s/keys
-                       :req [::age]
-                       :req-un [::lat]
-                       :opt [::truth]
-                       :opt-un [::uuid]))))))
+    (is (= {:type :map
+            :keys #{::age :lat ::truth :uuid}}
+
+           ;; named spec
+           (info/parse-spec
+             ::collect-info-spec)
+
+           ;; spec
+           (info/parse-spec
+             (s/keys
+               :req [::age]
+               :req-un [::lat]
+               :opt [::truth]
+               :opt-un [::uuid]))
+
+           ;; form
+           (info/parse-spec
+             (s/form
+               (s/keys
+                 :req [::age]
+                 :req-un [::lat]
+                 :opt [::truth]
+                 :opt-un [::uuid]))))))
 
   (testing "ands and ors are flattened"
-    (is (= {:keys #{::age ::lat ::uuid}}
-           (st/extract-extra-info
-             (s/form (s/keys
-                       :req [(or ::age (and ::uuid ::lat))])))))))
+    (is (= {:type :map
+            :keys #{::age ::lat ::uuid}}
+           (info/parse-spec
+             (s/keys
+               :req [(or ::age (and ::uuid ::lat))]))))))
 
 (deftest type-inference-test
   (testing "works for core predicates"
-    (is (= :long (type/resolve-type `integer?))))
+    (is (= :long (:type (info/parse-spec `integer?)))))
   (testing "works for conjunctive predicates"
-    (is (= :long (type/resolve-type `(s/and integer? #(> % 42))))))
+    (is (= :long (:type (info/parse-spec `(s/and integer? #(> % 42)))))))
   (testing "unknowns return nil"
-    (is (= nil (type/resolve-type #(> % 2)))))
+    (is (= nil (:type (info/parse-spec #(> % 2))))))
   (testing "available types"
-    (is (not (empty? (type/types))))
-    (is (contains? (type/types) :boolean)))
+    (is (not (empty? (info/types))))
+    (is (contains? (info/types) :boolean)))
   (testing "available type-symbols"
-    (is (not (empty? (type/type-symbols))))
-    (is (contains? (type/type-symbols) 'clojure.spec.alpha/keys))
-    (is (contains? (type/type-symbols) 'clojure.core/integer?))))
+    (is (not (empty? (info/type-symbols))))
+    (is (contains? (info/type-symbols) 'clojure.spec.alpha/keys))
+    (is (contains? (info/type-symbols) 'clojure.core/integer?))))
 
 (deftest form-inference-test
   (testing "works for core predicates"

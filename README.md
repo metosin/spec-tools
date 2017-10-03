@@ -100,7 +100,7 @@ my-integer?
 ;       :description "It's a int"}
 ```
 
-For most core predicates, `:type` can be resolved automatically using the `spec-tools.type/resolve-type` multimethod.
+For most core predicates, `:type` can be resolved automatically using the `spec-tools.parse/parse-form` multimethod.
 
 For most core predicates, `:form` can be resolved automatically using the `spec-tools.form/resolve-form` multimethod.
 
@@ -226,9 +226,10 @@ The following type-based conforming are found in `spec-tools.core`:
 To strip out extra keys from a keyset:
 
 ```clj
+(s/def ::name string?)
 (s/def ::street string?)
 (s/def ::address (st/spec (s/keys :req-un [::street])))
-(s/def ::user (st/spec (s/keys :req-un [::name ::street])))
+(s/def ::user (st/spec (s/keys :req-un [::name ::address])))
 
 (def inkeri
   {:name "Inkeri"
