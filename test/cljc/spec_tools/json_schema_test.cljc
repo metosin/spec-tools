@@ -17,9 +17,10 @@
 (s/def ::b string?)
 (s/def ::c string?)
 (s/def ::d string?)
+(s/def ::e string?)
 
-(s/def ::keys (s/keys :opt [::a]
-                      :opt-un [::a]
+(s/def ::keys (s/keys :opt [::e]
+                      :opt-un [::e]
                       :req [::a (or ::b (and ::c ::d))]
                       :req-un [::a (or ::b (and ::c ::d))]))
 
@@ -54,10 +55,12 @@
                          "spec-tools.json-schema-test/b" {:type "string"}
                          "spec-tools.json-schema-test/c" {:type "string"}
                          "spec-tools.json-schema-test/d" {:type "string"}
+                         "spec-tools.json-schema-test/e" {:type "string"}
                          "a" {:type "string"}
                          "b" {:type "string"}
                          "c" {:type "string"}
-                         "d" {:type "string"}}
+                         "d" {:type "string"}
+                         "e" {:type "string"}}
             :required ["spec-tools.json-schema-test/a"
                        "spec-tools.json-schema-test/b"
                        "spec-tools.json-schema-test/c"
