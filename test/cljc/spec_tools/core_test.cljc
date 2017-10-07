@@ -407,7 +407,9 @@
 
   (testing "all keys types are extracted"
     (is (= {:type :map
-            :keys #{::age :lat ::truth :uuid}}
+            :keys #{::age :lat ::truth :uuid}
+            :keys/req #{::age :lat}
+            :keys/opt #{::truth :uuid}}
 
            ;; named spec
            (info/parse-spec
@@ -432,7 +434,8 @@
 
   (testing "ands and ors are flattened"
     (is (= {:type :map
-            :keys #{::age ::lat ::uuid}}
+            :keys #{::age ::lat ::uuid}
+            :keys/req #{::age ::lat ::uuid}}
            (info/parse-spec
              (s/keys
                :req [(or ::age (and ::uuid ::lat))]))))))
