@@ -110,13 +110,11 @@
 (defmethod parse-form :clojure.spec.alpha/unknown [_ _])
 
 (defmethod parse-form 'clojure.spec.alpha/keys [_ form]
-  (let [{:keys [req opt req-un opt-un]} (some->> form (rest) (apply hash-map))]
-    {:type :map
-     :keys (set
-             (flatten
-               (concat
-                 (map impl/polish (concat req opt))
-                 (map impl/polish-un (concat req-un opt-un)))))}))
+  (let [{:keys [req opt req-un opt-un]} (impl/parse-keys form)]
+    (cond-> {:type :map
+             :keys (set (concat req opt req-un opt-un))}
+            (or req req-un) (assoc :keys/req (set (concat req req-un)))
+            (or opt opt-un) (assoc :keys/opt (set (concat opt opt-un))))))
 
 (defmethod parse-form 'clojure.spec.alpha/or [_ _])
 

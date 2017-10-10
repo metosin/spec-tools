@@ -185,7 +185,7 @@
     schema))
 
 (defmethod accept-spec 'clojure.spec.alpha/keys [_ spec children _]
-  (let [[_ & {:keys [req req-un opt opt-un]}] (impl/extract-form spec)
+  (let [{:keys [req req-un opt opt-un]} (impl/parse-keys (impl/extract-form spec))
         names-un (map name (concat req-un opt-un))
         names (map impl/qualified-name (concat req opt))
         required (map impl/qualified-name req)

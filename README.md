@@ -36,7 +36,9 @@ The following Spec keys having a special meaning:
 | `:name`            | Name of the spec. Maps to `title` in JSON Schema.                           |
 | `:description`     | Description of the spec. Maps to `description` in JSON Schema.              |
 | `:gen`             | Generator function for the Spec (set via `s/with-gen`)                      |
-| `:keys`            | Set of map keys that the spec defines. Extracted from `s/keys` Specs.       |
+| `:keys`            | Set of all map keys that the spec defines. Extracted from `s/keys` Specs.   |
+| `:keys/req`        | Set of required map keys that the spec defines. Extracted from `s/keys` Specs.|
+| `:keys/opt`        | Set of optional map keys that the spec defines. Extracted from `s/keys` Specs.|
 | `:reason`          | Value is added to `s/explain-data` problems under key `:reason`             |
 | `:json-schema/...` | Extra data that is merged with unqualifed keys into json-schema             |
 
@@ -462,7 +464,8 @@ A tool to walk over and transform specs using the [Visitor-pattern](https://en.w
 ;                                   {:spec (clojure.spec.alpha/keys
 ;                                            :req-un [:user$person$orders/id :user$person$orders/description])
 ;                                    :type :map
-;                                    :keys #{:id :description}})
+;                                    :keys #{:id :description}
+;                                    :keys/req #{:id :description}})
 ;                                 :into [])
 ;                         :type :vector})
 ;  :user$person$address/street (spec-tools.core/spec
@@ -477,7 +480,8 @@ A tool to walk over and transform specs using the [Visitor-pattern](https://en.w
 ;                                    {:spec (clojure.spec.alpha/keys
 ;                                             :req-un [:user$person$address/street :user$person$address/zip])
 ;                                     :type :map
-;                                     :keys #{:street :zip}}))
+;                                     :keys #{:street :zip}
+;                                     :keys/req #{:street :zip}}))
 ;                          :type nil})
 ;  :user$person/description (spec-tools.core/spec
 ;                             {:spec clojure.core/string?

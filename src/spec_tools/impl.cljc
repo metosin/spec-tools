@@ -63,7 +63,14 @@
     :else x))
 
 (defn polish-un [x]
-  (-> x polish name keyword))
+  (some-> x polish name keyword))
+
+(defn parse-keys [form]
+  (let [m (some->> form (rest) (apply hash-map))]
+    (cond-> m
+            (:req m) (update :req #(->> % flatten (keep polish) (into [])))
+            (:req-un m) (update :req-un #(->> % flatten (keep polish-un) (into [])))
+            (:opt-un m) (update :opt-un #(->> % (keep polish-un) (into []))))))
 
 (defn extract-keys [form]
   (let [{:keys [req opt req-un opt-un]} (some->> form (rest) (apply hash-map))]
