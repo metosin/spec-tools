@@ -1,4 +1,4 @@
-## 0.4.0-SNAPSHOT
+## 0.4.0 (11.10.2017)
 
 * `or` and `and` keys are parsed correctly for JSON Schema & Swagger, Fixes [#79](https://github.com/metosin/spec-tools/issues/79)
 * **BREAKING**: `spec-tools.type` is now `spec-tools.parse` with public api of:
