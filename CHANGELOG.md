@@ -6,6 +6,12 @@
   * `parse-form`: multimethod to parse info out of a form
 * Spec Records of `s/and` are fully resolved now, fixes https://github.com/metosin/compojure-api/issues/336
 
+* updated deps:
+
+```clj
+[org.clojure/spec.alpha "0.1.134"] is available but we use "0.1.123"
+```
+
 ## 0.3.3 (1.9.2017)
 
 * `spec-tools.core/create-spec` fails with qualified keyword if they don't link to a spec, thanks to [Camilo Roca](https://github.com/carocad)
