@@ -133,6 +133,17 @@
   {:pre [(= 1 (count coll))]}
   (first coll))
 
+(defn deep-merge [& values]
+  (cond
+    (every? map? values)
+    (apply merge-with deep-merge values)
+
+    (every? coll? values)
+    (reduce into values)
+
+    :else
+    (last values)))
+
 ;;
 ;; FIXME: using ^:skip-wiki functions from clojure.spec. might break.
 ;;
