@@ -128,7 +128,7 @@
            {:spec (spec-tools.core/spec
                     {:spec double?
                      :type :double})
-            :type nil})
+            :type :double})
 
         (st/spec (fn [x] (> x 10)))
         `(spec-tools.core/spec

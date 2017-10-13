@@ -21,11 +21,11 @@
 
     ;; symbol
     (symbol? x)
-    (parse-form (impl/clojure-core-symbol-or-any x) nil)
+    (parse-form (impl/normalize-symbol x) nil)
 
     ;; a from
     (seq? x)
-    (parse-form (impl/clojure-core-symbol-or-any (first x)) x)
+    (parse-form (impl/normalize-symbol (first x)) x)
 
     ;; a spec
     (s/spec? x)
@@ -121,7 +121,8 @@
 (defmethod parse-form 'clojure.spec.alpha/and [_ form]
   (parse-spec (second form)))
 
-; merge
+(defmethod parse-form 'clojure.spec.alpha/merge [_ form]
+  (apply impl/deep-merge (map parse-spec (rest form))))
 
 (defmethod parse-form 'clojure.spec.alpha/every [_ form]
   (let [{:keys [into]} (apply hash-map (drop 2 form))]
@@ -142,6 +143,9 @@
        :else :vector)}))
 
 (defmethod parse-form 'clojure.spec.alpha/map-of [_ _] {:type :map})
+
+(defmethod parse-form 'spec-tools.core/spec [_ form]
+  (parse-spec (-> form last :spec)))
 
 ; *
 ; +

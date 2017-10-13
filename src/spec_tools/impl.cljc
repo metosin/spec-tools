@@ -25,14 +25,6 @@
     (:name x)
     x))
 
-(defn clojure-core-symbol-or-any [x]
-  (or
-    (if (symbol? x)
-      (if-let [ns (get {"cljs.core" "clojure.core"
-                        "cljs.spec.alpha" "clojure.spec.alpha"} (namespace x))]
-        (symbol ns (name x))))
-    x))
-
 (defn- clj-sym [x]
   (if (var? x)
     (let [^Var v x]
