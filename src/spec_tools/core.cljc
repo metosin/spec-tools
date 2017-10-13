@@ -273,7 +273,7 @@
                  (form/resolve-form spec)
                  ::s/unknown)
         info (parse/parse-spec form)
-        type (if-not (contains? m :type) (:type info) type)
+        type (if (contains? m :type) type (:type info))
         name (-> spec meta ::s/name)
         record (map->Spec
                  (merge m info {:spec spec :form form, :type type}))]
