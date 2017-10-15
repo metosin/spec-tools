@@ -42,36 +42,43 @@
   * otherwise: the spec itself"
   ([spec accept]
    (visit spec accept nil))
-  ([spec accept options]
-   (visit-spec spec accept options)))
+  ([spec accept {:keys [::visited] :as options}]
+    ;; quick fix for #75: don't rewalk on recursive specs
+    ;; correct solution would be walk on a reference of a spec?
+   (if-not (get visited spec)
+     (let [options (if (keyword? spec)
+                     (update options ::visited (fnil conj #{}) spec)
+                     options)]
+       (visit-spec spec accept options))
+     (visit-spec nil accept options))))
 
 (defmethod visit-spec ::set [spec accept options]
   (accept ::set spec (vec (if (keyword? spec) (impl/extract-form spec) spec)) options))
 
 (defmethod visit-spec 'clojure.spec.alpha/keys [spec accept options]
   (let [keys (impl/extract-keys (impl/extract-form spec))]
-    (accept 'clojure.spec.alpha/keys spec (mapv #(visit-spec % accept options) keys) options)))
+    (accept 'clojure.spec.alpha/keys spec (mapv #(visit % accept options) keys) options)))
 
 (defmethod visit-spec 'clojure.spec.alpha/or [spec accept options]
   (let [[_ & {:as inner-spec-map}] (impl/extract-form spec)]
-    (accept 'clojure.spec.alpha/or spec (mapv #(visit-spec % accept options) (vals inner-spec-map)) options)))
+    (accept 'clojure.spec.alpha/or spec (mapv #(visit % accept options) (vals inner-spec-map)) options)))
 
 (defmethod visit-spec 'clojure.spec.alpha/and [spec accept options]
   (let [[_ & inner-specs] (impl/extract-form spec)]
-    (accept 'clojure.spec.alpha/and spec (mapv #(visit-spec % accept options) inner-specs) options)))
+    (accept 'clojure.spec.alpha/and spec (mapv #(visit % accept options) inner-specs) options)))
 
 (defmethod visit-spec 'clojure.spec.alpha/merge [spec accept options]
   (let [[_ & inner-specs] (impl/extract-form spec)]
-    (accept 'clojure.spec.alpha/merge spec (mapv #(visit-spec % accept options) inner-specs) options)))
+    (accept 'clojure.spec.alpha/merge spec (mapv #(visit % accept options) inner-specs) options)))
 
 (defmethod visit-spec 'clojure.spec.alpha/every [spec accept options]
   (let [[_ inner-spec] (impl/extract-form spec)]
-    (accept 'clojure.spec.alpha/every spec [(visit-spec inner-spec accept options)] options)))
+    (accept 'clojure.spec.alpha/every spec [(visit inner-spec accept options)] options)))
 
 (defmethod visit-spec 'clojure.spec.alpha/every-kv [spec accept options]
   (let [[_ inner-spec1 inner-spec2] (impl/extract-form spec)]
     (accept 'clojure.spec.alpha/every-kv spec (mapv
-                                                #(visit-spec % accept options)
+                                                #(visit % accept options)
                                                 [inner-spec1 inner-spec2]) options)))
 
 (defmethod visit-spec 'clojure.spec.alpha/coll-of [spec accept options]
@@ -82,52 +89,52 @@
                    :map ::map-of
                    :set ::set-of
                    :vector ::vector-of)]
-    (accept dispatch spec [(visit-spec pred accept options)] options)))
+    (accept dispatch spec [(visit pred accept options)] options)))
 
 (defmethod visit-spec 'clojure.spec.alpha/map-of [spec accept options]
   (let [[_ k v] (impl/extract-form spec)]
-    (accept ::map-of spec (mapv #(visit-spec % accept options) [k v]) options)))
+    (accept ::map-of spec (mapv #(visit % accept options) [k v]) options)))
 
 (defmethod visit-spec 'clojure.spec.alpha/* [spec accept options]
   (let [[_ inner-spec] (impl/extract-form spec)]
-    (accept 'clojure.spec.alpha/* spec [(visit-spec inner-spec accept options)] options)))
+    (accept 'clojure.spec.alpha/* spec [(visit inner-spec accept options)] options)))
 
 (defmethod visit-spec 'clojure.spec.alpha/+ [spec accept options]
   (let [[_ inner-spec] (impl/extract-form spec)]
-    (accept 'clojure.spec.alpha/+ spec [(visit-spec inner-spec accept options)] options)))
+    (accept 'clojure.spec.alpha/+ spec [(visit inner-spec accept options)] options)))
 
 (defmethod visit-spec 'clojure.spec.alpha/? [spec accept options]
   (let [[_ inner-spec] (impl/extract-form spec)]
-    (accept 'clojure.spec.alpha/? spec [(visit-spec inner-spec accept options)] options)))
+    (accept 'clojure.spec.alpha/? spec [(visit inner-spec accept options)] options)))
 
 (defmethod visit-spec 'clojure.spec.alpha/alt [spec accept options]
   (let [[_ & {:as inner-spec-map}] (impl/extract-form spec)]
-    (accept 'clojure.spec.alpha/alt spec (mapv #(visit-spec % accept options) (vals inner-spec-map)) options)))
+    (accept 'clojure.spec.alpha/alt spec (mapv #(visit % accept options) (vals inner-spec-map)) options)))
 
 (defmethod visit-spec 'clojure.spec.alpha/cat [spec accept options]
   (let [[_ & {:as inner-spec-map}] (impl/extract-form spec)]
-    (accept 'clojure.spec.alpha/cat spec (mapv #(visit-spec % accept options) (vals inner-spec-map)) options)))
+    (accept 'clojure.spec.alpha/cat spec (mapv #(visit % accept options) (vals inner-spec-map)) options)))
 
 (defmethod visit-spec 'clojure.spec.alpha/& [spec accept options]
   (let [[_ inner-spec] (impl/extract-form spec)]
-    (accept 'clojure.spec.alpha/& spec [(visit-spec inner-spec accept options)] options)))
+    (accept 'clojure.spec.alpha/& spec [(visit inner-spec accept options)] options)))
 
 (defmethod visit-spec 'clojure.spec.alpha/tuple [spec accept options]
   (let [[_ & inner-specs] (impl/extract-form spec)]
-    (accept 'clojure.spec.alpha/tuple spec (mapv #(visit-spec % accept options) inner-specs) options)))
+    (accept 'clojure.spec.alpha/tuple spec (mapv #(visit % accept options) inner-specs) options)))
 
 ;; TODO: broken: http://dev.clojure.org/jira/browse/CLJ-2147
 (defmethod visit-spec 'clojure.spec.alpha/keys* [spec accept options]
   (let [keys (impl/extract-keys (impl/extract-form spec))]
-    (accept 'clojure.spec.alpha/keys* spec (mapv #(visit-spec % accept options) keys) options)))
+    (accept 'clojure.spec.alpha/keys* spec (mapv #(visit % accept options) keys) options)))
 
 (defmethod visit-spec 'clojure.spec.alpha/nilable [spec accept options]
   (let [[_ inner-spec] (impl/extract-form spec)]
-    (accept 'clojure.spec.alpha/nilable spec [(visit-spec inner-spec accept options)] options)))
+    (accept 'clojure.spec.alpha/nilable spec [(visit inner-spec accept options)] options)))
 
 (defmethod visit-spec 'spec-tools.core/spec [spec accept options]
   (let [[_ {inner-spec :spec}] (impl/extract-form spec)]
-    (accept ::spec spec [(visit-spec inner-spec accept options)] options)))
+    (accept ::spec spec [(visit inner-spec accept options)] options)))
 
 (defmethod visit-spec ::default [spec accept options]
   (accept (spec-dispatch spec accept options) spec nil options))

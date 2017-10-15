@@ -1,5 +1,9 @@
 ## UNRELEASED
 
+* added parsers for `s/merge` & `st/spec`.
+* Don't fail on recursive spec visits, fixes [#75](https://github.com/metosin/spec-tools/issues/75)
+* **BREAKING**: `spec-tools.visitor/visit-spec` should recurse with `spec-tools.visitor/visit` instead of `spec-tools.visitor/visit-spec`
+
 * updated deps:
 
 ```clj
