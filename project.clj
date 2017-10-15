@@ -13,7 +13,7 @@
 
   :dependencies [[org.clojure/spec.alpha "0.1.134"]]
 
-  :profiles {:dev {:plugins [[jonase/eastwood "0.2.4"]
+  :profiles {:dev {:plugins [[jonase/eastwood "0.2.5"]
                              [lein-tach "0.3.0"]
                              [lein-doo "0.1.8"]
                              [lein-cljsbuild "1.1.7"]
@@ -21,8 +21,8 @@
                              [lein-codox "0.10.3"]]
                    :jvm-opts ^:replace ["-server"]
                    ;:global-vars {*warn-on-reflection* true}
-                   :dependencies [[org.clojure/clojure "1.9.0-alpha19"]
-                                  [org.clojure/clojurescript "1.9.908"]
+                   :dependencies [[org.clojure/clojure "1.9.0-beta2"]
+                                  [org.clojure/clojurescript "1.9.946"]
                                   [criterium "0.4.4"]
                                   [prismatic/schema "1.1.7"]
                                   [org.clojure/test.check "0.9.0"]

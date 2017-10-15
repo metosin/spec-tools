@@ -1,3 +1,12 @@
+## UNRELEASED
+
+* updated deps:
+
+```clj
+[org.clojure/clojure "1.9.0-beta2"] is available but we use "1.9.0-alpha19"
+[org.clojure/clojurescript "1.9.946"] is available but we use "1.9.908"
+```
+
 ## 0.4.0 (11.10.2017)
 
 * `or` and `and` keys are parsed correctly for JSON Schema & Swagger, Fixes [#79](https://github.com/metosin/spec-tools/issues/79)
