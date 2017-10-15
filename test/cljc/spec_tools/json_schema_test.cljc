@@ -182,6 +182,7 @@
              ::nested
              [[[[string?]]]])))))
 
+(s/def ::user any?)
 (s/def ::name string?)
 (s/def ::parent (s/nilable ::user))
 (s/def ::user (s/keys :req-un [::name ::parent]))
