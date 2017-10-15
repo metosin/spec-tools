@@ -25,14 +25,6 @@
     (:name x)
     x))
 
-(defn clojure-core-symbol-or-any [x]
-  (or
-    (if (symbol? x)
-      (if-let [ns (get {"cljs.core" "clojure.core"
-                        "cljs.spec.alpha" "clojure.spec.alpha"} (namespace x))]
-        (symbol ns (name x))))
-    x))
-
 (defn- clj-sym [x]
   (if (var? x)
     (let [^Var v x]
@@ -132,6 +124,17 @@
   [coll]
   {:pre [(= 1 (count coll))]}
   (first coll))
+
+(defn deep-merge [& values]
+  (cond
+    (every? map? values)
+    (apply merge-with deep-merge values)
+
+    (every? coll? values)
+    (reduce into values)
+
+    :else
+    (last values)))
 
 ;;
 ;; FIXME: using ^:skip-wiki functions from clojure.spec. might break.
