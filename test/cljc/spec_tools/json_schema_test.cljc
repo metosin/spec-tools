@@ -181,3 +181,16 @@
            (ds/spec
              ::nested
              [[[[string?]]]])))))
+
+(s/def ::user any?)
+(s/def ::name string?)
+(s/def ::parent (s/nilable ::user))
+(s/def ::user (s/keys :req-un [::name ::parent]))
+
+(deftest recursive-spec-test
+  (is (= {:type "object",
+          :properties {"name" {:type "string"}
+                       "parent" {:oneOf [{} {:type "null"}]}},
+          :required ["name" "parent"],
+          :title "spec-tools.json-schema-test/user"}
+         (jsc/transform ::user))))
