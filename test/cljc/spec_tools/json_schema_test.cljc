@@ -24,6 +24,9 @@
                       :req [::a (or ::b (and ::c ::d))]
                       :req-un [::a (or ::b (and ::c ::d))]))
 
+(s/def ::keys-no-req (s/keys :opt [::e]
+                             :opt-un [::e]))
+
 (deftest simple-spec-test
   (testing "primitive predicates"
     ;; You're intented to call jsc/to-json with a registered spec, but to avoid
@@ -69,6 +72,11 @@
                        "b"
                        "c"
                        "d"]}))
+    (is (= (jsc/transform ::keys-no-req)
+           {:type "object"
+            :title "spec-tools.json-schema-test/keys-no-req"
+            :properties {"spec-tools.json-schema-test/e" {:type "string"}
+                         "e" {:type "string"}}}))
     (is (= (jsc/transform (s/or :int integer? :string string?))
            {:anyOf [{:type "integer"} {:type "string"}]}))
     (is (= (jsc/transform (s/and integer? pos?))
