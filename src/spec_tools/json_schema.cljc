@@ -189,12 +189,15 @@
         names-un (map name (concat req-un opt-un))
         names (map impl/qualified-name (concat req opt))
         required (map impl/qualified-name req)
-        required-un (map name req-un)]
+        required-un (map name req-un)
+        all-required (not-empty (concat required required-un))]
     (maybe-with-title
+     (merge
       {:type "object"
-       :properties (zipmap (concat names names-un) children)
-       :required (vec (concat required required-un))}
-      spec)))
+       :properties (zipmap (concat names names-un) children)}
+      (when all-required
+        {:required (vec all-required)}))
+     spec)))
 
 (defmethod accept-spec 'clojure.spec.alpha/or [_ _ children _]
   {:anyOf children})
