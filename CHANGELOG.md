@@ -1,5 +1,6 @@
-## UNRELEASED
+## 0.5.0 (19.10.2017)
 
+* don't publish empty `:required` fields for JSON Schemas, by [acron0](https://github.com/acron0)
 * added parsers for `s/merge` & `st/spec`.
 * Don't fail on recursive spec visits, fixes [#75](https://github.com/metosin/spec-tools/issues/75)
 * **BREAKING**: `spec-tools.visitor/visit-spec` should recurse with `spec-tools.visitor/visit` instead of `spec-tools.visitor/visit-spec`
