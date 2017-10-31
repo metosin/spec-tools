@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [any? some? number? pos? neg? integer? int? pos-int? neg-int? nat-int?
                             float? double? boolean? string? ident? simple-ident? qualified-ident?
                             keyword? simple-keyword? qualified-keyword? symbol? simple-symbol?
-                            qualified-symbol? uuid? uri? bigdec? inst? seqable? indexed?
+                            qualified-symbol? uuid? uri? decimal? inst? seqable? indexed?
                             map? vector? list? seq? char? set? nil? false? true? zero?
                             rational? coll? empty? associative? sequential? ratio? bytes?
                             #?@(:cljs [Inst Keyword UUID])])
@@ -33,7 +33,7 @@
 (def qualified-symbol? (st/spec clojure.core/qualified-symbol?))
 (def uuid? (st/spec clojure.core/uuid?))
 #?(:clj (def uri? (st/spec clojure.core/uri?)))
-#?(:clj (def bigdec? (st/spec clojure.core/bigdec?)))
+#?(:clj (def decimal? (st/spec clojure.core/decimal?)))
 (def inst? (st/spec clojure.core/inst?))
 (def seqable? (st/spec clojure.core/seqable?))
 (def indexed? (st/spec clojure.core/indexed?))

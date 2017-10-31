@@ -35,7 +35,7 @@
 (defmethod resolve-form qualified-symbol? [_] `qualified-symbol?)
 (defmethod resolve-form uuid? [_] `uuid?)
 #?(:clj (defmethod resolve-form uri? [_] `uri?))
-#?(:clj (defmethod resolve-form bigdec? [_] `bigdec?))
+#?(:clj (defmethod resolve-form decimal? [_] `decimal?))
 (defmethod resolve-form inst? [_] `inst?)
 (defmethod resolve-form seqable? [_] `seqable?)
 (defmethod resolve-form indexed? [_] `indexed?)

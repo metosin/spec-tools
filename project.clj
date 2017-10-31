@@ -11,7 +11,7 @@
           :source-uri "https://github.com/metosin/spec-tools/{version}/{filepath}#L{line}"
           :metadata {:doc/format :markdown}}
 
-  :dependencies [[org.clojure/spec.alpha "0.1.134"]]
+  :dependencies [[org.clojure/spec.alpha "0.1.143"]]
 
   :profiles {:dev {:plugins [[jonase/eastwood "0.2.5"]
                              [lein-tach "0.3.0"]
@@ -21,14 +21,14 @@
                              [lein-codox "0.10.3"]]
                    :jvm-opts ^:replace ["-server"]
                    ;:global-vars {*warn-on-reflection* true}
-                   :dependencies [[org.clojure/clojure "1.9.0-beta2"]
+                   :dependencies [[org.clojure/clojure "1.9.0-beta4"]
                                   [org.clojure/clojurescript "1.9.946"]
                                   [criterium "0.4.4"]
                                   [prismatic/schema "1.1.7"]
                                   [org.clojure/test.check "0.9.0"]
                                   [org.clojure/tools.namespace "0.2.11"]
                                   [com.gfredericks/test.chuck "0.2.8"]
-                                  [metosin/ring-swagger "0.24.2"]
+                                  [metosin/ring-swagger "0.24.3"]
                                   [metosin/scjsv "0.4.0"]]}
              :perf {:jvm-opts ^:replace ["-server"]}}
   :aliases {"all" ["with-profile" "dev"]
