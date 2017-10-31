@@ -37,6 +37,8 @@
     (is (= (jsc/transform (s/spec double?)) {:type "number"}))
     (is (= (jsc/transform (s/spec string?)) {:type "string"}))
     (is (= (jsc/transform (s/spec boolean?)) {:type "boolean"}))
+    #?(:clj (is (= (jsc/transform (s/spec decimal?)) {:type "number" :format "double"})))
+    (is (= (jsc/transform (s/spec inst?)) {:type "string", :format "date-time"}))
     (is (= (jsc/transform (s/spec nil?)) {:type "null"}))
     (is (= (jsc/transform #{1 2 3}) {:enum [1 3 2]})))
   (testing "clojure.spec predicates"

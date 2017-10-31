@@ -29,8 +29,8 @@
     spec/simple-symbol? clojure.core/simple-symbol?
     spec/qualified-symbol? clojure.core/qualified-symbol?
     spec/uuid? clojure.core/uuid?
-    ;#?(:clj spec/uri? clojure.core/uri?)
-    ;#?(:clj spec/bigdec? clojure.core/bigdec?)
+    #?@(:clj [spec/uri? clojure.core/uri?])
+    #?@(:clj [spec/decimal? clojure.core/decimal?])
     spec/inst? clojure.core/inst?
     spec/seqable? clojure.core/seqable?
     spec/indexed? clojure.core/indexed?
@@ -44,11 +44,10 @@
     spec/false? clojure.core/false?
     spec/true? clojure.core/true?
     spec/zero? clojure.core/zero?
-    ;#?(:clj spec/rational? clojure.core/rational?)
+    #?@(:clj [spec/rational? clojure.core/rational?])
     spec/coll? clojure.core/coll?
     spec/empty? clojure.core/empty?
     spec/associative? clojure.core/associative?
     spec/sequential? clojure.core/sequential?
-    ;#?(:clj spec/ratio? clojure.core/ratio?)
-    ;#?(:clj spec/bytes? clojure.core/bytes?)
-    ))
+    #?@(:clj [spec/ratio? clojure.core/ratio?])
+    #?@(:clj [spec/bytes? clojure.core/bytes?])))

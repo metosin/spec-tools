@@ -85,7 +85,7 @@
 (defmethod parse-form 'clojure.core/qualified-symbol? [_ _] {:type :symbol})
 (defmethod parse-form 'clojure.core/uuid? [_ _] {:type :uuid})
 #?(:clj (defmethod parse-form 'clojure.core/uri? [_ _] {:type :uri}))
-#?(:clj (defmethod parse-form 'clojure.core/bigdec? [_ _] {:type :bigdec}))
+#?(:clj (defmethod parse-form 'clojure.core/decimal? [_ _] {:type :bigdec}))
 (defmethod parse-form 'clojure.core/inst? [_ _] {:type :date})
 (defmethod parse-form 'clojure.core/seqable? [_ _])
 (defmethod parse-form 'clojure.core/indexed? [_ _])

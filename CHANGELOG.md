@@ -1,3 +1,13 @@
+## 0.5.1
+
+* remove `bigdec?` in favor of `decimal?` (1.9.0-beta4 changes)
+* updated deps:
+
+```clj
+[org.clojure/clojure "1.9.0-beta4"] is available but we use "1.9.0-beta4"
+[org.clojure/spec.alpha "0.1.143"] is available but we use "0.1.134"
+```
+
 ## 0.5.0 (19.10.2017)
 
 * don't publish empty `:required` fields for JSON Schemas, by [acron0](https://github.com/acron0)
