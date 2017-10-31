@@ -1,4 +1,4 @@
-# spec-tools [![Build Status](https://travis-ci.org/metosin/spec-tools.svg?branch=master)](https://travis-ci.org/metosin/spec-tools) [![Dependencies Status](https://jarkeeper.com/metosin/spec-tools/status.svg)](https://jarkeeper.com/metosin/spec-tools)
+# spec-tools [![Build Status](https://travis-ci.org/metosin/spec-tools.svg?branch=master)](https://travis-ci.org/metosin/spec-tools)
 
 Clojure(Script) tools for [clojure.spec](http://clojure.org/about/spec). Like [Schema-tools](https://github.com/metosin/schema-tools) but for spec.
 
@@ -20,7 +20,7 @@ Blogs:
 
 [![Clojars Project](http://clojars.org/metosin/spec-tools/latest-version.svg)](http://clojars.org/metosin/spec-tools)
 
-Requires Java 1.8, tested with Clojure `1.9.0-alpha19` and/or ClojureScript `1.9.908`.
+Requires Java 1.8, tested with Clojure `1.9.0-beta4` and/or ClojureScript `1.9.908`.
 
 ## Spec Records
 

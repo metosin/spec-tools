@@ -1,4 +1,4 @@
-## 0.5.1
+## 0.5.1 (31.10.2017)
 
 * remove `bigdec?` in favor of `decimal?` (1.9.0-beta4 changes)
 * updated deps:
