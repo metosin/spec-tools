@@ -13,57 +13,52 @@
 ;;
 
 (defn string->long [_ x]
-  (cond
-    (int? x) x
-    (string? x) (try
-                  #?(:clj  (Long/parseLong x)
-                     :cljs (let [x (js/parseInt x 10)]
-                             (if (js/isNaN x) ::s/invalid x)))
-                  (catch #?(:clj Exception, :cljs js/Error) _
-                    ::s/invalid))
-    :else ::s/invalid))
+  (if (string? x)
+    (try
+      #?(:clj  (Long/parseLong x)
+         :cljs (let [x (js/parseInt x 10)]
+                 (if (js/isNaN x) ::s/invalid x)))
+      (catch #?(:clj Exception, :cljs js/Error) _
+          ::s/invalid))
+    x))
 
 (defn string->double [_ x]
-  (cond
-    (double? x) x
-    (string? x) (try
-                  #?(:clj  (Double/parseDouble x)
-                     :cljs (let [x (js/parseFloat x)]
-                             (if (js/isNaN x) ::s/invalid x)))
-                  (catch #?(:clj Exception, :cljs js/Error) _
-                    ::s/invalid))
-    :else ::s/invalid))
+  (if (string? x)
+    (try
+      #?(:clj  (Double/parseDouble x)
+         :cljs (let [x (js/parseFloat x)]
+                 (if (js/isNaN x) ::s/invalid x)))
+      (catch #?(:clj Exception, :cljs js/Error) _
+          ::s/invalid))
+    x))
 
 (defn string->keyword [_ x]
-  (cond
-    (keyword? x) x
-    (string? x) (keyword x)
-    :else ::s/invalid))
+  (if (string? x)
+    (keyword x)
+    x))
 
 (defn string->boolean [_ x]
-  (cond
-    (boolean? x) x
-    (= "true" x) true
-    (= "false" x) false
-    :else ::s/invalid))
+  (if (string? x)
+    (cond
+      (= "true" x) true
+      (= "false" x) false
+      :else ::s/invalid)
+    x))
 
 (defn string->uuid [_ x]
-  (cond
-    (uuid? x) x
-    (string? x) (try
-                  #?(:clj  (UUID/fromString x)
-                     ;; http://stackoverflow.com/questions/7905929/how-to-test-valid-uuid-guid
-                     :cljs (if (re-find #"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" x)
-                             (uuid x)
-                             ::s/invalid))
-                  (catch #?(:clj Exception, :cljs js/Error) _
-                    ::s/invalid))
-    :else ::s/invalid))
+  (if (string? x)
+    (try
+      #?(:clj  (UUID/fromString x)
+         ;; http://stackoverflow.com/questions/7905929/how-to-test-valid-uuid-guid
+         :cljs (if (re-find #"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" x)
+                 (uuid x)
+                 ::s/invalid))
+      (catch #?(:clj Exception, :cljs js/Error) _
+          ::s/invalid))
+    x))
 
 (defn string->date [_ x]
-  (cond
-    (inst? x) x
-    (string? x)
+  (if (string? x)
     (try
       #?(:clj  (Date/from
                  (Instant/parse x))
@@ -71,19 +66,17 @@
       (catch #?(:clj  Exception
                 :cljs js/Error) _
         ::s/invalid))
-    :else ::s/invalid))
+    x))
 
 (defn string->symbol [_ x]
-  (cond
-    (symbol? x) x
-    (string? x) (symbol x)
-    :else ::s/invalid))
+  (if (string? x)
+    (symbol x)
+    x))
 
 (defn string->nil [_ x]
-  (cond
-    (nil? x) nil
-    (= "" x) nil
-    :else ::s/invalid))
+  (if (= "" x)
+    nil
+    x))
 
 ;;
 ;; Maps
