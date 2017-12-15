@@ -18,8 +18,7 @@
       #?(:clj  (Long/parseLong x)
          :cljs (let [x (js/parseInt x 10)]
                  (if (js/isNaN x) ::s/invalid x)))
-      (catch #?(:clj Exception, :cljs js/Error) _
-          ::s/invalid))
+      (catch #?(:clj Exception, :cljs js/Error) _ x))
     x))
 
 (defn string->double [_ x]
@@ -28,8 +27,7 @@
       #?(:clj  (Double/parseDouble x)
          :cljs (let [x (js/parseFloat x)]
                  (if (js/isNaN x) ::s/invalid x)))
-      (catch #?(:clj Exception, :cljs js/Error) _
-          ::s/invalid))
+      (catch #?(:clj Exception, :cljs js/Error) _ x))
     x))
 
 (defn string->keyword [_ x]
@@ -42,7 +40,7 @@
     (cond
       (= "true" x) true
       (= "false" x) false
-      :else ::s/invalid)
+      :else x)
     x))
 
 (defn string->uuid [_ x]
@@ -52,20 +50,17 @@
          ;; http://stackoverflow.com/questions/7905929/how-to-test-valid-uuid-guid
          :cljs (if (re-find #"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" x)
                  (uuid x)
-                 ::s/invalid))
-      (catch #?(:clj Exception, :cljs js/Error) _
-          ::s/invalid))
+                 ;; TODO: what should this return?
+                 x))
+      (catch #?(:clj Exception, :cljs js/Error) _ x))
     x))
 
 (defn string->date [_ x]
   (if (string? x)
     (try
-      #?(:clj  (Date/from
-                 (Instant/parse x))
+      #?(:clj  (Date/from (Instant/parse x))
          :cljs (js/Date. (.getTime (goog.date.UtcDateTime.fromIsoString x))))
-      (catch #?(:clj  Exception
-                :cljs js/Error) _
-        ::s/invalid))
+      (catch #?(:clj  Exception, :cljs js/Error) _ x))
     x))
 
 (defn string->symbol [_ x]
@@ -87,6 +82,7 @@
     (select-keys x keys)
     x))
 
+;; TODO: remove this as it couples transformation & validation?
 (defn fail-on-extra-keys [{:keys [keys]} x]
   (if (and (map? x) (not (set/subset? (-> x (clojure.core/keys) (set)) keys)))
     ::s/invalid

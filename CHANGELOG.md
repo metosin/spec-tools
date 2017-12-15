@@ -1,3 +1,13 @@
+## 0.6.0-SNAPSHOT
+
+* **BREAKING**: the transforming functions in `spec-tools.conform` just transform, dont' validate. Fixes [#92](https://github.com/metosin/spec-tools/issues/92). Thanks to [Benjamin Albrecht](https://github.com/benalbrecht)
+
+* updated deps:
+
+```clj
+[org.clojure/clojure "1.9.0"] is available but we use "1.9.0-beta4"
+```
+
 ## 0.5.1 (31.10.2017)
 
 * remove `bigdec?` in favor of `decimal?` (1.9.0-beta4 changes)
