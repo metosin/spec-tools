@@ -20,6 +20,7 @@
 (s/def ::b ::a)
 
 (s/def ::string string?)
+(s/def ::alias ::string)
 
 (deftest get-spec-test
   (is (= spec/int? (st/get-spec ::a)))
@@ -103,6 +104,12 @@
              (:spec (st/spec ::string))))
       (is (= (s/form ::string)
              (:form (st/spec ::string)))))
+
+    (testing "nested specs are inlined"
+      (is (= (s/get-spec ::string)
+             (:spec (st/spec ::alias))))
+      (is (= (s/form ::string)
+             (:form (st/spec ::alias)))))
 
     (testing "forms"
       (are [spec form]

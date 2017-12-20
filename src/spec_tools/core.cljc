@@ -262,9 +262,9 @@
   [{:keys [spec type form] :as m}]
   (assert spec "missing spec predicate")
   (when (qualified-keyword? spec)
-    (assert (s/get-spec spec) (str " Unable to resolve spec: " (:spec m))))
+    (assert (get-spec spec) (str " Unable to resolve spec: " (:spec m))))
   (let [spec (if (qualified-keyword? spec)
-               (s/get-spec spec) spec)
+               (get-spec spec) spec)
         form (or (if (qualified-keyword? form)
                    (s/form form))
                  form
