@@ -154,8 +154,17 @@
   (let [spec (spec n (first v))]
     (st/create-spec {:spec (coll-of-spec spec proto)})))
 
-(defn- -or-spec [v]
-  (let [pairs (map (fn [[k v]] [k (spec k v)]) (:v v))
+(defn- -or-spec [name v]
+  (when-not (and
+              (map? v)
+              (every? qualified-keyword? (keys v)))
+    (throw
+      (ex-info
+        (str "data-spec or must be a map of qualified keys -> specs, "
+             v " found")
+        {:name name
+         :value v})))
+  (let [pairs (map (fn [[k v]] [k (spec k v)]) v)
         ks (mapv first pairs)
         forms (mapv second pairs)]
     (s/or-spec-impl ks forms forms nil)))
@@ -167,7 +176,7 @@
    (cond
      (st/spec? x) x
      (s/regex? x) x
-     (or? x) (-or-spec x)
+     (or? x) (-or-spec name (:v x))
      (and coll-specs? (map? x)) (-map-spec name x)
      (and coll-specs? (set? x)) (-coll-spec name x #{})
      (and coll-specs? (vector? x)) (-coll-spec name x [])
