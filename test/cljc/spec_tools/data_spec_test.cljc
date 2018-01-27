@@ -161,6 +161,18 @@
             (is (= value
                    (st/conform person-spec bloated st/strip-extra-keys-conforming))))))))
 
+  (testing "or spec"
+    (let [strings-or-keywords (ds/or {::ui-target {:id string?}
+                                      ::data-target [keyword?]})]
+      (is (s/valid?
+            (ds/spec ::str-kw-vector strings-or-keywords)
+            {:id "1"}))
+      (is (s/valid?
+            (ds/spec ::str-kw-vector [strings-or-keywords])
+            [{:id "1"}]))
+      (is (s/valid?
+            (ds/spec ::str-kw-map {:test strings-or-keywords})
+            {:test {:id "1"}}))))
   (testing "top-level vector"
     (is (true?
           (s/valid?
