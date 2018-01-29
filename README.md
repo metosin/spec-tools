@@ -333,6 +333,8 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
   {::id integer?
    ::age ::age
    :boss boolean?
+   :aliases [(ds/or {::maps {:alias string?}
+                     ::strings string?})]
    (ds/req :name) string?
    (ds/opt :description) string?
    :languages #{keyword?}

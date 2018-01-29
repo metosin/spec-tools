@@ -1,5 +1,6 @@
 (ns spec-tools.data-spec
   "Data Specs"
+  (:refer-clojure :exclude [or])
   (:require [spec-tools.impl :as impl]
             [spec-tools.core :as st]
             [spec-tools.form :as form]
@@ -49,7 +50,7 @@
         keys-pred (fn [x]
                     (reduce
                       (fn [_ p]
-                        (or (p x) (reduced false)))
+                        (clojure.core/or (p x) (reduced false)))
                       true
                       pred-exprs))]
 
@@ -77,10 +78,12 @@
 (defrecord OptionalKey [k])
 (defrecord RequiredKey [k])
 (defrecord Maybe [v])
+(defrecord Or [v])
 
 (defn opt [k] (->OptionalKey k))
 (defn req [k] (->RequiredKey k))
 (defn maybe [v] (->Maybe v))
+(defn or [v] (->Or v))
 
 (defn opt? [x]
   (instance? OptionalKey x))
@@ -89,13 +92,16 @@
   (not (opt? x)))
 
 (defn wrapped-key? [x]
-  (or (opt? x) (instance? RequiredKey x)))
+  (clojure.core/or (opt? x) (instance? RequiredKey x)))
 
 (defn unwrap-key [x]
   (if (wrapped-key? x) (:k x) x))
 
 (defn maybe? [x]
   (instance? Maybe x))
+
+(defn or? [x]
+  (instance? Or x))
 
 (declare spec)
 
@@ -105,7 +111,7 @@
                         (let [[k v] (first data)]
                           (and
                             (not
-                              (or (keyword? k)
+                              (clojure.core/or (keyword? k)
                                   (wrapped-key? k)))
                             [k v])))]
     (st/create-spec {:spec (map-of-spec (spec n k' false) (spec n v'))})
@@ -148,6 +154,21 @@
   (let [spec (spec n (first v))]
     (st/create-spec {:spec (coll-of-spec spec proto)})))
 
+(defn- -or-spec [name v]
+  (when-not (and
+              (map? v)
+              (every? qualified-keyword? (keys v)))
+    (throw
+      (ex-info
+        (str "data-spec or must be a map of qualified keys -> specs, "
+             v " found")
+        {:name name
+         :value v})))
+  (let [pairs (map (fn [[k v]] [k (spec k v)]) v)
+        ks (mapv first pairs)
+        forms (mapv second pairs)]
+    (s/or-spec-impl ks forms forms nil)))
+
 (defn spec
   ([name x]
    (spec name x true))
@@ -155,6 +176,7 @@
    (cond
      (st/spec? x) x
      (s/regex? x) x
+     (or? x) (-or-spec name (:v x))
      (and coll-specs? (map? x)) (-map-spec name x)
      (and coll-specs? (set? x)) (-coll-spec name x #{})
      (and coll-specs? (vector? x)) (-coll-spec name x [])

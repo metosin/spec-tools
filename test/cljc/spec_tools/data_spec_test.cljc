@@ -3,7 +3,8 @@
             [clojure.spec.alpha :as s]
             [spec-tools.data-spec :as ds]
             [spec-tools.core :as st]
-            [spec-tools.spec :as spec]))
+            [spec-tools.spec :as spec])
+  #?(:clj (:import clojure.lang.ExceptionInfo)))
 
 (def ignoring-spec #(dissoc % ::s/spec))
 
@@ -161,6 +162,23 @@
             (is (= value
                    (st/conform person-spec bloated st/strip-extra-keys-conforming))))))))
 
+  (testing "or spec"
+    (let [strings-or-keywords (ds/or {::ui-target {:id string?}
+                                      ::data-target [keyword?]})]
+      (is (thrown? ExceptionInfo
+                   (#'spec-tools.data-spec/-or-spec ::foo :bar)))
+      (is (s/valid?
+            (ds/spec ::str-kw-vector strings-or-keywords)
+            {:id "1"}))
+      (is (s/valid?
+            (ds/spec ::str-kw-vector strings-or-keywords)
+            [:foo :bar]))
+      (is (s/valid?
+            (ds/spec ::str-kw-vector [strings-or-keywords])
+            [{:id "1"}]))
+      (is (s/valid?
+            (ds/spec ::str-kw-map {:test strings-or-keywords})
+            {:test {:id "1"}}))))
   (testing "top-level vector"
     (is (true?
           (s/valid?
