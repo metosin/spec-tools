@@ -319,9 +319,9 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
     * can be wrapped into `ds/opt` or `ds/req` for making them optional or required.
   * Map values
     * can be functions, specs, qualified spec names or nested collections.
-    * wrapping value into `ds/maybe` makes it `s/nillable`
+    * wrapping value into `ds/maybe` makes it `s/nilable`
 
-**NOTE**: to avoid macros, current implementation uses the undocumented functional core of `clojure.spec.alpha`: `every-impl`, `tuple-impl`, `map-spec-impl` & `nilable-impl`.
+**NOTE**: to avoid macros, current implementation uses the undocumented functional core of `clojure.spec.alpha`: `every-impl`, `tuple-impl`, `map-spec-impl`, `nilable-impl` and `or-spec-impl`.
 
 **NOTE**: To use enums with data-specs, you need to wrap them: `(s/spec #{:S :M :L})`
 
@@ -333,11 +333,11 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
   {::id integer?
    ::age ::age
    :boss boolean?
-   :aliases [(ds/or {::maps {:alias string?}
-                     ::strings string?})]
    (ds/req :name) string?
    (ds/opt :description) string?
    :languages #{keyword?}
+   :aliases [(ds/or {:maps {:alias string?}
+                     :strings string?})]
    :orders [{:id int?
              :description string?}]
    :address (ds/maybe
@@ -370,6 +370,7 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
 ;  :user$person/name
 ;  :user$person/description
 ;  :user$person/languages
+;  :user$person$aliases$maps/alias
 ;  :user$person/orders
 ;  :user$person$orders/description
 ;  :user$person$orders/id
@@ -387,6 +388,7 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
    :boss true
    :name "Liisa"
    :languages #{:clj :cljs}
+   :aliases [{:alias "Lissu"} "Liisu"]
    :orders [{:id 1, :description "cola"}
             {:id 2, :description "kebab"}]
    :description "Liisa is a valid boss"

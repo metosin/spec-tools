@@ -2,6 +2,20 @@
 
 * **BREAKING**: the transforming functions in `spec-tools.conform` just transform, dont' validate. Fixes [#92](https://github.com/metosin/spec-tools/issues/92). Thanks to [Benjamin Albrecht](https://github.com/benalbrecht)
 * Fixed `s/gen` triggers `IllegalArgumentException` for nested aliased specs [#94](https://github.com/metosin/spec-tools/issues/94) by [@johanwiren](https://github.com/johanwiren).
+* New `spec-tools.data-spec/or`, thanks to [Dmitri Sotnikov](https://github.com/yogthos):
+
+```clj
+(require '[clojure.spec.alpha :as s])
+(require '[spec-tools.data-spec :as ds])
+
+(s/conform
+  (ds/spec
+    ::user
+    [(ds/or {:map {:alias string?}
+             :string string?})])
+  [{:alias "Rudi"}, "Rudolf"])
+; [[:map {:alias "rudi"}] [:string "Rudolf"]]
+```
 
 * updated deps:
 
