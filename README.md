@@ -406,6 +406,7 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
    :boss "true"
    :name "Liisa"
    :languages ["clj" "cljs"]
+   :aliases [{:alias "Lissu"} "Liisu"]
    :orders [{:id "1", :description "cola"}
             {:id "2", :description "kebab"}]
    :description "Liisa is a valid boss"
@@ -414,6 +415,7 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
 ; {::age 63
 ;  :boss true
 ;  :name "Liisa"
+;  :aliases [{:alias "Lissu"} "Liisu"]
 ;  :languages #{:clj :cljs}
 ;  :orders [{:id 1, :description "cola"}
 ;           {:id 2, :description "kebab"}]
@@ -449,6 +451,20 @@ A tool to walk over and transform specs using the [Visitor-pattern](https://en.w
 ;  :user$person/name (spec-tools.core/spec
 ;                      {:spec clojure.core/string?
 ;                       :type :string})
+; :user$person/aliases (spec-tools.core/spec
+;                        {:spec (clojure.spec.alpha/coll-of
+;                                (clojure.spec.alpha/or
+;                                 :maps
+;                                 (spec-tools.core/spec
+;                                  {:spec (clojure.spec.alpha/keys :req-un [:user$person$aliases$maps/alias]),
+;                                   :type :map,
+;                                   :keys #{:alias},
+;                                   :keys/req #{:alias}})
+;                                 :strings
+;                                 (spec-tools.core/spec {:spec clojure.core/string?, :type :string}))
+;                                :into
+;                                []),
+;                         :type :vector})
 ;  :user$person/languages (spec-tools.core/spec
 ;                           {:spec (clojure.spec.alpha/coll-of
 ;                                    (spec-tools.core/spec
@@ -507,6 +523,11 @@ Generating JSON Schemas from arbitrary specs (and Spec Records).
 ;               "user/age" {:type "integer", :format "int64", :minimum 1}
 ;               "boss" {:type "boolean"}
 ;               "name" {:type "string"}
+;               "aliases" {:type "array",
+;                          :items {:anyOf [{:type "string"}
+;                                          {:type "object",
+;                                           :properties {"alias" {:type "string"}},
+;                                           :required ["alias"]}]}},
 ;               "languages" {:type "array", :items {:type "string"}, :uniqueItems true}
 ;               "orders" {:type "array"
 ;                         :items {:type "object"
