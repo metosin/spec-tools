@@ -439,73 +439,21 @@ A tool to walk over and transform specs using the [Visitor-pattern](https://en.w
         (swap! specs assoc spec (s/form s))
         @specs))))
 
-; {:user/id (spec-tools.core/spec
-;             {:spec clojure.core/integer?
-;              :type :long})
-;  :user/age (spec-tools.core/spec
-;              {:spec clojure.core/pos-int?
-;               :type :long})
-;  :user$person/boss (spec-tools.core/spec
-;                      {:spec clojure.core/boolean?
-;                       :type :boolean})
-;  :user$person/name (spec-tools.core/spec
-;                      {:spec clojure.core/string?
-;                       :type :string})
-; :user$person/aliases (spec-tools.core/spec
-;                        {:spec (clojure.spec.alpha/coll-of
-;                                (clojure.spec.alpha/or
-;                                 :maps
-;                                 (spec-tools.core/spec
-;                                  {:spec (clojure.spec.alpha/keys :req-un [:user$person$aliases$maps/alias]),
-;                                   :type :map,
-;                                   :keys #{:alias},
-;                                   :keys/req #{:alias}})
-;                                 :strings
-;                                 (spec-tools.core/spec {:spec clojure.core/string?, :type :string}))
-;                                :into
-;                                []),
-;                         :type :vector})
-;  :user$person/languages (spec-tools.core/spec
-;                           {:spec (clojure.spec.alpha/coll-of
-;                                    (spec-tools.core/spec
-;                                      {:spec clojure.core/keyword?
-;                                       :type :keyword})
-;                                    :into #{})
-;                            :type :set})
-;  :user$person$orders/id (spec-tools.core/spec
-;                           {:spec clojure.core/int?
-;                            :type :long})
-;  :user$person$orders/description (spec-tools.core/spec
-;                                    {:spec clojure.core/string?
-;                                     :type :string})
-;  :user$person/orders (spec-tools.core/spec
-;                        {:spec (clojure.spec.alpha/coll-of
-;                                 (spec-tools.core/spec
-;                                   {:spec (clojure.spec.alpha/keys
-;                                            :req-un [:user$person$orders/id :user$person$orders/description])
-;                                    :type :map
-;                                    :keys #{:id :description}
-;                                    :keys/req #{:id :description}})
-;                                 :into [])
-;                         :type :vector})
-;  :user$person$address/street (spec-tools.core/spec
-;                                {:spec clojure.core/string?
-;                                 :type :string})
-;  :user$person$address/zip (spec-tools.core/spec
-;                             {:spec clojure.core/string?
-;                              :type :string})
-;  :user$person/address (spec-tools.core/spec
-;                         {:spec (clojure.spec.alpha/nilable
-;                                  (spec-tools.core/spec
-;                                    {:spec (clojure.spec.alpha/keys
-;                                             :req-un [:user$person$address/street :user$person$address/zip])
-;                                     :type :map
-;                                     :keys #{:street :zip}
-;                                     :keys/req #{:street :zip}}))
-;                          :type nil})
-;  :user$person/description (spec-tools.core/spec
-;                             {:spec clojure.core/string?
-;                              :type :string})}
+; {:user/id ..
+;  :user/age ..
+;  :user$person/boss ..
+;  :user$person/name ..
+;  :user$person/aliases ..
+;  :user$person/languages ..
+;  :user$person/aliases
+;  :user$person$aliases$maps/alias
+;  :user$person$orders/id ..
+;  :user$person$orders/description ..
+;  :user$person/orders ..
+;  :user$person$address/street ..
+;  :user$person$address/zip ..
+;  :user$person/address ..
+;  :user$person/description ..}
 ```
 
 **NOTE**: due to [CLJ-2152](http://dev.clojure.org/jira/browse/CLJ-2152), `s/&` & `s/keys*` can't be visited.
