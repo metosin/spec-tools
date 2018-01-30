@@ -187,6 +187,7 @@
      (st/spec? x) x
      (s/regex? x) x
      (or? x) (-or-spec name (:v x))
+     (maybe? x) (nilable-spec (spec name (:v x)))
      (and coll-specs? (map? x)) (-map-spec name x)
      (and coll-specs? (set? x)) (-coll-spec name x #{})
      (and coll-specs? (vector? x)) (-coll-spec name x [])

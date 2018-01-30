@@ -267,5 +267,13 @@
              {"thanks" "alex"}
              st/string-conforming)))))
 
+(deftest top-level-maybe-test
+  (let [spec (ds/spec ::maybe (ds/maybe {:n int?}))]
+    (is (= true
+           (s/valid? spec nil)
+           (s/valid? spec {:n 1})))
+    (is (= false
+           (s/valid? spec {:n "1"})))))
+
 (deftest pithyless-test
   (is (map? (st/explain-data (ds/spec ::foo {:foo string?}) {:foo 42}))))
