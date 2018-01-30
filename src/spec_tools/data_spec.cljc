@@ -71,6 +71,12 @@
   (let [form (form/resolve-form pred)]
     (s/nilable-impl form pred nil)))
 
+(defn- or-spec [v]
+  (let [ks (mapv first v)
+        preds (mapv second v)
+        forms (mapv form/resolve-form preds)]
+    (s/or-spec-impl ks forms preds nil)))
+
 ;;
 ;; Data Specs
 ;;
@@ -103,6 +109,11 @@
 (defn or? [x]
   (instance? Or x))
 
+(defn nested-key [n k]
+  (keyword (str (namespace n) "$" (name n)
+                (if-let [kns (namespace k)]
+                  (str "$" kns)) "/" (name k))))
+
 (declare spec)
 
 (defn- -map-spec [n data]
@@ -112,7 +123,7 @@
                           (and
                             (not
                               (clojure.core/or (keyword? k)
-                                  (wrapped-key? k)))
+                                               (wrapped-key? k)))
                             [k v])))]
     (st/create-spec {:spec (map-of-spec (spec n k' false) (spec n v'))})
     ;; keyword keys
@@ -127,7 +138,7 @@
                                  [v identity])
                       [k' n'] (if (qualified-keyword? kv)
                                 [kv (if (not= kv v) kv)]
-                                (let [k' (keyword (str (str (namespace n) "$" (name n)) "/" (name (unwrap-key kv))))]
+                                (let [k' (nested-key n (unwrap-key kv))]
                                   [k' k']))
                       v' (if n' (wrap (spec n' v)))]
                   (-> acc
@@ -154,20 +165,19 @@
   (let [spec (spec n (first v))]
     (st/create-spec {:spec (coll-of-spec spec proto)})))
 
-(defn- -or-spec [name v]
+(defn- -or-spec [n v]
   (when-not (and
               (map? v)
-              (every? qualified-keyword? (keys v)))
+              (every? keyword? (keys v)))
     (throw
       (ex-info
-        (str "data-spec or must be a map of qualified keys -> specs, "
+        (str "data-spec or must be a map of keyword keys -> specs, "
              v " found")
-        {:name name
+        {:name n
          :value v})))
-  (let [pairs (map (fn [[k v]] [k (spec k v)]) v)
-        ks (mapv first pairs)
-        forms (mapv second pairs)]
-    (s/or-spec-impl ks forms forms nil)))
+  (or-spec (-> (for [[k v] v]
+                 [k (spec (nested-key n k) v)])
+               (into {}))))
 
 (defn spec
   ([name x]

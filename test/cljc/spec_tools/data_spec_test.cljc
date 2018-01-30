@@ -4,7 +4,8 @@
             [spec-tools.data-spec :as ds]
             [spec-tools.core :as st]
             [spec-tools.spec :as spec])
-  #?(:clj (:import clojure.lang.ExceptionInfo)))
+  #?(:clj
+     (:import clojure.lang.ExceptionInfo)))
 
 (def ignoring-spec #(dissoc % ::s/spec))
 
@@ -84,6 +85,25 @@
     (is (= (ignoring-spec (s/explain-data spec [1]))
            (ignoring-spec (s/explain-data impl [1]))))
     (is (= "1"
+           (s/conform spec "1")
+           (s/conform impl "1")))))
+
+(deftest or-spec-tst
+  (let [spec (s/or :int int?, :string string?)
+        impl (#'ds/or-spec {:int int?, :string string?})]
+    (is (= (s/form spec)
+           (s/form impl)))
+    (is (= `(s/or :int (st/spec {:spec int? :type :long})
+                  :string (st/spec {:spec string? :type :string}))
+           (s/form (#'ds/or-spec {:int spec/int?, :string spec/string?}))))
+    (is (= nil
+           (s/explain-data spec "1")
+           (s/explain-data spec 1)
+           (s/explain-data impl "1")
+           (s/explain-data impl 1)))
+    (is (= (ignoring-spec (s/explain-data spec [1]))
+           (ignoring-spec (s/explain-data impl [1]))))
+    (is (= [:string "1"]
            (s/conform spec "1")
            (s/conform impl "1")))))
 
@@ -178,7 +198,13 @@
             [{:id "1"}]))
       (is (s/valid?
             (ds/spec ::str-kw-map {:test strings-or-keywords})
-            {:test {:id "1"}}))))
+            {:test {:id "1"}}))
+      (testing "non-qualified keywords are ok too"
+        (is (= {:values [[:strings ["1" "2"]] [:ints [3]]]}
+               (s/conform
+                 (ds/spec ::values {:values [(ds/or {:ints [int?], :strings [string?]})]})
+                 {:values [["1" "2"] [3]]}))))))
+
   (testing "top-level vector"
     (is (true?
           (s/valid?
