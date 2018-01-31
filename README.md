@@ -349,10 +349,23 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
   (dissoc person ::id))
 ```
 
-* to turn a data-spec into a Spec, call `ds/spec` on it, providing a qualified keyword describing the root spec name - used to generate unique names for sub-specs that will be registered.
+* to turn a data-spec into a Spec, call `ds/spec` on it, providing either a options map or a qualified keyword describing the root spec name - used to generate unique names for sub-specs that will be registered. Valid options:
+
+| Key                | Description                                                                       |
+| -------------------|-----------------------------------------------------------------------------------|
+| `:spec`            | The wrapped data-spec.                                                            |
+| `:name`            | Qualified root spec anme - used to generate unique names for sub-specs.           |
+| `:keys-spec`       | Function to wrap not-wrapped keys, e.g. `ds/un` to make keys optional by default. |
+| `:keys-default`    | Function to generate the keys-specs, default `ds/keys-specs`.                     |
 
 ```clj
-;; transform into specs
+;; options-syntax
+(def person-spec
+  (ds/spec
+    {:name ::person
+     :spec person}))
+
+;; legacy syntax
 (def person-spec
   (ds/spec ::person person))
 
