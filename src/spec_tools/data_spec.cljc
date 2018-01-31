@@ -125,7 +125,7 @@
                               (clojure.core/or (keyword? k)
                                                (wrapped-key? k)))
                             [k v])))]
-    (st/create-spec {:spec (map-of-spec (spec n k' false) (spec n v'))})
+    (st/create-spec {:spec (map-of-spec (spec n k') (spec n v'))})
     ;; keyword keys
     (let [m (reduce-kv
               (fn [acc k v]
@@ -179,16 +179,13 @@
                  [k (spec (nested-key n k) v)])
                (into {}))))
 
-(defn spec
-  ([name x]
-   (spec name x true))
-  ([name x coll-specs?]
-   (cond
-     (st/spec? x) x
-     (s/regex? x) x
-     (or? x) (-or-spec name (:v x))
-     (maybe? x) (nilable-spec (spec name (:v x)))
-     (and coll-specs? (map? x)) (-map-spec name x)
-     (and coll-specs? (set? x)) (-coll-spec name x #{})
-     (and coll-specs? (vector? x)) (-coll-spec name x [])
-     :else (st/create-spec {:spec x}))))
+(defn spec [name x]
+  (cond
+    (st/spec? x) x
+    (s/regex? x) x
+    (or? x) (-or-spec name (:v x))
+    (maybe? x) (nilable-spec (spec name (:v x)))
+    (map? x) (-map-spec name x)
+    (set? x) (-coll-spec name x #{})
+    (vector? x) (-coll-spec name x [])
+    :else (st/create-spec {:spec x})))
