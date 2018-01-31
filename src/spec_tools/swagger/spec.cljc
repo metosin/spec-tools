@@ -77,7 +77,7 @@
      (ds/opt :schemes) (s/coll-of #{"http", "https", "ws", "wss"} :into #{})
      (ds/opt :consumes) #{string?}
      (ds/opt :produces) #{string?}
-     (ds/opt :paths) {string? {#{:get :put :post :delete :options :head :patch} ::operation}}
+     (ds/opt :paths) {string? {(s/spec #{:get :put :post :delete :options :head :patch}) ::operation}}
      ;(ds/opt :definitions) map?
      ;(ds/opt :parameters) map?
      ;(ds/opt :responses) map?

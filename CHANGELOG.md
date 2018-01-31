@@ -17,6 +17,18 @@
 ; [[:map {:alias "rudi"}] [:string "Rudolf"]]
 ```
 
+* **BREAKING**: `map-of` data-spec keys are also data-specs. So this works now:
+
+```clj
+(require '[clojure.spec.alpha :as s])
+(require '[spec-tools.data-spec :as ds])
+
+(s/valid?
+  (ds/spec ::ints {[int?] [int?]})
+  {[1 2 3] [4 5 6]})
+; true
+```
+
 * updated deps:
 
 ```clj

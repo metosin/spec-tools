@@ -251,7 +251,7 @@
           {"invalid spec" "is this"}))))
 
   (testing "set keys"
-    (let [spec (ds/spec ::pred-keys {#{:one :two} string?})]
+    (let [spec (ds/spec ::pred-keys {(s/spec #{:one :two}) string?})]
       (is
         (= true
            (s/valid? spec {:one "beer"})
