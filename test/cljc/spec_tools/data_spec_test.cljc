@@ -275,5 +275,47 @@
     (is (= false
            (s/valid? spec {:n "1"})))))
 
+(deftest alternative-syntax-test
+  (testing "both ways produce same specs"
+    (let [spec1 (ds/spec ::spec1 {::i int?})
+          spec2 (ds/spec {:name ::spec2, :spec {::i int?}})]
+      (is (= true
+             (s/valid? spec1 {::i 1})
+             (s/valid? spec2 {::i 1})))
+      (is (= `(spec-tools.core/spec
+                {:spec (clojure.spec.alpha/keys :req [::i])
+                 :type :map
+                 :keys #{::i}
+                 :keys/req #{::i}})
+             (s/form spec1)
+             (s/form spec2)))))
+
+  (testing ":name can be ommitted if no specs are registered"
+    (is (ds/spec {:spec {::i int?}})))
+
+  (testing ":name is required if specs are registered"
+    (is (thrown? #?(:clj Error, :cljs js/Error) (ds/spec {:spec {:i int?}})))))
+
+(deftest keys-spec-extra-options-test
+  (testing "keys-default"
+    (let [data {(ds/req :a) any?
+                (ds/opt :b) any?
+                :c any?}]
+      (testing "by default, plain keyword keys are required"
+        (let [spec (ds/spec
+                     {:name ::kikka
+                      :spec data})]
+          (is (s/valid? spec {:a 1, :b 1, :c 1}))
+          (is (not (s/valid? spec {:a 1})))))
+      (testing "plain keyword keys can be made optional by default"
+        (let [spec (ds/spec
+                     {:name ::kikka
+                      :spec data
+                      :keys-default ds/opt})]
+          (is (s/valid? spec {:a 1, :b 1, :c 1}))
+          (is (s/valid? spec {:a 1}))))))
+  ;; TODO
+  (testing "keys-spec"))
+
 (deftest pithyless-test
   (is (map? (st/explain-data (ds/spec ::foo {:foo string?}) {:foo 42}))))

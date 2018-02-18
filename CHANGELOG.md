@@ -29,6 +29,37 @@
 ; true
 ```
 
+* `ds/spec` supports 1-arity version, allowing extra options `:keys-spec` & `:keys-default`.
+
+```clj
+(require '[clojure.spec.alpha :as s])
+(require '[spec-tools.data-spec :as ds])
+
+(s/valid?
+  (ds/spec
+    {:name ::optiona-user
+     :spec {(ds/req :id) int?
+            :age pos-int?
+            :name string?}
+     :keys-default ds/opt})
+  {:id 123})
+; true
+```
+
+* `ds/spec` option `:name` is only required if non-qualified map keys are present.
+
+```clj
+(require '[clojure.spec.alpha :as s])
+(require '[spec-tools.data-spec :as ds])
+
+(s/valid?
+  (ds/spec
+    {:spec [{::alias string?}]})
+  [{::alias "kikka"}
+   {::alias "kukka"}])
+; true
+```
+
 * updated deps:
 
 ```clj

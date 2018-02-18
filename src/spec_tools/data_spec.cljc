@@ -110,13 +110,14 @@
   (instance? Or x))
 
 (defn nested-key [n k]
+  (assert (qualified-keyword? n) "spec must have a qualified name")
   (keyword (str (namespace n) "$" (name n)
                 (if-let [kns (namespace k)]
                   (str "$" kns)) "/" (name k))))
 
 (declare spec)
 
-(defn- -map-spec [n data]
+(defn- -map-spec [data {n :name :keys [keys-spec keys-default] :or {keys-spec keys-spec} :as opts}]
   ;; predicate keys
   (if-let [[k' v'] (and (= 1 (count data))
                         (let [[k v] (first data)]
@@ -125,11 +126,12 @@
                               (clojure.core/or (keyword? k)
                                                (wrapped-key? k)))
                             [k v])))]
-    (st/create-spec {:spec (map-of-spec (spec n k') (spec n v'))})
+    (st/create-spec {:spec (map-of-spec (spec n k') (spec {:name n, :spec v'}))})
     ;; keyword keys
     (let [m (reduce-kv
               (fn [acc k v]
-                (let [kv (unwrap-key k)
+                (let [k (if (and keys-default (keyword? k)) (keys-default k) k)
+                      kv (unwrap-key k)
                       rk (keyword
                            (str (if (req? k) "req" "opt")
                                 (if-not (qualified-keyword? kv) "-un")))
@@ -140,30 +142,30 @@
                                 [kv (if (not= kv v) kv)]
                                 (let [k' (nested-key n (unwrap-key kv))]
                                   [k' k']))
-                      v' (if n' (wrap (spec n' v)))]
+                      v' (if n' (wrap (spec (-> opts (assoc :name n') (assoc :spec v)))))]
                   (-> acc
                       (update rk (fnil conj []) k')
                       (cond-> v' (update ::defs (fnil conj []) [k' v'])))))
               {}
               data)
           defs (::defs m)
-          margs (apply concat (dissoc m ::defs))]
+          data (apply hash-map (apply concat (dissoc m ::defs)))]
       (doseq [[k s] defs]
         (impl/register-spec! k s))
-      (st/create-spec {:spec (keys-spec margs)}))))
+      (st/create-spec {:spec (keys-spec data)}))))
 
-(defn- -coll-spec [n v proto]
-  (when-not (= 1 (count v))
+(defn- -coll-spec [data {n :name kind :kind}]
+  (when-not (= 1 (count data))
     (throw
       (ex-info
-        (str "data-spec collection " proto
-             " should be homogeneous, " (count v)
+        (str "data-spec collection " kind
+             " should be homogeneous, " (count data)
              " values found")
         {:name n
-         :proto proto
-         :values v})))
-  (let [spec (spec n (first v))]
-    (st/create-spec {:spec (coll-of-spec spec proto)})))
+         :kind kind
+         :values data})))
+  (let [spec (spec n (first data))]
+    (st/create-spec {:spec (coll-of-spec spec kind)})))
 
 (defn- -or-spec [n v]
   (when-not (and
@@ -179,13 +181,37 @@
                  [k (spec (nested-key n k) v)])
                (into {}))))
 
-(defn spec [name x]
-  (cond
-    (st/spec? x) x
-    (s/regex? x) x
-    (or? x) (-or-spec name (:v x))
-    (maybe? x) (nilable-spec (spec name (:v x)))
-    (map? x) (-map-spec name x)
-    (set? x) (-coll-spec name x #{})
-    (vector? x) (-coll-spec name x [])
-    :else (st/create-spec {:spec x})))
+(defn spec
+  "Creates a clojure.spec.alpha/Spec out of a data-spec. Supports 2 arities:
+
+     ;; arity1
+     (ds/spec
+       {:spec {:i int?}
+        :name ::map})
+
+     ;; arity2 (legacy)
+     (ds/spec ::map {:i int?})
+
+  The following options are valid for the 1 arity case:
+
+               :spec the data-spec form (required)
+               :name fully qualified keyword name for the spec, used in keys-spec
+                     key spec registration, required if there are non-qualified
+                     keyword keys in maps.
+          :keys-spec function to generate keys-spec (default: [[keys-spec]])
+       :keys-default optional function to wrap the plain keyword keys, e.g. setting
+                     the value to [[opt]] maes all plain keyword keys optional."
+  ([{data :spec name :name :as opts}]
+   (assert spec "missing :spec predicate in data-spec")
+   (let [opts (-> opts (assoc :name name) (dissoc :spec))]
+     (cond
+       (st/spec? data) data
+       (s/regex? data) data
+       (or? data) (-or-spec name (:v data))
+       (maybe? data) (nilable-spec (spec name (:v data)))
+       (map? data) (-map-spec data opts)
+       (set? data) (-coll-spec data (assoc opts :kind #{}))
+       (vector? data) (-coll-spec data (assoc opts :kind []))
+       :else (st/create-spec {:spec data}))))
+  ([name data]
+   (spec {:name name, :spec data})))
