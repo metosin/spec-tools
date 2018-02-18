@@ -1,4 +1,8 @@
-## 0.6.0-SNAPSHOT
+## 0.6.1 (19.2.2018)
+
+* 0.6.0 deployed correctly
+
+## 0.6.0 (19.2.2018)
 
 * **BREAKING**: the transforming functions in `spec-tools.conform` just transform, dont' validate. Fixes [#92](https://github.com/metosin/spec-tools/issues/92). Thanks to [Benjamin Albrecht](https://github.com/benalbrecht)
 * Fixed `s/gen` triggers `IllegalArgumentException` for nested aliased specs [#94](https://github.com/metosin/spec-tools/issues/94) by [@johanwiren](https://github.com/johanwiren).
