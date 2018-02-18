@@ -6,6 +6,8 @@
             [spec-tools.spec :as spec]
             [spec-tools.parse :as info]
             [spec-tools.form :as form]
+            [#?(:clj  clojure.spec.gen.alpha
+                :cljs cljs.spec.gen.alpha) :as gen]
             [spec-tools.conform :as conform]))
 
 (s/def ::age (s/and spec/integer? #(> % 10)))
@@ -473,3 +475,66 @@
     (is (= ::s/unknown (form/resolve-form :kikka))))
   (testing "unknowns return unknown"
     (is (= ::s/unknown (form/resolve-form #(> % 2))))))
+
+(s/def ::kw1 spec/keyword?)
+(s/def ::m1 (s/keys :req-un [::kw1]))
+(s/def ::kw2 spec/keyword?)
+(s/def ::map (st/merge ::m1 (s/keys :opt-un [::kw2])))
+(s/def ::core-map (s/merge ::m1 (s/keys :opt-un [::kw2])))
+
+(s/def ::or (s/or :int int? :string string?))
+(s/def ::or-map (st/merge (s/keys :req-un [::or])
+                          (s/keys :opt-un [::kw2])))
+
+(deftest merge-test
+  (let [input {:kw1 "kw1"
+               :kw2 "kw2"}
+        bad-input {:kw2 :kw2}
+        output {:kw1 :kw1
+                :kw2 :kw2}]
+    (testing "clojure.spec.alpha/merge"
+      (testing "fails to conform all values with spec-tools.core/conform"
+        (is (= {:kw1 "kw1"
+                :kw2 :kw2}
+               (st/conform ::core-map input st/json-conforming)))))
+    (testing "spec-tools.core/merge"
+      (testing "creates a conformer that conforms maps inside merge with spec-tools.core/conform"
+        (is (= output (st/conform ::map input st/json-conforming)))
+        (testing "also for non-spectools specs"
+          (is (= {:or [:int 1]} (st/conform ::or-map {:or 1})))
+          (is (= {:or [:string "1"]} (st/conform ::or-map {:or "1"}))))
+        (testing "also for nested spec-tools.core/merge"
+          (is (= output (st/conform (st/merge ::map) input st/json-conforming)))))
+      (testing "fails with bad input"
+        (is (not (s/valid? ::map bad-input))))
+      (testing "doesn't strip extra keys from input"
+        (is (= (assoc output :foo true)
+               (st/conform ::map (assoc input :foo true) st/json-conforming))))
+      (testing "works with strip-extra-keys-conforming"
+        (is (= output
+               (st/conform ::map (assoc output :foo true) st/strip-extra-keys-conforming))))
+      (testing "has proper unform"
+        (is (= output (s/conform ::map (s/unform ::map (st/conform ::map input st/json-conforming)))))
+        (testing "also for non-spectools specs"
+          (is (= {:or 1} (s/unform ::or-map (st/conform ::or-map {:or 1} st/json-conforming))))
+          (is (= {:or "1"} (s/unform ::or-map (st/conform ::or-map {:or "1"} st/json-conforming))))))
+      (testing "has a working generator"
+        (is (s/valid? ::map (gen/generate (s/gen ::map)))))
+      (testing "has a working with-gen"
+        (let [new-spec (s/with-gen ::map #(gen/return output))]
+          (testing "that creates a conformer that conforms maps inside merge"
+            (is (= output (st/conform new-spec input st/json-conforming))))
+          (testing "that uses the given generator"
+            (is (= output (gen/generate (s/gen new-spec)))))))
+      (testing "has the same explain as clojure.spec.alpha/merge"
+        (let [expected-explanation (s/explain-data ::core-map bad-input)
+              actual-explanation (s/explain-data ::map bad-input)]
+          (is (= (select-keys (first (::s/problems expected-explanation))
+                              [:path :pred :val :in])
+                 (select-keys (first (::s/problems actual-explanation))
+                              [:path :pred :val :in])))))
+      (testing "has a working describe"
+        (is (= (s/describe ::core-map)
+               (:spec (second (s/describe ::map)))))))))
+
+

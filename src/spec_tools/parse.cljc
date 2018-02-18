@@ -156,3 +156,6 @@
 ; tuple
 ; keys*
 ; nilable
+
+(defmethod parse-form 'spec-tools.core/merge [_ form]
+  (apply impl/deep-merge (map parse-spec (rest form))))

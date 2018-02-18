@@ -5,13 +5,8 @@
                             qualified-symbol? uuid? uri? decimal? inst? seqable? indexed?
                             map? vector? list? seq? char? set? nil? false? true? zero?
                             rational? coll? empty? associative? sequential? ratio? bytes?
-                            merge
                             #?@(:cljs [Inst Keyword UUID])])
-  (:require [clojure.spec.alpha :as s]
-            [clojure.set :as set]
-            [spec-tools.core :as st]
-            [spec-tools.impl :as impl]
-            [spec-tools.parse :as parse]))
+  (:require [spec-tools.core :as st]))
 
 (def any? (st/spec clojure.core/any?))
 (def some? (st/spec clojure.core/some?))
@@ -59,39 +54,3 @@
 (def sequential? (st/spec clojure.core/sequential?))
 #?(:clj (def ratio? (st/spec clojure.core/ratio?)))
 #?(:clj (def bytes? (st/spec clojure.core/bytes?)))
-
-(defn- map-spec-keys [spec]
-  (let [spec (or (if (qualified-keyword? spec)
-                   (s/form spec))
-                 spec)
-        info (parse/parse-spec spec)]
-    (select-keys info [:keys :keys/req :keys/opt])))
-
-(defn merge-impl [forms spec-form merge-spec]
-  (let [form-keys (map map-spec-keys forms)
-        spec (reify
-               s/Spec
-               (conform* [_ x]
-                 (let [conformed-vals (map #(s/conform % x) forms)]
-                   (if (some #{::s/invalid} conformed-vals)
-                     ::s/invalid
-                     (apply clojure.core/merge x (map #(select-keys %1 %2) conformed-vals (map :keys form-keys))))))
-               (unform* [_ x]
-                 (s/unform* merge-spec x))
-               (explain* [_ path via in x]
-                 (s/explain* merge-spec path via in x))
-               (gen* [_ overrides path rmap]
-                 (s/gen* merge-spec overrides path rmap)))]
-    (st/create-spec (clojure.core/merge {:spec spec
-                                         :form spec-form
-                                         :type :map}
-                                        (apply merge-with set/union form-keys)))))
-
-(defmacro merge [& forms]
-  `(let [merge-spec# (s/merge ~@forms)]
-     (merge-impl ~(vec forms) '(spec-tools.spec/merge ~@(map #(impl/resolve-form &env %) forms)) merge-spec#)))
-
-;; spec-tools.spec/merge is normalized to clojure.core/merge
-(defmethod parse/parse-form 'clojure.core/merge
-  [_ form]
-  (apply impl/deep-merge (map parse/parse-spec (rest form))))

@@ -1,8 +1,10 @@
 (ns spec-tools.core
+  (:refer-clojure :exclude [merge])
   #?(:cljs (:require-macros [spec-tools.core :refer [spec]]))
   (:require [spec-tools.impl :as impl]
             [spec-tools.parse :as parse]
             [spec-tools.form :as form]
+            [clojure.set :as set]
             [spec-tools.conform :as conform]
             [clojure.spec.alpha :as s]
     #?@(:clj  [
@@ -203,7 +205,7 @@
   (with-gen* [this gfn]
     (assoc this :gen gfn))
   (describe* [this]
-    (let [data (merge {:spec form} (extra-spec-map this))]
+    (let [data (clojure.core/merge {:spec form} (extra-spec-map this))]
       `(spec-tools.core/spec ~data)))
   IFn
   #?(:clj  (invoke [this x] (if (ifn? spec) (spec x) (fail-on-invoke this)))
@@ -213,7 +215,7 @@
    (defmethod print-method Spec
      [^Spec t ^Writer w]
      (.write w (str "#Spec"
-                    (merge
+                    (clojure.core/merge
                       (select-keys t [:form])
                       (if (:type t) (select-keys t [:type]))
                       (extra-spec-map t))))))
@@ -276,7 +278,7 @@
         type (if (contains? m :type) type (:type info))
         name (-> spec meta ::s/name)
         record (map->Spec
-                 (merge m info {:spec spec :form form, :type type}))]
+                 (clojure.core/merge m info {:spec spec :form form, :type type}))]
     (cond-> record name (with-meta {::s/name name}))))
 
 #?(:clj
@@ -301,7 +303,7 @@
              form# '~(impl/resolve-form &env pred)]
          (assert (map? info#) (str "spec info should be a map, was: " info#))
          (create-spec
-           (merge
+           (clojure.core/merge
              info#
              {:form form#
               :spec ~pred}))))))
@@ -325,4 +327,39 @@
       (let [[spec info] (impl/extract-pred-and-info pred-or-info)]
         `(doc ~spec ~info)))
      ([spec info]
-      `(spec ~spec (merge ~info {:type nil})))))
+      `(spec ~spec (clojure.core/merge ~info {:type nil})))))
+
+;;
+;; merge
+;;
+
+(defn- map-spec-keys [spec]
+  (let [spec (or (if (qualified-keyword? spec)
+                   (s/form spec))
+                 spec)
+        info (parse/parse-spec spec)]
+    (select-keys info [:keys :keys/req :keys/opt])))
+
+(defn merge-impl [forms spec-form merge-spec]
+  (let [form-keys (map map-spec-keys forms)
+        spec (reify
+               s/Spec
+               (conform* [_ x]
+                 (let [conformed-vals (map #(s/conform % x) forms)]
+                   (if (some #{::s/invalid} conformed-vals)
+                     ::s/invalid
+                     (apply clojure.core/merge x (map #(select-keys %1 %2) conformed-vals (map :keys form-keys))))))
+               (unform* [_ x]
+                 (s/unform* merge-spec x))
+               (explain* [_ path via in x]
+                 (s/explain* merge-spec path via in x))
+               (gen* [_ overrides path rmap]
+                 (s/gen* merge-spec overrides path rmap)))]
+    (create-spec (clojure.core/merge {:spec spec
+                                      :form spec-form
+                                      :type :map}
+                                     (apply merge-with set/union form-keys)))))
+
+(defmacro merge [& forms]
+  `(let [merge-spec# (s/merge ~@forms)]
+     (merge-impl ~(vec forms) '(spec-tools.core/merge ~@(map #(impl/resolve-form &env %) forms)) merge-spec#)))
