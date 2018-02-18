@@ -60,6 +60,8 @@
 ; true
 ```
 
+* `spec-tools.core/merge` that selects only the specced keys from each conformed result, then merges those results onto the original input. This avoids overwriting conformed values with unconformed values while preserving all unspecced keys of the input. Fixes [#90](https://github.com/metosin/spec-tools/issues/90). By [Arttu Kaipiainen](https://github.com/arttuka).
+
 * updated deps:
 
 ```clj
