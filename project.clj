@@ -14,7 +14,7 @@
   :dependencies [[org.clojure/spec.alpha "0.1.143"]]
 
   :profiles {:dev {:plugins [[jonase/eastwood "0.2.5"]
-                             [lein-tach "0.4.0"]
+                             [lein-tach "1.0.0"]
                              [lein-doo "0.1.8"]
                              [lein-cljsbuild "1.1.7"]
                              [lein-cloverage "1.0.10"]
@@ -28,8 +28,8 @@
                                   [org.clojure/test.check "0.9.0"]
                                   [org.clojure/tools.namespace "0.2.11"]
                                   [com.gfredericks/test.chuck "0.2.8"]
-                                  [metosin/ring-swagger "0.25.0"]
-                                  [metosin/scjsv "0.4.0"]]}
+                                  [metosin/ring-swagger "0.26.0"]
+                                  [metosin/scjsv "0.4.1"]]}
              :perf {:jvm-opts ^:replace ["-server"]}}
   :aliases {"all" ["with-profile" "dev"]
             "perf" ["with-profile" "default,dev,perf"]
