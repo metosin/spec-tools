@@ -24,7 +24,7 @@ Requires Java 1.8 & Clojure `1.9.0` and/or ClojureScript `1.9.908`+.
 
 ## Spec Records
 
-To support spec metadata and extensions like [dynamic conforming](#dynamic-conforming), Spec-tools introduces extendable Spec Records, `Spec`s. They wrap specs and act like specs or 1-arity functions. Specs are created with `spec-tools.core/spec` macro of with the underlying `spec-tools.core/create-spec` function.
+To support spec metadata and extensions like [dynamic conforming](#dynamic-conforming), Spec-tools introduces extendable Spec Records, `Spec`s. They wrap specs and act like specs or 1-arity functions. Specs are created with `spec-tools.core/spec` macro or with the underlying `spec-tools.core/create-spec` function.
 
 The following Spec keys having a special meaning:
 
@@ -354,7 +354,7 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
 | Key                | Description                                                                       |
 | -------------------|-----------------------------------------------------------------------------------|
 | `:spec`            | The wrapped data-spec.                                                            |
-| `:name`            | Qualified root spec anme - used to generate unique names for sub-specs.           |
+| `:name`            | Qualified root spec name - used to generate unique names for sub-specs.           |
 | `:keys-spec`       | Function to wrap not-wrapped keys, e.g. `ds/un` to make keys optional by default. |
 | `:keys-default`    | Function to generate the keys-specs, default `ds/keys-specs`.                     |
 
