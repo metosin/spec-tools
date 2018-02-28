@@ -181,6 +181,18 @@
               :description "it's an int"
               :json-schema/default 42})))))
 
+(deftest json-schema-ref-test
+  (is (= {:type "array"
+          :items {"$ref" "#/definitions/Map"}
+          :title "maps"
+          :description "it's some maps"}
+         (jsc/transform
+          (st/spec
+           {:spec (s/coll-of map?)
+            :name "maps"
+            :description "it's some maps"
+            :json-schema/items-ref "#/definitions/Map"})))))
+
 (deftest deeply-nested-test
   (is (= {:type "array"
           :items {:type "array"

@@ -273,7 +273,15 @@
         extra-info (-> data
                        (select-keys [:name :description])
                        (set/rename-keys {:name :title}))]
-    (merge (impl/unwrap children) extra-info json-schema-meta)))
+    (let [{:keys [type items] :as m} (merge (impl/unwrap children)
+                                            extra-info
+                                            json-schema-meta)]
+      (if (and (:items-ref json-schema-meta)
+               (= "array" type))
+        (-> m
+            (assoc :items {"$ref" (:items-ref json-schema-meta)})
+            (dissoc m :items-ref))
+        m))))
 
 (defmethod accept-spec ::default [_ _ _ _]
   {})
