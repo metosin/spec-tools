@@ -273,7 +273,9 @@
         extra-info (-> data
                        (select-keys [:name :description])
                        (set/rename-keys {:name :title}))]
-    (merge (impl/unwrap children) extra-info json-schema-meta)))
+    (if-let [ref (:ref json-schema-meta)]
+      {"$ref" ref}
+      (merge (spec-tools.impl/unwrap children) extra-info json-schema-meta))))
 
 (defmethod accept-spec ::default [_ _ _ _]
   {})
