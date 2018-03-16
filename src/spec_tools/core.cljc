@@ -75,16 +75,19 @@
 
 (def ^:dynamic ^:private *conforming* nil)
 
-(defn type-conforming [opts]
-  (fn [spec]
-    (let [type (:type spec)]
-      (get opts type))))
+(defn type-conforming
+  ([opts]
+    (type-conforming nil opts))
+  ([name opts]
+   (fn [spec]
+     (or (and name (name spec))
+         (get opts (:type spec))))))
 
 (def json-conforming
-  (type-conforming conform/json-type-conforming))
+  (type-conforming ::conform/json conform/json-type-conforming))
 
 (def string-conforming
-  (type-conforming conform/string-type-conforming))
+  (type-conforming ::conform/string conform/string-type-conforming))
 
 (def strip-extra-keys-conforming
   (type-conforming conform/strip-extra-keys-type-conforming))

@@ -275,7 +275,21 @@
         (is (= #inst "2014-02-18T18:25:37.456Z"
                (conform ::birthdate "2014-02-18T18:25:37.456Z")))
         (is (= #inst "2014-02-18T18:25:37Z"
-               (conform ::birthdate "2014-02-18T18:25:37Z")))))))
+               (conform ::birthdate "2014-02-18T18:25:37Z"))))))
+
+  (testing "self-conforming"
+    (let [spec (st/spec
+                 {:spec #(and (string? %) (> (count %) 8))
+                  :description "a string longer than 8"
+                  ::conform/json #(str %2 "-json")
+                  ::conform/string #(str %2 "-string")})]
+      (testing "without conforming"
+        (is (= ::s/invalid (st/conform spec "invalid")))
+        (is (= "a valid string" (st/conform spec "a valid string"))))
+      (testing "with conforming"
+        (is (= ::s/invalid (st/conform spec ":(" st/json-conforming)))
+        (is (= "valid-json" (st/conform spec "valid" st/json-conforming)))
+        (is (= "valid-string" (st/conform spec "valid" st/string-conforming)))))))
 
 (deftest conform!-test
   (testing "suceess"
