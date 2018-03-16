@@ -40,6 +40,8 @@ The following Spec keys having a special meaning:
 | `:keys/req`        | Set of required map keys that the spec defines. Extracted from `s/keys` Specs.|
 | `:keys/opt`        | Set of optional map keys that the spec defines. Extracted from `s/keys` Specs.|
 | `:reason`          | Value is added to `s/explain-data` problems under key `:reason`             |
+| `:reason`          | Value is added to `s/explain-data` problems under key `:reason`             |
+| `::conform/...`    | Self-contained dynamic conforming functions                                 |
 | `:json-schema/...` | Extra data that is merged with unqualifed keys into json-schema             |
 
 ### Creating Specs
@@ -253,6 +255,31 @@ Inspired by the [Schema-tools](https://github.com/metosin/schema-tools), there a
 (st/select-spec ::user inkeri)
 ; {:name "Inkeri"
 ;  :address {:street "Satamakatu"}}
+```
+
+### Self-contained conforming
+
+Type-conforming also supports self-contained definitions of conforming functions. Self-contained conforming has precedence over normal `:type`-based conforming.
+
+```clj
+(require '[spec-tools.core :as st])
+(require '[spec-tools.conform :as conform])
+
+(def spec
+  (st/spec
+    {:spec string?
+     :description "a string spec"
+     ::conform/json #(str %2 "-json")
+     ::conform/string #(str %2 "-string")}))
+
+(st/conform spec "kikka")
+; "kikka"
+
+(st/conform spec "kikka" st/json-conforming)
+; "kikka-json"
+
+(st/conform spec "kikka" st/string-conforming)
+; "kikka-string"
 ```
 
 ### Custom conforming

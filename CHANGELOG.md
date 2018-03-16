@@ -1,3 +1,28 @@
+# 0.6.2-SNAPSHOT
+
+* Add support for self-contained dynamic conforming, fixes [#96](https://github.com/metosin/spec-tools/issues/96):
+
+```clj
+(require '[spec-tools.core :as st])
+(require '[spec-tools.conform :as conform])
+
+(def spec
+  (st/spec
+    {:spec string?
+     :description "a string spec"
+     ::conform/json #(str %2 "-json")
+     ::conform/string #(str %2 "-string")}))
+
+(st/conform spec "kikka")
+; "kikka"
+
+(st/conform spec "kikka" st/json-conforming)
+; "kikka-json"
+
+(st/conform spec "kikka" st/string-conforming)
+; "kikka-string"
+```
+
 ## 0.6.1 (19.2.2018)
 
 * 0.6.0 deployed correctly
