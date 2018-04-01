@@ -714,9 +714,9 @@ Value should a [Swagger2 Responses Definition Object](https://swagger.io/specifi
                                ::kikka 42
                                ::swagger/parameters {:path (s/keys :req [::id])
                                                      :body ::user}
-                               :responses {200 {::swagger/spec ::user
-                                                :description "Found it!"}
-                                           404 {:description "Ohnoes."}}}}}})
+                               ::swagger/responses {200 {:schema ::user
+                                                         :description "Found it!"}
+                                                    404 {:description "Ohnoes."}}}}}})
 ; {:swagger "2.0",
 ;  :info {:version "1.0.0",
 ;         :title "Sausages",
