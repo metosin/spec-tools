@@ -100,10 +100,7 @@
 ;; expand the spec
 ;;
 
-(defmulti expand (fn [k _ _ _] k) :default ::extension)
-
-(defmethod expand ::extension [k v _ _]
-  {(keyword (str "x-" (impl/qualified-name k))) v})
+(defmulti expand (fn [k _ _ _] k))
 
 (defmethod expand ::responses [_ v acc _]
   {:responses
@@ -130,16 +127,15 @@
                     (reverse))]
     {:parameters merged}))
 
-(defn expand-qualified-keywords [x f options]
-  ;; inline qualified-keywords? to work with clojure 1.8
-  (let [qualified? #(boolean (and (keyword? %) (namespace %) true))]
+(defn expand-qualified-keywords [x options]
+  (let [accept? (set (keys (methods expand)))]
     (walk/postwalk
       (fn [x]
         (if (map? x)
           (reduce-kv
             (fn [acc k v]
-              (if (qualified? k)
-                (-> acc (dissoc k) (merge (f k v acc options)))
+              (if (accept? k)
+                (-> acc (dissoc k) (merge (expand k v acc options)))
                 acc))
             x
             x)
@@ -158,4 +154,4 @@
   ([x]
    (swagger-spec x nil))
   ([x options]
-   (expand-qualified-keywords x expand options)))
+   (expand-qualified-keywords x options)))

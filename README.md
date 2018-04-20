@@ -594,16 +594,6 @@ A converter from Specs to Swagger2 (JSON) Schemas. Can be used as standalone but
 
 Predifined dispatch keys below.
 
-#### `::swagger/extension`
-
-Transforms the the key into valid [swagger vendor extension](http://swagger.io/specification/#vendorExtensions) by prepending a `x-` to it's namespace. Value is not touched.
-
-```clj
-(swagger/swagger-spec
-  {:my/thing 42})
-; {:x-my/thing 42}
-```
-
 #### `::swagger/parameters`
 
 Value should be a map with optional keys `:body`, `:query`, `:path`, `:header` and `:formData`. For all but `:body`, the value should be a `s/keys` spec (describing the ring parameters). With `:body`, the value can be any `clojure.spec.alpha/Spec`.
@@ -711,7 +701,6 @@ Value should a [Swagger2 Responses Definition Object](https://swagger.io/specifi
            "/user/:id" {:post {:summary "User Api"
                                :description "User Api description"
                                :tags ["user"]
-                               ::kikka 42
                                ::swagger/parameters {:path (s/keys :req [::id])
                                                      :body ::user}
                                ::swagger/responses {200 {:schema ::user

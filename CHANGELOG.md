@@ -23,6 +23,8 @@
 ; "kikka-string"
 ```
 
+* Remove `::swagger/extension` expansion in Swagger2 generation.
+
 ## 0.6.1 (19.2.2018)
 
 * 0.6.0 deployed correctly

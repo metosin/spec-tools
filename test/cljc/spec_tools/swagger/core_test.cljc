@@ -180,11 +180,6 @@
 
 (deftest expand-test
 
-  (testing "::extension"
-    (is (= {:x-my/thing 42}
-           (swagger/swagger-spec
-             {:my/thing 42}))))
-
   (testing "::parameters"
     (is (= {:parameters [{:in "query"
                           :name "name2"
@@ -283,10 +278,9 @@
                          "/user/:id" {:post {:summary "User Api"
                                              :description "User Api description"
                                              :tags ["user"]
-                                             ::kikka 42
                                              ::swagger/parameters {:path (s/keys :req [::id])
                                                                    :body ::user}
-                                             :responses {200 {::swagger/schema ::user
-                                                              :description "Found it!"}
-                                                         404 {:description "Ohnoes."}}}}}}]
+                                             ::swagger/responses {200 {:schema ::user
+                                                                       :description "Found it!"}
+                                                                  404 {:description "Ohnoes."}}}}}}]
        (is (nil? (-> data swagger/swagger-spec v/validate))))))
