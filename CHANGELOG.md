@@ -1,5 +1,6 @@
 # 0.6.2-SNAPSHOT
 
+* Fix `rational?` mapping for JSON Schema, fixes [#113](https://github.com/metosin/spec-tools/issues/113)
 * Add support for self-contained dynamic conforming, fixes [#96](https://github.com/metosin/spec-tools/issues/96):
 
 ```clj
