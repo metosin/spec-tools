@@ -37,7 +37,7 @@
     (is (= (jsc/transform (s/spec double?)) {:type "number"}))
     (is (= (jsc/transform (s/spec string?)) {:type "string"}))
     (is (= (jsc/transform (s/spec boolean?)) {:type "boolean"}))
-    (is (= (jsc/transform rational?) {:type "double"}))
+    #?(:clj (is (= (jsc/transform rational?) {:type "double"})))
     #?(:clj (is (= (jsc/transform (s/spec decimal?)) {:type "number" :format "double"})))
     (is (= (jsc/transform (s/spec inst?)) {:type "string", :format "date-time"}))
     (is (= (jsc/transform (s/spec nil?)) {:type "null"}))

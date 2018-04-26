@@ -152,7 +152,7 @@
 (defmethod accept-spec 'clojure.core/zero? [_ _ _ _] {:type "integer"})
 
 ; rational? (one-of [(large-integer) (ratio)])
-(defmethod accept-spec 'clojure.core/rational? [_ _ _ _] {:type "double"})
+#?(:clj (defmethod accept-spec 'clojure.core/rational? [_ _ _ _] {:type "double"}))
 
 ; coll? (one-of [(map simple simple)
 ;                (list simple)
