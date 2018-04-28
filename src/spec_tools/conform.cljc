@@ -5,8 +5,10 @@
                [goog.date.Date]])
             [clojure.set :as set])
   #?(:clj
-     (:import (java.util Date UUID)
-              (java.time Instant))))
+     (:import (java.util Calendar Date TimeZone UUID)
+              (javax.xml.bind DatatypeConverter)
+              (java.time LocalDate Instant ZoneOffset)
+              (java.time.format DateTimeFormatter))))
 
 ;;
 ;; Strings
@@ -58,7 +60,17 @@
 (defn string->date [_ x]
   (if (string? x)
     (try
-      #?(:clj  (Date/from (Instant/parse x))
+      #?(:clj (try
+                 ;; Try first parsing the "yyyy-mm-dd" format (ISO Date), because
+                 ;; in this case we have to set the offset to UTC, so the date refers
+                 ;; to the current day, and it's not offsetted by the JVM current timezone
+                 (-> x
+                     (LocalDate/parse DateTimeFormatter/ISO_LOCAL_DATE)
+                     (.atStartOfDay)
+                     (.toInstant ZoneOffset/UTC)
+                     (Date/from))
+                 ;; If we cannot match on a date, we try parsing the Istant/DateTime syntax
+                 (catch Exception _ (.getTime (DatatypeConverter/parseDateTime x))))
          :cljs (js/Date. (.getTime (goog.date.UtcDateTime.fromIsoString x))))
       (catch #?(:clj  Exception, :cljs js/Error) _ x))
     x))

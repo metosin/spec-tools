@@ -32,7 +32,11 @@
 
 (deftest string->date
   (is (= #inst "2014-02-18T18:25:37Z" (conform/string->date _ "2014-02-18T18:25:37Z")))
+  (is (= #inst "2018-04-27T00:00:00Z" (conform/string->date _ "2018-04-27")))
+  (is (= #inst "2018-04-27T05:00:00Z" (conform/string->date _ "2018-04-27T08:00:00+03:00")))
   (is (= #inst "2014-02-18T18:25:37Z" (conform/string->date _ #inst "2014-02-18T18:25:37Z")))
+  (is (= #inst "2018-04-27T00:00:00Z" (conform/string->date _ #inst "2018-04-27")))
+  (is (= #inst "2018-04-27T05:00:00Z" (conform/string->date _ #inst "2018-04-27T08:00:00+03:00")))
   (is (= "abba" (conform/string->date _ "abba"))))
 
 (deftest string->symbol
