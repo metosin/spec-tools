@@ -6,6 +6,7 @@
             [clojure.set :as set])
   #?(:clj
      (:import (java.util Date UUID)
+              (com.fasterxml.jackson.databind.util StdDateFormat)
               (java.time Instant))))
 
 ;;
@@ -58,7 +59,7 @@
 (defn string->date [_ x]
   (if (string? x)
     (try
-      #?(:clj  (Date/from (Instant/parse x))
+      #?(:clj  (.parse (StdDateFormat.) x)
          :cljs (js/Date. (.getTime (goog.date.UtcDateTime.fromIsoString x))))
       (catch #?(:clj  Exception, :cljs js/Error) _ x))
     x))
