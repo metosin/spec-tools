@@ -74,14 +74,23 @@
 ;;
 
 (def ^:dynamic ^:private *conforming* nil)
+(def ^:dynamic ^:private *encode?* nil)
 
 (defn type-conforming
   ([opts]
-    (type-conforming nil opts))
-  ([name opts]
-   (fn [spec]
-     (or (and name (name spec))
-         (get opts (:type spec))))))
+   (type-conforming nil opts))
+  ([cname decode-opts]
+   (type-conforming cname decode-opts nil))
+  ([cname decode-opts encode-opts]
+   (let [encode-name (some->> cname name (str "encode/") keyword)
+         decode-name (some->> cname name (str "decode/") keyword)]
+     (fn
+       ([spec]
+        (or (get spec decode-name)
+            (get decode-opts (:type spec))))
+       ([spec _]
+        (or (get spec encode-name)
+            (get encode-opts (:type spec))))))))
 
 (def json-conforming
   (type-conforming ::conform/json conform/json-type-conforming))
@@ -99,14 +108,14 @@
   ([spec value]
    (explain spec value nil))
   ([spec value conforming]
-   (binding [*conforming* conforming]
+   (binding [*conforming* conforming, *encode?* false]
      (s/explain spec value))))
 
 (defn explain-data
   ([spec value]
    (explain-data spec value nil))
   ([spec value conforming]
-   (binding [*conforming* conforming]
+   (binding [*conforming* conforming, *encode?* false]
      (s/explain-data spec value))))
 
 (defn conform
@@ -115,7 +124,7 @@
   ([spec value]
    (conform spec value nil))
   ([spec value conforming]
-   (binding [*conforming* conforming]
+   (binding [*conforming* conforming, *encode?* false]
      (s/conform spec value))))
 
 (defn conform!
@@ -126,7 +135,7 @@
   ([spec value]
    (conform! spec value nil))
   ([spec value conforming]
-   (binding [*conforming* conforming]
+   (binding [*conforming* conforming, *encode?* false]
      (let [conformed (s/conform spec value)]
        (if-not (= conformed +invalid+)
          conformed
@@ -139,6 +148,23 @@
 
 (defn select-spec [spec value]
   (conform spec value strip-extra-keys-conforming))
+
+(defn decode
+  "Transform and validate value from external format into valid value
+  defined by the spec."
+  ([spec value]
+   (decode spec value nil))
+  ([spec value conforming]
+   (binding [*conforming* conforming, *encode?* false]
+     (s/conform spec value))))
+
+(defn encode
+  "Transform (without validation) a value into external format."
+  ([spec value]
+   (encode spec value nil))
+  ([spec value conforming]
+   (binding [*conforming* conforming, *encode?* true]
+     (s/conform spec value))))
 
 ;;
 ;; Spec Record
@@ -162,12 +188,13 @@
 
   s/Spec
   (conform* [this x]
-    (let [conforming *conforming*]
-      (if-let [conform (if conforming (conforming this))]
-        (let [conformed (conform this x)]
-          (or (and (= +invalid+ conformed) conformed)
-              (s/conform spec conformed)))
-        (s/conform spec x))))
+    (let [conforming *conforming*, encode? *encode?*]
+      (if-let [transform (if conforming (if encode? (conforming this encode?) (conforming this)))]
+        (let [transformed (transform this x)]
+          (or (and (= +invalid+ transformed) transformed)
+              (if encode? transformed (s/conform spec transformed))))
+        ;; TODO: should the encode default to `str`?
+        (if encode? +invalid+ (s/conform spec x)))))
   (unform* [_ x]
     (s/unform spec x))
   (explain* [this path via in x]

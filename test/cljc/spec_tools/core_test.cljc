@@ -275,21 +275,36 @@
         (is (= #inst "2014-02-18T18:25:37.456Z"
                (conform ::birthdate "2014-02-18T18:25:37.456Z")))
         (is (= #inst "2014-02-18T18:25:37Z"
-               (conform ::birthdate "2014-02-18T18:25:37Z"))))))
+               (conform ::birthdate "2014-02-18T18:25:37Z")))))))
 
-  (testing "self-conforming"
-    (let [spec (st/spec
-                 {:spec #(and (string? %) (> (count %) 8))
-                  :description "a string longer than 8"
-                  ::conform/json #(str %2 "-json")
-                  ::conform/string #(str %2 "-string")})]
+(s/def ::my-spec
+  (st/spec
+    {:spec #(and (simple-keyword? %) (-> % name str/lower-case keyword (= %)))
+     :description "a lowercase simple keyword, encoded in uppercase in string-mode"
+     :decode/string #(-> %2 name str/lower-case keyword)
+     :encode/string #(-> %2 name str/upper-case)}))
+(s/def ::my-spec-map (s/keys :req [::my-spec]))
+
+(deftest encode-decode-test
+  (testing "spec-driven encode & decode"
+    (let [invalid {::my-spec "kikka"}
+          encoded {::my-spec "KIKKA"}
+          decoded {::my-spec :kikka}]
       (testing "without conforming"
-        (is (= ::s/invalid (st/conform spec "invalid")))
-        (is (= "a valid string" (st/conform spec "a valid string"))))
+        (testing "decode works just like s/conform"
+          (is (= ::s/invalid (st/decode ::my-spec-map encoded)))
+          (is (= decoded (st/decode ::my-spec-map decoded))))
+        (testing "encode fails if no encoder is defined"
+          (is (= ::s/invalid (st/encode ::my-spec-map invalid)))))
       (testing "with conforming"
-        (is (= ::s/invalid (st/conform spec ":(" st/json-conforming)))
-        (is (= "valid-json" (st/conform spec "valid" st/json-conforming)))
-        (is (= "valid-string" (st/conform spec "valid" st/string-conforming)))))))
+        (testing "decoding is applied before validation, if defined"
+          (is (= ::s/invalid (st/decode ::my-spec-map encoded st/json-conforming)))
+          (is (= decoded (st/decode ::my-spec-map decoded st/string-conforming)))
+          (is (= decoded (st/decode ::my-spec-map encoded st/string-conforming))))
+        (testing "encoding is applied without validation, if defined"
+          (is (= ::s/invalid (st/encode ::my-spec-map decoded st/json-conforming)))
+          (is (= encoded (st/encode ::my-spec-map encoded st/string-conforming)))
+          (is (= encoded (st/encode ::my-spec-map decoded st/string-conforming))))))))
 
 (deftest conform!-test
   (testing "suceess"
@@ -550,5 +565,3 @@
       (testing "has a working describe"
         (is (= (s/describe ::core-map)
                (:spec (second (s/describe ::map)))))))))
-
-

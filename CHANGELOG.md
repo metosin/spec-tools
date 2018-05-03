@@ -1,30 +1,55 @@
 # 0.6.2-SNAPSHOT
 
 * Fix `rational?` mapping for JSON Schema, fixes [#113](https://github.com/metosin/spec-tools/issues/113)
-* Add support for self-contained dynamic conforming, fixes [#96](https://github.com/metosin/spec-tools/issues/96):
+* Remove `::swagger/extension` expansion in Swagger2 generation.
+* Date-conforming is now [ISO8601](https://en.wikipedia.org/wiki/ISO_8601)-compliant on Clojure too, thanks to [Fabrizio Ferrai](https://github.com/f-f).
+* Add support for self-contained symmetric spec encoding & decoding, fixes [#96](https://github.com/metosin/spec-tools/issues/96)
+  * `st/decode` to transform and validate value from external format into valid value defined by the spec
+  * `st/encode` to transform (without validation) a value into external format
+  * new `encode` and `decode` namespaces to define transformations for `Spec`s. `json` and `string` are supported by default, but free to extend whatever (`xml`, `avro` etc.)
+  * type-based encoders can be defined via `st/type-conforming` (defaults no none)
 
 ```clj
+(require '[clojure.spec.alpha :as s])
 (require '[spec-tools.core :as st])
-(require '[spec-tools.conform :as conform])
 
-(def spec
+(s/def ::spec
   (st/spec
-    {:spec string?
-     :description "a string spec"
-     ::conform/json #(str %2 "-json")
-     ::conform/string #(str %2 "-string")}))
+    {:spec #(and (simple-keyword? %) (-> % name str/lower-case keyword (= %)))
+     :description "a lowercase simple keyword, encoded in uppercase in string-mode"
+     :decode/string #(-> %2 name str/lower-case keyword)
+     :encode/string #(-> %2 name str/upper-case)}))
 
-(st/conform spec "kikka")
-; "kikka"
+; decode also validates
+(st/decode ::spec "kikka")
+; => :clojure.spec.alpha/invalid
 
-(st/conform spec "kikka" st/json-conforming)
-; "kikka-json"
+(st/decode ::spec "kikka" st/string-conforming)
+; => :kikka
 
-(st/conform spec "kikka" st/string-conforming)
-; "kikka-string"
+; encode fails if no encoder present
+(st/encode ::spec "kikka")
+; => :clojure.spec.alpha/invalid
+
+; encode doesn't validate!
+(st/encode ::spec "kikka" st/string-conforming)
+; => "KIKKA"
+
+; not real bijections (https://en.wikipedia.org/wiki/Bijection)
+(as-> "KikKa" $
+      (doto $ prn)
+      (st/encode ::spec $ st/string-conforming)
+      (doto $ prn)
+      (st/decode ::spec $ st/string-conforming)
+      (doto $ prn)
+      (st/encode ::spec $ st/string-conforming)
+      (prn $))
+; "KikKa"
+; "KIKKA"
+; :kikka
+; "KIKKA"
+; => nil
 ```
-
-* Remove `::swagger/extension` expansion in Swagger2 generation.
 
 ## 0.6.1 (19.2.2018)
 
