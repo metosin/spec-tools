@@ -7,7 +7,7 @@ Clojure/Script tools for [clojure.spec](http://clojure.org/about/spec).
 * [Data Specs](#data-specs)
 * [Spec Visitors](#spec-visitors)
 * [Generating JSON Schemas](#generating-json-schemas)
-* [Swagger2 Integration](#swagger2-integration)
+* [Generating Swagger2 Schemas](#generating-swagger2-schemas)
 
 Status: **Alpha** (as spec is still alpha too).
 
@@ -585,7 +585,7 @@ Extra data from Spec records is used to populate the data:
 ;  :default 42}
 ```
 
-## Swagger2 Integration
+## Generating Swagger2 Schemas
 
 A converter from Specs to Swagger2 (JSON) Schemas. Can be used as standalone but will be later available as [ring-swagger](https://clojars.org/metosin/ring-swagger) module. See https://github.com/metosin/ring-swagger/issues/95.
 
