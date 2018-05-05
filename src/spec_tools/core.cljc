@@ -408,7 +408,3 @@
 (defmacro merge [& forms]
   `(let [merge-spec# (s/merge ~@forms)]
      (merge-impl ~(vec forms) '(spec-tools.core/merge ~@(map #(impl/resolve-form &env %) forms)) merge-spec#)))
-
-(./aprint
-  (decode (spec identity) 'kikka string-transformer))
-
