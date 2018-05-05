@@ -8,7 +8,7 @@
             [spec-tools.form :as form]
             [#?(:clj  clojure.spec.gen.alpha
                 :cljs cljs.spec.gen.alpha) :as gen]
-            [spec-tools.conform :as conform]))
+            [spec-tools.decode :as std]))
 
 (s/def ::age (s/and spec/integer? #(> % 10)))
 (s/def ::over-a-million (s/and spec/int? #(> % 1000000)))
@@ -247,7 +247,7 @@
       (is (= st/+invalid+ (st/conform ::birthdate "2014-02-18T18:25:37Z")))))
 
   (testing "string-conforming"
-    (let [conform #(st/conform %1 %2 st/string-conforming)]
+    (let [conform #(st/conform %1 %2 st/string-transformer)]
       (testing "everything gets conformed"
         (is (= 12 (conform ::age "12")))
         (is (= 1234567 (conform ::over-a-million "1234567")))
@@ -262,7 +262,7 @@
                (conform ::birthdate "2014-02-18T18:25:37Z"))))))
 
   (testing "json-conforming"
-    (let [conform #(st/conform %1 %2 st/json-conforming)]
+    (let [conform #(st/conform %1 %2 st/json-transformer)]
       (testing "some are not conformed"
         (is (= st/+invalid+ (conform ::age "12")))
         (is (= st/+invalid+ (conform ::over-a-million "1234567")))
@@ -298,17 +298,17 @@
           (is (= ::s/invalid (st/encode ::my-spec-map invalid)))))
       (testing "with conforming"
         (testing "decoding is applied before validation, if defined"
-          (is (= ::s/invalid (st/decode ::my-spec-map encoded st/json-conforming)))
-          (is (= decoded (st/decode ::my-spec-map decoded st/string-conforming)))
-          (is (= decoded (st/decode ::my-spec-map encoded st/string-conforming))))
+          (is (= ::s/invalid (st/decode ::my-spec-map encoded st/json-transformer)))
+          (is (= decoded (st/decode ::my-spec-map decoded st/string-transformer)))
+          (is (= decoded (st/decode ::my-spec-map encoded st/string-transformer))))
         (testing "encoding is applied without validation, if defined"
-          (is (= ::s/invalid (st/encode ::my-spec-map decoded st/json-conforming)))
-          (is (= encoded (st/encode ::my-spec-map encoded st/string-conforming)))
-          (is (= encoded (st/encode ::my-spec-map decoded st/string-conforming))))))))
+          (is (= ::s/invalid (st/encode ::my-spec-map decoded st/json-transformer)))
+          (is (= encoded (st/encode ::my-spec-map encoded st/string-transformer)))
+          (is (= encoded (st/encode ::my-spec-map decoded st/string-transformer))))))))
 
 (deftest conform!-test
   (testing "suceess"
-    (is (= 12 (st/conform! ::age "12" st/string-conforming))))
+    (is (= 12 (st/conform! ::age "12" st/string-transformer))))
   (testing "failing"
     (is (thrown? #?(:clj Exception, :cljs js/Error) (st/conform! ::age "12")))
     (try
@@ -335,26 +335,26 @@
       (is (any? (with-out-str (st/explain spec/int? "12"))))
       (is (any? (with-out-str (st/explain spec/int? "12" nil))))))
   (testing "with conforming"
-    (is (= 12 (st/conform spec/int? "12" st/string-conforming)))
-    (is (= nil (st/explain-data spec/int? "12" st/string-conforming)))
+    (is (= 12 (st/conform spec/int? "12" st/string-transformer)))
+    (is (= nil (st/explain-data spec/int? "12" st/string-transformer)))
     (is (= "Success!\n"
-           (with-out-str (st/explain spec/int? "12" st/string-conforming))))))
+           (with-out-str (st/explain spec/int? "12" st/string-transformer))))))
 
 (deftest conform-unform-explain-tests
   (testing "specs"
     (let [spec (st/spec (s/or :int spec/int? :bool spec/boolean?))
           value "1"]
       (is (= st/+invalid+ (st/conform spec value)))
-      (is (= [:int 1] (st/conform spec value st/string-conforming)))
-      (is (= 1 (s/unform spec (st/conform spec value st/string-conforming))))
-      (is (= nil (st/explain-data spec value st/string-conforming)))))
+      (is (= [:int 1] (st/conform spec value st/string-transformer)))
+      (is (= 1 (s/unform spec (st/conform spec value st/string-transformer))))
+      (is (= nil (st/explain-data spec value st/string-transformer)))))
   (testing "regexs"
     (let [spec (st/spec (s/* (s/cat :key spec/keyword? :val spec/int?)))
           value [:a "1" :b "2"]]
       (is (= st/+invalid+ (st/conform spec value)))
-      (is (= [{:key :a, :val 1} {:key :b, :val 2}] (st/conform spec value st/string-conforming)))
-      (is (= [:a 1 :b 2] (s/unform spec (st/conform spec value st/string-conforming))))
-      (is (= nil (st/explain-data spec value st/string-conforming))))))
+      (is (= [{:key :a, :val 1} {:key :b, :val 2}] (st/conform spec value st/string-transformer)))
+      (is (= [:a 1 :b 2] (s/unform spec (st/conform spec value st/string-transformer))))
+      (is (= nil (st/explain-data spec value st/string-transformer))))))
 
 (s/def ::height integer?)
 (s/def ::weight integer?)
@@ -370,15 +370,15 @@
 
     (testing "stripping extra keys"
       (is (= {:height 200, :weight 80}
-             (st/conform ::person person st/strip-extra-keys-conforming)
+             (st/conform ::person person st/strip-extra-keys-transformer)
              (st/select-spec ::person person))))
 
     (testing "failing on extra keys"
       (is (= st/+invalid+
-             (st/conform ::person person st/fail-on-extra-keys-conforming))))
+             (st/conform ::person person st/fail-on-extra-keys-transformer))))
 
     (testing "explain works too"
-      (is (is (seq (st/explain-data ::person person st/fail-on-extra-keys-conforming)))))))
+      (is (is (seq (st/explain-data ::person person st/fail-on-extra-keys-transformer)))))))
 
 (s/def ::human (st/spec (s/keys :req-un [::height ::weight]) {:type ::human}))
 
@@ -398,11 +398,11 @@
 
     (testing "bmi-conforming"
       (is (= {:height 200, :weight 80, :bmi 20.0}
-             (st/conform ::human person (st/type-conforming
-                                          {::human bmi-conformer})))))))
+             (st/conform ::human person (st/type-transformer
+                                          {:decoders {::human bmi-conformer}})))))))
 
 (deftest unform-test
-  (let [unform-conform #(s/unform %1 (st/conform %1 %2 st/string-conforming))]
+  (let [unform-conform #(s/unform %1 (st/conform %1 %2 st/string-transformer))]
     (testing "conformed values can be unformed"
       (is (= 12 (unform-conform ::age "12")))
       (is (= 1234567 (unform-conform ::age "1234567")))
@@ -417,17 +417,18 @@
              (unform-conform ::birthdate "2014-02-18T18:25:37.456Z"))))))
 
 (deftest extending-test
-  (let [my-conforming (st/type-conforming
-                        (assoc
-                          conform/string-type-conforming
-                          :keyword
-                          (fn [_ value]
-                            (-> value
-                                str/upper-case
-                                str/reverse
-                                keyword))))]
+  (let [my-conforming (st/type-transformer
+                        {:decoders
+                         (assoc
+                           std/string-type-decoders
+                           :keyword
+                           (fn [_ value]
+                             (-> value
+                                 str/upper-case
+                                 str/reverse
+                                 keyword)))})]
     (testing "string-conforming"
-      (is (= :kikka (st/conform spec/keyword? "kikka" st/string-conforming))))
+      (is (= :kikka (st/conform spec/keyword? "kikka" st/string-transformer))))
     (testing "my-conforming"
       (is (= :AKKIK (st/conform spec/keyword? "kikka" my-conforming))))))
 
@@ -525,34 +526,34 @@
       (testing "fails to conform all values with spec-tools.core/conform"
         (is (= {:kw1 "kw1"
                 :kw2 :kw2}
-               (st/conform ::core-map input st/json-conforming)))))
+               (st/conform ::core-map input st/json-transformer)))))
     (testing "spec-tools.core/merge"
       (testing "creates a conformer that conforms maps inside merge with spec-tools.core/conform"
-        (is (= output (st/conform ::map input st/json-conforming)))
+        (is (= output (st/conform ::map input st/json-transformer)))
         (testing "also for non-spectools specs"
           (is (= {:or [:int 1]} (st/conform ::or-map {:or 1})))
           (is (= {:or [:string "1"]} (st/conform ::or-map {:or "1"}))))
         (testing "also for nested spec-tools.core/merge"
-          (is (= output (st/conform (st/merge ::map) input st/json-conforming)))))
+          (is (= output (st/conform (st/merge ::map) input st/json-transformer)))))
       (testing "fails with bad input"
         (is (not (s/valid? ::map bad-input))))
       (testing "doesn't strip extra keys from input"
         (is (= (assoc output :foo true)
-               (st/conform ::map (assoc input :foo true) st/json-conforming))))
+               (st/conform ::map (assoc input :foo true) st/json-transformer))))
       (testing "works with strip-extra-keys-conforming"
         (is (= output
-               (st/conform ::map (assoc output :foo true) st/strip-extra-keys-conforming))))
+               (st/conform ::map (assoc output :foo true) st/strip-extra-keys-transformer))))
       (testing "has proper unform"
-        (is (= output (s/conform ::map (s/unform ::map (st/conform ::map input st/json-conforming)))))
+        (is (= output (s/conform ::map (s/unform ::map (st/conform ::map input st/json-transformer)))))
         (testing "also for non-spectools specs"
-          (is (= {:or 1} (s/unform ::or-map (st/conform ::or-map {:or 1} st/json-conforming))))
-          (is (= {:or "1"} (s/unform ::or-map (st/conform ::or-map {:or "1"} st/json-conforming))))))
+          (is (= {:or 1} (s/unform ::or-map (st/conform ::or-map {:or 1} st/json-transformer))))
+          (is (= {:or "1"} (s/unform ::or-map (st/conform ::or-map {:or "1"} st/json-transformer))))))
       (testing "has a working generator"
         (is (s/valid? ::map (gen/generate (s/gen ::map)))))
       (testing "has a working with-gen"
         (let [new-spec (s/with-gen ::map #(gen/return output))]
           (testing "that creates a conformer that conforms maps inside merge"
-            (is (= output (st/conform new-spec input st/json-conforming))))
+            (is (= output (st/conform new-spec input st/json-transformer))))
           (testing "that uses the given generator"
             (is (= output (gen/generate (s/gen new-spec)))))))
       (testing "has the same explain as clojure.spec.alpha/merge"

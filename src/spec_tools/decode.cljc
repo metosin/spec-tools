@@ -1,4 +1,4 @@
-(ns spec-tools.conform
+(ns spec-tools.decode
   #?(:cljs (:refer-clojure :exclude [Inst Keyword UUID]))
   (:require [clojure.spec.alpha :as s]
     #?@(:cljs [[goog.date.UtcDateTime]
@@ -93,7 +93,7 @@
 ;; type conforming
 ;;
 
-(def json-type-conforming
+(def json-type-decoders
   (merge
     {:keyword string->keyword
      :uuid string->uuid
@@ -104,17 +104,17 @@
         :bigdec nil
         :ratio nil})))
 
-(def string-type-conforming
+(def string-type-decoders
   (merge
-    json-type-conforming
+    json-type-decoders
     {:long string->long
      :double string->double
      :boolean string->boolean
      :nil string->nil
      :string nil}))
 
-(def strip-extra-keys-type-conforming
+(def strip-extra-keys-type-decoders
   {:map strip-extra-keys})
 
-(def fail-on-extra-keys-type-conforming
+(def fail-on-extra-keys-type-decoders
   {:map fail-on-extra-keys})

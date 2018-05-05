@@ -180,7 +180,7 @@
 
           (testing "map-conforming works recursively"
             (is (= value
-                   (st/conform person-spec bloated st/strip-extra-keys-conforming))))))))
+                   (st/conform person-spec bloated st/strip-extra-keys-transformer))))))))
 
   (testing "or spec"
     (let [strings-or-keywords (ds/or {::ui-target {:id string?}
@@ -265,7 +265,7 @@
            (st/conform
              (ds/spec ::kikka {keyword? keyword?})
              {"thanks" "alex"}
-             st/string-conforming)))))
+             st/string-transformer)))))
 
 (deftest top-level-maybe-test
   (let [spec (ds/spec ::maybe (ds/maybe {:n int?}))]

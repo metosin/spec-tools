@@ -5,7 +5,7 @@
             [spec-tools.parse :as parse]
             [spec-tools.form :as form]
             [clojure.set :as set]
-            [spec-tools.conform :as conform]
+            [spec-tools.decode :as std]
             [clojure.spec.alpha :as s]
     #?@(:clj  [
             [clojure.spec.gen.alpha :as gen]
@@ -73,49 +73,65 @@
 ;; Dynamic conforming
 ;;
 
-(def ^:dynamic ^:private *conforming* nil)
+(def ^:dynamic ^:private *transformer* nil)
 (def ^:dynamic ^:private *encode?* nil)
 
-(defn type-conforming
-  ([opts]
-   (type-conforming nil opts))
-  ([cname decode-opts]
-   (type-conforming cname decode-opts nil))
-  ([cname decode-opts encode-opts]
-   (let [encode-name (some->> cname name (str "encode/") keyword)
-         decode-name (some->> cname name (str "decode/") keyword)]
-     (fn
-       ([spec]
-        (or (get spec decode-name)
-            (get decode-opts (:type spec))))
-       ([spec _]
-        (or (get spec encode-name)
-            (get encode-opts (:type spec))))))))
+(defprotocol Transformer
+  (-name [this])
+  (-encoder [this spec value])
+  (-decoder [this spec value]))
 
-(def json-conforming
-  (type-conforming ::conform/json conform/json-type-conforming))
+(defn type-transformer [{transformr-name :name
+                         :keys [encoders decoders default-encoder default-decoder]
+                         :or {default-encoder (fn [_ _] +invalid+)
+                              default-decoder (fn [_ value] value)}}]
+  (let [encode-key (some->> transformr-name name (str "encode/") keyword)
+        decode-key (some->> transformr-name name (str "decode/") keyword)]
+    (reify
+      Transformer
+      (-name [_] transformr-name)
+      (-encoder [_ spec _]
+        (or (get spec encode-key)
+            (get encoders (:type spec))
+            default-encoder))
+      (-decoder [_ spec _]
+        (or (get spec decode-key)
+            (get decoders (:type spec))
+            default-decoder)))))
 
-(def string-conforming
-  (type-conforming ::conform/string conform/string-type-conforming))
+(def json-transformer
+  (type-transformer
+    {:name :json
+     :decoders std/json-type-decoders}))
 
-(def strip-extra-keys-conforming
-  (type-conforming conform/strip-extra-keys-type-conforming))
+(def string-transformer
+  (type-transformer
+    {:name :string
+     :decoders std/string-type-decoders
+     :default-encoder #(str %2)}))
 
-(def fail-on-extra-keys-conforming
-  (type-conforming conform/fail-on-extra-keys-type-conforming))
+(def strip-extra-keys-transformer
+  (type-transformer
+    {:name ::strip-extra-keys
+     :decoders std/strip-extra-keys-type-decoders}))
+
+(def fail-on-extra-keys-transformer
+  (type-transformer
+    {:name ::fail-on-extra-keys
+     :decoders std/fail-on-extra-keys-type-decoders}))
 
 (defn explain
   ([spec value]
    (explain spec value nil))
-  ([spec value conforming]
-   (binding [*conforming* conforming, *encode?* false]
+  ([spec value transformer]
+   (binding [*transformer* transformer, *encode?* false]
      (s/explain spec value))))
 
 (defn explain-data
   ([spec value]
    (explain-data spec value nil))
-  ([spec value conforming]
-   (binding [*conforming* conforming, *encode?* false]
+  ([spec value transformer]
+   (binding [*transformer* transformer, *encode?* false]
      (s/explain-data spec value))))
 
 (defn conform
@@ -123,8 +139,8 @@
    or ::s/invalid"
   ([spec value]
    (conform spec value nil))
-  ([spec value conforming]
-   (binding [*conforming* conforming, *encode?* false]
+  ([spec value transformer]
+   (binding [*transformer* transformer, *encode?* false]
      (s/conform spec value))))
 
 (defn conform!
@@ -134,8 +150,8 @@
    actual conformed value."
   ([spec value]
    (conform! spec value nil))
-  ([spec value conforming]
-   (binding [*conforming* conforming, *encode?* false]
+  ([spec value transformer]
+   (binding [*transformer* transformer, *encode?* false]
      (let [conformed (s/conform spec value)]
        (if-not (= conformed +invalid+)
          conformed
@@ -147,23 +163,23 @@
            (throw (ex-info (str "Spec conform error: " data) data))))))))
 
 (defn select-spec [spec value]
-  (conform spec value strip-extra-keys-conforming))
+  (conform spec value strip-extra-keys-transformer))
 
 (defn decode
   "Transform and validate value from external format into valid value
   defined by the spec."
   ([spec value]
    (decode spec value nil))
-  ([spec value conforming]
-   (binding [*conforming* conforming, *encode?* false]
+  ([spec value transformer]
+   (binding [*transformer* transformer, *encode?* false]
      (s/conform spec value))))
 
 (defn encode
   "Transform (without validation) a value into external format."
   ([spec value]
    (encode spec value nil))
-  ([spec value conforming]
-   (binding [*conforming* conforming, *encode?* true]
+  ([spec value transformer]
+   (binding [*transformer* transformer, *encode?* true]
      (s/conform spec value))))
 
 ;;
@@ -188,12 +204,11 @@
 
   s/Spec
   (conform* [this x]
-    (let [conforming *conforming*, encode? *encode?*]
-      (if-let [transform (if conforming (if encode? (conforming this encode?) (conforming this)))]
+    (let [transformer *transformer*, encode? *encode?*]
+      (if-let [transform (if transformer ((if encode? -encoder -decoder) transformer this x))]
         (let [transformed (transform this x)]
           (or (and (= +invalid+ transformed) transformed)
               (if encode? transformed (s/conform spec transformed))))
-        ;; TODO: should the encode default to `str`?
         (if encode? +invalid+ (s/conform spec x)))))
   (unform* [_ x]
     (s/unform spec x))
@@ -393,3 +408,7 @@
 (defmacro merge [& forms]
   `(let [merge-spec# (s/merge ~@forms)]
      (merge-impl ~(vec forms) '(spec-tools.core/merge ~@(map #(impl/resolve-form &env %) forms)) merge-spec#)))
+
+(./aprint
+  (decode (spec identity) 'kikka string-transformer))
+
