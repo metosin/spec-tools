@@ -8,7 +8,7 @@
             [spec-tools.form :as form]
             [#?(:clj  clojure.spec.gen.alpha
                 :cljs cljs.spec.gen.alpha) :as gen]
-            [spec-tools.decode :as std]))
+            [spec-tools.transformer :as stt]))
 
 (s/def ::age (s/and spec/integer? #(> % 10)))
 (s/def ::over-a-million (s/and spec/int? #(> % 1000000)))
@@ -420,7 +420,7 @@
   (let [my-conforming (st/type-transformer
                         {:decoders
                          (assoc
-                           std/string-type-decoders
+                           stt/string-type-decoders
                            :keyword
                            (fn [_ value]
                              (-> value

@@ -1,4 +1,4 @@
-(ns spec-tools.decode
+(ns spec-tools.transformer
   #?(:cljs (:refer-clojure :exclude [Inst Keyword UUID]))
   (:require [clojure.spec.alpha :as s]
     #?@(:cljs [[goog.date.UtcDateTime]
@@ -61,7 +61,7 @@
     (try
       #?(:clj  (.parse (StdDateFormat.) x)
          :cljs (js/Date. (.getTime (goog.date.UtcDateTime.fromIsoString x))))
-      (catch #?(:clj  Exception, :cljs js/Error) _ x))
+      (catch #?(:clj Exception, :cljs js/Error) _ x))
     x))
 
 (defn string->symbol [_ x]

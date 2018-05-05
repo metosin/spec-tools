@@ -5,7 +5,7 @@
             [spec-tools.parse :as parse]
             [spec-tools.form :as form]
             [clojure.set :as set]
-            [spec-tools.decode :as std]
+            [spec-tools.transformer :as stt]
             [clojure.spec.alpha :as s]
     #?@(:clj  [
             [clojure.spec.gen.alpha :as gen]
@@ -102,23 +102,23 @@
 (def json-transformer
   (type-transformer
     {:name :json
-     :decoders std/json-type-decoders}))
+     :decoders stt/json-type-decoders}))
 
 (def string-transformer
   (type-transformer
     {:name :string
-     :decoders std/string-type-decoders
+     :decoders stt/string-type-decoders
      :default-encoder #(str %2)}))
 
 (def strip-extra-keys-transformer
   (type-transformer
     {:name ::strip-extra-keys
-     :decoders std/strip-extra-keys-type-decoders}))
+     :decoders stt/strip-extra-keys-type-decoders}))
 
 (def fail-on-extra-keys-transformer
   (type-transformer
     {:name ::fail-on-extra-keys
-     :decoders std/fail-on-extra-keys-type-decoders}))
+     :decoders stt/fail-on-extra-keys-type-decoders}))
 
 (defn explain
   ([spec value]
