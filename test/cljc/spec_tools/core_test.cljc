@@ -285,26 +285,50 @@
      :encode/string #(-> %2 name str/upper-case)}))
 (s/def ::my-spec-map (s/keys :req [::my-spec]))
 
+(s/def ::my-type
+  (st/spec keyword?))
+(s/def ::my-type-map (s/keys :req [::my-type]))
+
 (deftest encode-decode-test
-  (testing "spec-driven encode & decode"
-    (let [invalid {::my-spec "kikka"}
-          encoded {::my-spec "KIKKA"}
-          decoded {::my-spec :kikka}]
-      (testing "without transformer"
-        (testing "decode works just like s/conform"
-          (is (= ::s/invalid (st/decode ::my-spec-map encoded)))
-          (is (= decoded (st/decode ::my-spec-map decoded))))
-        (testing "encode fails if no encoder is defined"
-          (is (= ::s/invalid (st/encode ::my-spec-map invalid)))))
-      (testing "with transformer"
-        (testing "decoding is applied before validation, if defined"
-          (is (= ::s/invalid (st/decode ::my-spec-map encoded st/json-transformer)))
-          (is (= decoded (st/decode ::my-spec-map decoded st/string-transformer)))
-          (is (= decoded (st/decode ::my-spec-map encoded st/string-transformer))))
-        (testing "encoding is applied without validation, if defined"
-          (is (= ::s/invalid (st/encode ::my-spec-map decoded st/json-transformer)))
-          (is (= encoded (st/encode ::my-spec-map encoded st/string-transformer)))
-          (is (= encoded (st/encode ::my-spec-map decoded st/string-transformer))))))))
+  (let [my-type-transformer (st/type-transformer {:name ::my})]
+    (testing "spec-driven encode & decode"
+      (let [invalid {::my-spec "kikka"}
+            encoded {::my-spec "KIKKA"}
+            decoded {::my-spec :kikka}]
+        (testing "without transformer"
+          (testing "decode works just like s/conform"
+            (is (= ::s/invalid (st/decode ::my-spec-map encoded)))
+            (is (= decoded (st/decode ::my-spec-map decoded))))
+          (testing "encode fails if no encoder is defined"
+            (is (= ::s/invalid (st/encode ::my-spec-map invalid)))))
+        (testing "with transformer"
+          (testing "decoding is applied before validation, if defined"
+            (is (= ::s/invalid (st/decode ::my-spec-map encoded my-type-transformer)))
+            (is (= decoded (st/decode ::my-spec-map decoded st/string-transformer)))
+            (is (= decoded (st/decode ::my-spec-map encoded st/string-transformer))))
+          (testing "encoding is applied without validation, if defined"
+            (is (= ::s/invalid (st/encode ::my-spec-map decoded my-type-transformer)))
+            (is (= encoded (st/encode ::my-spec-map encoded st/string-transformer)))
+            (is (= encoded (st/encode ::my-spec-map decoded st/string-transformer)))))))
+    (testing "type-driven encode & decode"
+      (let [invalid {::my-type 123456789}
+            encoded {::my-type "kikka/kukka"}
+            decoded {::my-type :kikka/kukka}]
+        (testing "without transformer"
+          (testing "decode works just like s/conform"
+            (is (= ::s/invalid (st/decode ::my-type-map encoded)))
+            (is (= decoded (st/decode ::my-type-map decoded))))
+          (testing "encode fails if no encoder is defined"
+            (is (= ::s/invalid (st/encode ::my-type-map invalid)))))
+        (testing "with transformer"
+          (testing "decoding is applied before validation, if defined"
+            (is (= ::s/invalid (st/decode ::my-type-map encoded my-type-transformer)))
+            (is (= decoded (st/decode ::my-type-map decoded st/string-transformer)))
+            (is (= decoded (st/decode ::my-type-map encoded st/string-transformer))))
+          (testing "encoding is applied without validation, if defined"
+            (is (= ::s/invalid (st/encode ::my-type-map decoded my-type-transformer)))
+            (is (= encoded (st/encode ::my-type-map encoded st/string-transformer)))
+            (is (= encoded (st/encode ::my-type-map decoded st/string-transformer)))))))))
 
 (deftest conform!-test
   (testing "suceess"
