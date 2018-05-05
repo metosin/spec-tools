@@ -36,6 +36,13 @@
     (keyword x)
     x))
 
+(defn keyword->string [_ x]
+  (if (keyword? x)
+    (let [name (name x)]
+      (if-let [ns (namespace x)]
+        (str ns "/" name) name))
+    x))
+
 (defn string->boolean [_ x]
   (if (string? x)
     (cond
@@ -90,7 +97,7 @@
     x))
 
 ;;
-;; type conforming
+;; type decoders
 ;;
 
 (def json-type-decoders
@@ -118,3 +125,14 @@
 
 (def fail-on-extra-keys-type-decoders
   {:map fail-on-extra-keys})
+
+;;
+;; type encoders
+;;
+
+(def json-type-encoders
+  (merge
+    {:keyword keyword->string}))
+
+(def string-type-encoders
+  json-type-encoders)

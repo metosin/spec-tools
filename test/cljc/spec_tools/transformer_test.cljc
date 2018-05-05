@@ -19,6 +19,11 @@
   (is (= :abba (stt/string->keyword _ "abba")))
   (is (= :abba (stt/string->keyword _ :abba))))
 
+(deftest keyword->string
+  (is (= "abba" (stt/keyword->string _ :abba)))
+  (is (= "jabba/abba" (stt/keyword->string _ :jabba/abba)))
+  (is (= "abba" (stt/keyword->string _ "abba"))))
+
 (deftest string->boolean
   (is (= true (stt/string->boolean _ "true")))
   (is (= false (stt/string->boolean _ "false")))

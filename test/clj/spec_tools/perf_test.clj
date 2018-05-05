@@ -112,7 +112,7 @@
 
 (defn conform-test2 []
 
-  (suite "conforming set of keywords")
+  (suite "transformer set of keywords")
 
   (let [sizes-spec (s/coll-of (s/and spec/keyword? #{:L :M :S}) :into #{})
         sizes-schema #{(schema/enum :L :M :S)}]
@@ -212,7 +212,7 @@
 
 (defn conform-test3 []
 
-  (suite "conforming a nested map")
+  (suite "transformer a nested map")
 
   ; 4.5µs (alpha12)
   ; 3.9µs (alpha14)

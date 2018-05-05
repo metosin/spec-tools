@@ -70,7 +70,7 @@
 (def +problems+ #?(:clj :clojure.spec.alpha/problems, :cljs :cljs.spec.alpha/problems))
 
 ;;
-;; Dynamic conforming
+;; Transformers
 ;;
 
 (def ^:dynamic ^:private *transformer* nil)
@@ -102,12 +102,14 @@
 (def json-transformer
   (type-transformer
     {:name :json
-     :decoders stt/json-type-decoders}))
+     :decoders stt/json-type-decoders
+     :encoders stt/json-type-encoders}))
 
 (def string-transformer
   (type-transformer
     {:name :string
      :decoders stt/string-type-decoders
+     :encoders stt/string-type-encoders
      :default-encoder #(str %2)}))
 
 (def strip-extra-keys-transformer
@@ -214,7 +216,7 @@
     (s/unform spec x))
   (explain* [this path via in x]
     (let [problems (if (or (s/spec? spec) (s/regex? spec))
-                     ;; conforming might fail deliberately, while the vanilla
+                     ;; transformer might fail deliberately, while the vanilla
                      ;; conform would succeed - we'll short-circuit it here.
                      ;; https://dev.clojure.org/jira/browse/CLJ-2115 would help
                      (let [conformed (s/conform* this x)
@@ -356,7 +358,7 @@
 #?(:clj
    (defmacro doc
      "Creates a Spec instance with one or two arguments,
-      setting the :type to nil (e.g. no dynamic conforming).
+      setting the :type to nil (e.g. no dynamic transformer).
 
       ;; using type inference
       (doc integer?)

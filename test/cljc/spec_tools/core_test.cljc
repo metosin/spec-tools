@@ -234,7 +234,7 @@
                (st/explain-data spec -1)
                (s/explain-data spec -1)))))))
 
-(deftest spec-tools-conform-test
+(deftest spec-tools-transform-test
   (testing "in default mode"
     (testing "nothing is conformed"
       (is (= st/+invalid+ (st/conform ::age "12")))
@@ -246,7 +246,7 @@
       (is (= st/+invalid+ (st/conform ::birthdate "2014-02-18T18:25:37.456Z")))
       (is (= st/+invalid+ (st/conform ::birthdate "2014-02-18T18:25:37Z")))))
 
-  (testing "string-conforming"
+  (testing "string-transformer"
     (let [conform #(st/conform %1 %2 st/string-transformer)]
       (testing "everything gets conformed"
         (is (= 12 (conform ::age "12")))
@@ -261,7 +261,7 @@
         (is (= #inst "2014-02-18T18:25:37Z"
                (conform ::birthdate "2014-02-18T18:25:37Z"))))))
 
-  (testing "json-conforming"
+  (testing "json-transformer"
     (let [conform #(st/conform %1 %2 st/json-transformer)]
       (testing "some are not conformed"
         (is (= st/+invalid+ (conform ::age "12")))
@@ -290,13 +290,13 @@
     (let [invalid {::my-spec "kikka"}
           encoded {::my-spec "KIKKA"}
           decoded {::my-spec :kikka}]
-      (testing "without conforming"
+      (testing "without transformer"
         (testing "decode works just like s/conform"
           (is (= ::s/invalid (st/decode ::my-spec-map encoded)))
           (is (= decoded (st/decode ::my-spec-map decoded))))
         (testing "encode fails if no encoder is defined"
           (is (= ::s/invalid (st/encode ::my-spec-map invalid)))))
-      (testing "with conforming"
+      (testing "with transformer"
         (testing "decoding is applied before validation, if defined"
           (is (= ::s/invalid (st/decode ::my-spec-map encoded st/json-transformer)))
           (is (= decoded (st/decode ::my-spec-map decoded st/string-transformer)))
@@ -322,7 +322,7 @@
                  data)))))))
 
 (deftest explain-tests
-  (testing "without conforming"
+  (testing "without transformer"
     (let [expected-problem {:path [], :pred `int?, :val "12", :via [], :in []}]
       (is (= st/+invalid+ (st/conform spec/int? "12")))
       (is (= #?(:clj  #:clojure.spec.alpha{:problems [expected-problem]
@@ -334,7 +334,7 @@
              (st/explain-data spec/int? "12")))
       (is (any? (with-out-str (st/explain spec/int? "12"))))
       (is (any? (with-out-str (st/explain spec/int? "12" nil))))))
-  (testing "with conforming"
+  (testing "with transformer"
     (is (= 12 (st/conform spec/int? "12" st/string-transformer)))
     (is (= nil (st/explain-data spec/int? "12" st/string-transformer)))
     (is (= "Success!\n"
@@ -396,7 +396,7 @@
              (s/conform ::human person)
              (st/conform ::human person))))
 
-    (testing "bmi-conforming"
+    (testing "bmi-transformer"
       (is (= {:height 200, :weight 80, :bmi 20.0}
              (st/conform ::human person (st/type-transformer
                                           {:decoders {::human bmi-conformer}})))))))
@@ -417,20 +417,20 @@
              (unform-conform ::birthdate "2014-02-18T18:25:37.456Z"))))))
 
 (deftest extending-test
-  (let [my-conforming (st/type-transformer
-                        {:decoders
-                         (assoc
-                           stt/string-type-decoders
-                           :keyword
-                           (fn [_ value]
-                             (-> value
-                                 str/upper-case
-                                 str/reverse
-                                 keyword)))})]
-    (testing "string-conforming"
+  (let [my-transformer (st/type-transformer
+                         {:decoders
+                          (assoc
+                            stt/string-type-decoders
+                            :keyword
+                            (fn [_ value]
+                              (-> value
+                                  str/upper-case
+                                  str/reverse
+                                  keyword)))})]
+    (testing "string-transformer"
       (is (= :kikka (st/conform spec/keyword? "kikka" st/string-transformer))))
-    (testing "my-conforming"
-      (is (= :AKKIK (st/conform spec/keyword? "kikka" my-conforming))))))
+    (testing "my-transformer"
+      (is (= :AKKIK (st/conform spec/keyword? "kikka" my-transformer))))))
 
 (s/def ::collect-info-spec (s/keys
                              :req [::age]
@@ -540,7 +540,7 @@
       (testing "doesn't strip extra keys from input"
         (is (= (assoc output :foo true)
                (st/conform ::map (assoc input :foo true) st/json-transformer))))
-      (testing "works with strip-extra-keys-conforming"
+      (testing "works with strip-extra-keys-transformer"
         (is (= output
                (st/conform ::map (assoc output :foo true) st/strip-extra-keys-transformer))))
       (testing "has proper unform"

@@ -178,7 +178,7 @@
           (testing "maybe values"
             (is (true? (s/valid? person-spec (assoc value :address nil)))))
 
-          (testing "map-conforming works recursively"
+          (testing "map-transformer works recursively"
             (is (= value
                    (st/conform person-spec bloated st/strip-extra-keys-transformer))))))))
 
@@ -260,7 +260,7 @@
         (= false
            (s/valid? spec {:three "beers"})))))
 
-  (testing "map-of key conforming"
+  (testing "map-of key transformer"
     (is (= {:thanks :alex}
            (st/conform
              (ds/spec ::kikka {keyword? keyword?})
