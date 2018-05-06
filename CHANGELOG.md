@@ -1,17 +1,62 @@
-# 0.6.2-SNAPSHOT
+# 0.7.0-SNAPSHOT
 
 * Fix `rational?` mapping for JSON Schema, fixes [#113](https://github.com/metosin/spec-tools/issues/113)
 * Remove `::swagger/extension` expansion in Swagger2 generation.
 * Date-conforming is now [ISO8601](https://en.wikipedia.org/wiki/ISO_8601)-compliant on Clojure too, thanks to [Fabrizio Ferrai](https://github.com/f-f).
-* Add support for self-contained symmetric spec encoding & decoding, fixes [#96](https://github.com/metosin/spec-tools/issues/96)
-  * `st/decode` to transform and validate value from external format into valid value defined by the spec
-  * `st/encode` to transform (without validation) a value into external format
-  * new `encode` and `decode` namespaces to define transformations for `Spec`s. `json` and `string` are supported by default, but free to extend whatever (`xml`, `avro` etc.)
-  * type-based encoders can be defined via `st/type-conforming` (defaults no none)
+* new `st/IntoSpec` protocol to convert non-recursively vanilla `clojure.spec` Specs into `st/Spec`:s. Called for top-level specs in `st/encode`, `st/decode`, `st/explain`, `st/explain-data`, `st/conform` and `st/conform!`.
+* **BREAKING**: Bye bye conforming, welcome transforers!
+  * removed: `st/type-conforming`, `st/json-conforming`, `st/string-conforming`
+  * new `st/Transformer` protocol to drive spec-driven value transformations
+  * spec values can be both encoded (`st/encode`) & decoded (`st/decode`) using a transformer, fixes [#96](https://github.com/metosin/spec-tools/issues/96)
+  * renamed ns `spec-tools.conform` into `spec-tools.transformer`, covering both encoding & decoding of values
+  * `st/type-transformer`, supporting both `:type`-level transformations & `Spec` level transformations via new Spec keys with `encode` and `decode` namespaces + transformer name as name.
+  * `st/encode`, `st/decode`, `st/explain`, `st/explain-data`, `st/conform` and `st/conform!` take the transformer instance an optional third argument
+     * `st/json-transformer` and `st/string-transformer` are shipped out-of-the-box
+
+### Transformer
 
 ```clj
-(require '[clojure.spec.alpha :as s])
+(defprotocol Transformer
+  (-name [this])
+  (-encoder [this spec value])
+  (-decoder [this spec value]))
+```
+
+### Type-driven transformations
+
+* use `:type` information from Specs (mostly resolved automatically)
+
+```clj
 (require '[spec-tools.core :as st])
+
+(as-> "2014-02-18T18:25:37Z" $
+      (st/decode inst? $))
+; :clojure.spec.alpha/invalid
+
+;; decode using string-transformer
+(as-> "2014-02-18T18:25:37Z" $
+      (st/decode inst? $ st/string-transformer))
+; #inst"2014-02-18T18:25:37.000-00:00"
+
+(as-> "2014-02-18T18:25:37Z" $
+      (st/decode inst? $ st/string-transformer)
+      (st/encode inst? $))
+; :clojure.spec.alpha/invalid
+
+;; encode using string-transformer
+(as-> "2014-02-18T18:25:37Z" $
+      (st/decode inst? $ st/string-transformer)
+      (st/encode inst? $ st/string-transformer))
+; "2014-02-18T18:25:37.000+0000"
+```
+
+### Spec-driven transformations
+
+* use `:encode/*` and `:decode/*` keys from Spec instances
+
+```
+(require '[clojure.spec.alpha :as s])
+(require '[clojure.string :as str])
 
 (s/def ::spec
   (st/spec
@@ -20,35 +65,26 @@
      :decode/string #(-> %2 name str/lower-case keyword)
      :encode/string #(-> %2 name str/upper-case)}))
 
-; decode also validates
-(st/decode ::spec "kikka")
-; => :clojure.spec.alpha/invalid
-
-(st/decode ::spec "kikka" st/string-conforming)
-; => :kikka
-
-; encode fails if no encoder present
-(st/encode ::spec "kikka")
-; => :clojure.spec.alpha/invalid
-
-; encode doesn't validate!
-(st/encode ::spec "kikka" st/string-conforming)
-; => "KIKKA"
-
-; not real bijections (https://en.wikipedia.org/wiki/Bijection)
-(as-> "KikKa" $
-      (doto $ prn)
-      (st/encode ::spec $ st/string-conforming)
-      (doto $ prn)
-      (st/decode ::spec $ st/string-conforming)
-      (doto $ prn)
-      (st/encode ::spec $ st/string-conforming)
-      (prn $))
-; "KikKa"
-; "KIKKA"
+(st/decode ::spec :kikka)
 ; :kikka
+
+(as-> "KiKka" $
+      (st/decode ::spec $))
+; :clojure.spec.alpha/invalid
+
+(as-> "KiKka" $
+      (st/decode ::spec $ st/string-transformer))
+; :kikka
+
+(as-> "KiKka" $
+      (st/decode ::spec $ st/string-transformer)
+      (st/encode ::spec $))
+; :clojure.spec.alpha/invalid
+
+(as-> "KiKka" $
+      (st/decode ::spec $ st/string-transformer)
+      (st/encode ::spec $ st/string-transformer))
 ; "KIKKA"
-; => nil
 ```
 
 ## 0.6.1 (19.2.2018)
