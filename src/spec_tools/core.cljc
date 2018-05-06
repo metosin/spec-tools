@@ -78,7 +78,7 @@
 (def ^:dynamic ^:private *encode?* nil)
 
 (defprotocol Transformer
-  (-name [this])
+  (-transformer-name [this])
   (-encoder [this spec value])
   (-decoder [this spec value]))
 
@@ -88,7 +88,7 @@
         decode-key (some->> transformer-name name (str "decode/") keyword)]
     (reify
       Transformer
-      (-name [_] transformer-name)
+      (-transformer-name [_] transformer-name)
       (-encoder [_ spec _]
         (or (get spec encode-key)
             (get encoders (:type spec))
