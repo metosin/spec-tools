@@ -194,23 +194,6 @@
                                          (s/exercise)
                                          (->> (map first)))))))))
 
-(deftest doc-test
-
-  (testing "creation"
-    (is (= (st/doc integer? {:description "kikka"})
-           (st/doc {:spec integer?, :description "kikka"})
-           (st/doc integer? {:description "kikka"})
-           (st/spec {:spec integer?, :description "kikka", :type nil}))))
-
-  (testing "just docs, #12"
-    (let [spec (st/doc integer? {:description "kikka"})]
-      (is (= "kikka" (:description spec)))
-      (is (true? (s/valid? spec 1)))
-      (is (false? (s/valid? spec "1")))
-      (is (= `(st/spec {:spec integer? :description "kikka", :type nil})
-             (st/deserialize (st/serialize spec))
-             (s/form spec))))))
-
 (deftest reason-test
   (let [expected-problem {:path [] :pred `pos-int?, :val -1, :via [], :in []}]
     (testing "explain-data"

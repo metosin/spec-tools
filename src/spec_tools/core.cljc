@@ -360,26 +360,7 @@
              {:form form#
               :spec ~pred}))))))
 
-#?(:clj
-   (defmacro doc
-     "Creates a Spec instance with one or two arguments,
-      setting the :type to nil (e.g. no dynamic transformer).
 
-      ;; using type inference
-      (doc integer?)
-
-      ;; with explicit type
-      (doc integer? {:name \"it's a integer\"})
-
-      ;; map form
-      (doc {:spec integer?, :name \"it's a integer\"}})
-
-      calls `spec`, see it for details."
-     ([pred-or-info]
-      (let [[spec info] (impl/extract-pred-and-info pred-or-info)]
-        `(doc ~spec ~info)))
-     ([spec info]
-      `(spec ~spec (clojure.core/merge ~info {:type nil})))))
 
 ;;
 ;; merge
