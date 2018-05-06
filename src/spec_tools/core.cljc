@@ -81,15 +81,13 @@
   (-encoder [this spec value])
   (-decoder [this spec value]))
 
-(defn type-transformer [{transformr-name :name
-                         :keys [encoders decoders default-encoder default-decoder]
-                         :or {default-encoder (fn [_ _] +invalid+)
-                              default-decoder (fn [_ value] value)}}]
-  (let [encode-key (some->> transformr-name name (str "encode/") keyword)
-        decode-key (some->> transformr-name name (str "decode/") keyword)]
+(defn type-transformer [{transformer-name :name
+                         :keys [encoders decoders default-encoder default-decoder]}]
+  (let [encode-key (some->> transformer-name name (str "encode/") keyword)
+        decode-key (some->> transformer-name name (str "decode/") keyword)]
     (reify
       Transformer
-      (-name [_] transformr-name)
+      (-name [_] transformer-name)
       (-encoder [_ spec _]
         (or (get spec encode-key)
             (get encoders (:type spec))
@@ -103,14 +101,15 @@
   (type-transformer
     {:name :json
      :decoders stt/json-type-decoders
-     :encoders stt/json-type-encoders}))
+     :encoders stt/json-type-encoders
+     :default-encoder stt/any->any}))
 
 (def string-transformer
   (type-transformer
     {:name :string
      :decoders stt/string-type-decoders
      :encoders stt/string-type-encoders
-     :default-encoder #(str %2)}))
+     :default-encoder stt/any->string}))
 
 (def strip-extra-keys-transformer
   (type-transformer
@@ -207,10 +206,16 @@
   s/Spec
   (conform* [this x]
     (let [transformer *transformer*, encode? *encode?*]
+      ;; if there is a transformer present
       (if-let [transform (if transformer ((if encode? -encoder -decoder) transformer this x))]
+        ;; let's transform it
         (let [transformed (transform this x)]
+          ;; short-circuit on ::s/invalid
           (or (and (= +invalid+ transformed) transformed)
-              (if encode? transformed (s/conform spec transformed))))
+              ;; recur
+              (let [conformed (s/conform spec transformed)]
+                ;; it's ok if encode transforms the value into invalid
+                (or (and encode? (= +invalid+ conformed) transformed) conformed))))
         (if encode? +invalid+ (s/conform spec x)))))
   (unform* [_ x]
     (s/unform spec x))

@@ -81,6 +81,17 @@
     nil
     x))
 
+(defn any->string [_ x]
+  (if-not (nil? x)
+    (str x)))
+
+(defn number->double [_ x]
+  (if (number? x)
+    (double x)
+    x))
+
+(defn any->any [_ x] x)
+
 ;;
 ;; Maps
 ;;
@@ -131,8 +142,17 @@
 ;;
 
 (def json-type-encoders
-  (merge
-    {:keyword keyword->string}))
+  {:keyword keyword->string
+   :symbol any->string
+   :uuid any->string
+   :uri any->string
+   :bigdec any->string
+   :date any->string
+   #?@(:clj [:ratio number->double])})
 
 (def string-type-encoders
-  json-type-encoders)
+  {:keyword keyword->string
+   #?@(:clj [:ratio number->double])
+   :map any->any
+   :set any->any
+   :vector any->any})

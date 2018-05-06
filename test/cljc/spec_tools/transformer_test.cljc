@@ -50,3 +50,16 @@
 (deftest string->nil
   (is (= nil (stt/string->nil _ "")))
   (is (= nil (stt/string->nil _ nil))))
+
+(deftest number->double
+  (is (= 0.5 (stt/number->double _ 1/2)))
+  (is (= 1.0 (stt/number->double _ 1)))
+  (is (= "kikka" (stt/number->double _ "kikka"))))
+
+(deftest any->string
+  (is (= "1/2" (stt/any->string _ 1/2)))
+  (is (= nil (stt/any->string _ nil))))
+
+(deftest any->any
+  (is (= 1/2 (stt/any->any _ 1/2)))
+  (is (= nil (stt/any->any _ nil))))
