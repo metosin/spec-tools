@@ -71,6 +71,14 @@
       (catch #?(:clj Exception, :cljs js/Error) _ x))
     x))
 
+(defn date->string [_ x]
+  (if (inst? x)
+    (try
+      #?(:clj  (.format (StdDateFormat.) x)
+         :cljs (.toISOString x))
+      (catch #?(:clj Exception, :cljs js/Error) _ x))
+    x))
+
 (defn string->symbol [_ x]
   (if (string? x)
     (symbol x)
@@ -147,12 +155,13 @@
    :uuid any->string
    :uri any->string
    :bigdec any->string
-   :date any->string
+   :date date->string
    #?@(:clj [:ratio number->double])})
 
 (def string-type-encoders
   {:keyword keyword->string
    #?@(:clj [:ratio number->double])
+   :date date->string
    :map any->any
    :set any->any
    :vector any->any})

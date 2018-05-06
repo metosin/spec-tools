@@ -110,7 +110,7 @@
     {:name :string
      :decoders stt/string-type-decoders
      :encoders stt/string-type-encoders
-     :default-encoder stt/any->string}))
+     :default-encoder stt/any->any}))
 
 (def strip-extra-keys-transformer
   (type-transformer

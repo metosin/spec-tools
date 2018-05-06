@@ -1,4 +1,4 @@
-(ns spec-tools.transformer-test
+(ns spec-tools.transform-test
   (:require [clojure.test :refer [deftest testing is]]
             [spec-tools.transformer :as stt]))
 
@@ -52,14 +52,16 @@
   (is (= nil (stt/string->nil _ nil))))
 
 (deftest number->double
-  (is (= 0.5 (stt/number->double _ 1/2)))
+  #?(:clj (is (= 0.5 (stt/number->double _ 1/2))))
   (is (= 1.0 (stt/number->double _ 1)))
   (is (= "kikka" (stt/number->double _ "kikka"))))
 
 (deftest any->string
-  (is (= "1/2" (stt/any->string _ 1/2)))
+  #?(:clj (is (= "1/2" (stt/any->string _ 1/2))))
+  (is (= "0.5" (stt/any->string _ 0.5)))
   (is (= nil (stt/any->string _ nil))))
 
 (deftest any->any
-  (is (= 1/2 (stt/any->any _ 1/2)))
+  #?(:clj (is (= 1/2 (stt/any->any _ 1/2))))
+  (is (= 0.5 (stt/any->any _ 0.5)))
   (is (= nil (stt/any->any _ nil))))
