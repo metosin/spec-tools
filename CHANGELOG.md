@@ -4,7 +4,7 @@
 * Remove `::swagger/extension` expansion in Swagger2 generation.
 * Date-conforming is now [ISO8601](https://en.wikipedia.org/wiki/ISO_8601)-compliant on Clojure too, thanks to [Fabrizio Ferrai](https://github.com/f-f).
 * new `st/IntoSpec` protocol to convert non-recursively vanilla `clojure.spec` Specs into `st/Spec`:s. Called for top-level specs in `st/encode`, `st/decode`, `st/explain`, `st/explain-data`, `st/conform` and `st/conform!`.
-* **BREAKING**: Bye bye conforming, welcome transforers!
+* **BREAKING**: Bye bye conforming, welcome transformers!
   * removed: `st/type-conforming`, `st/json-conforming`, `st/string-conforming`
   * new `st/Transformer` protocol to drive spec-driven value transformations
   * spec values can be both encoded (`st/encode`) & decoded (`st/decode`) using a transformer, fixes [#96](https://github.com/metosin/spec-tools/issues/96)
@@ -17,7 +17,7 @@
 
 ```clj
 (defprotocol Transformer
-  (-name [this])
+  (-transformer-name [this])
   (-encoder [this spec value])
   (-decoder [this spec value]))
 ```
@@ -54,7 +54,7 @@
 
 * use `:encode/*` and `:decode/*` keys from Spec instances
 
-```
+```clj
 (require '[clojure.spec.alpha :as s])
 (require '[clojure.string :as str])
 
