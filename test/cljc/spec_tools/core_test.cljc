@@ -365,7 +365,8 @@
 
 (s/def ::height integer?)
 (s/def ::weight integer?)
-(s/def ::person (st/spec (s/keys :req-un [::height ::weight])))
+(s/def ::person (s/keys :req-un [::height ::weight]))
+(s/def ::person-spec (st/spec (s/keys :req-un [::height ::weight])))
 
 (deftest map-specs-test
   (let [person {:height 200, :weight 80, :age 36}]
@@ -373,16 +374,21 @@
     (testing "conform"
       (is (= {:height 200, :weight 80, :age 36}
              (s/conform ::person person)
-             (st/conform ::person person))))
+             (s/conform ::person-spec person)
+             (st/conform ::person person)
+             (st/conform ::person-spec person))))
 
     (testing "stripping extra keys"
       (is (= {:height 200, :weight 80}
              (st/conform ::person person st/strip-extra-keys-transformer)
-             (st/select-spec ::person person))))
+             (st/conform ::person-spec person st/strip-extra-keys-transformer)
+             (st/select-spec ::person person)
+             (st/select-spec ::person-spec person))))
 
     (testing "failing on extra keys"
       (is (= st/+invalid+
-             (st/conform ::person person st/fail-on-extra-keys-transformer))))
+             (st/conform ::person person st/fail-on-extra-keys-transformer)
+             (st/conform ::person-spec person st/fail-on-extra-keys-transformer))))
 
     (testing "explain works too"
       (is (is (seq (st/explain-data ::person person st/fail-on-extra-keys-transformer)))))))

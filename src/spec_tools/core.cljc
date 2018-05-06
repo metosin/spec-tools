@@ -24,6 +24,7 @@
 ;;
 
 (declare spec?)
+(declare into-spec)
 
 (defn ^:skip-wiki registry
   ([]
@@ -126,14 +127,14 @@
    (explain spec value nil))
   ([spec value transformer]
    (binding [*transformer* transformer, *encode?* false]
-     (s/explain spec value))))
+     (s/explain (into-spec spec) value))))
 
 (defn explain-data
   ([spec value]
    (explain-data spec value nil))
   ([spec value transformer]
    (binding [*transformer* transformer, *encode?* false]
-     (s/explain-data spec value))))
+     (s/explain-data (into-spec spec) value))))
 
 (defn conform
   "Given a spec and a value, returns the possibly destructured value
@@ -142,7 +143,7 @@
    (conform spec value nil))
   ([spec value transformer]
    (binding [*transformer* transformer, *encode?* false]
-     (s/conform spec value))))
+     (s/conform (into-spec spec) value))))
 
 (defn conform!
   "Given a spec and a value, returns the possibly destructured value
@@ -153,10 +154,11 @@
    (conform! spec value nil))
   ([spec value transformer]
    (binding [*transformer* transformer, *encode?* false]
-     (let [conformed (s/conform spec value)]
+     (let [spec' (into-spec spec)
+           conformed (s/conform spec' value)]
        (if-not (= conformed +invalid+)
          conformed
-         (let [problems (s/explain-data spec value)
+         (let [problems (s/explain-data spec' value)
                data {:type ::conform
                      :problems (+problems+ problems)
                      :spec spec
@@ -164,7 +166,7 @@
            (throw (ex-info (str "Spec conform error: " data) data))))))))
 
 (defn select-spec [spec value]
-  (conform spec value strip-extra-keys-transformer))
+  (conform (into-spec spec) value strip-extra-keys-transformer))
 
 (defn decode
   "Transform and validate value from external format into valid value
@@ -173,7 +175,7 @@
    (decode spec value nil))
   ([spec value transformer]
    (binding [*transformer* transformer, *encode?* false]
-     (s/conform spec value))))
+     (s/conform (into-spec spec) value))))
 
 (defn encode
   "Transform (without validation) a value into external format."
@@ -181,7 +183,7 @@
    (encode spec value nil))
   ([spec value transformer]
    (binding [*transformer* transformer, *encode?* true]
-     (s/conform spec value))))
+     (s/conform (into-spec spec) value))))
 
 ;;
 ;; Spec Record
@@ -361,6 +363,8 @@
               :spec ~pred}))))))
 
 
+(defn into-spec [x]
+  (if (spec? x) x (create-spec {:spec x})))
 
 ;;
 ;; merge
