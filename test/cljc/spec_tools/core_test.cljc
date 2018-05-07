@@ -263,7 +263,7 @@
 (s/def ::my-spec
   (st/spec
     {:spec #(and (simple-keyword? %) (-> % name str/lower-case keyword (= %)))
-     :description "a lowercase simple keyword, encoded in uppercase in string-mode"
+     :description "a lowercase keyword, encoded in uppercase in string-mode"
      :decode/string #(-> %2 name str/lower-case keyword)
      :encode/string #(-> %2 name str/upper-case)}))
 (s/def ::my-spec-map (s/keys :req [::my-spec]))
@@ -311,7 +311,17 @@
           (testing "encoding is applied without validation, if defined"
             (is (= ::s/invalid (st/encode ::my-type-map decoded my-type-transformer)))
             (is (= encoded (st/encode ::my-type-map encoded st/string-transformer)))
-            (is (= encoded (st/encode ::my-type-map decoded st/string-transformer)))))))))
+            (is (= encoded (st/encode ::my-type-map decoded st/string-transformer)))))))
+    (testing "roundtrip"
+      (is (= :kikka (as-> "KikKa" $
+                          (st/decode ::my-spec $ st/string-transformer))))
+      (is (= "KIKKA" (as-> "KikKa" $
+                           (st/decode ::my-spec $ st/string-transformer)
+                           (st/encode ::my-spec $ st/string-transformer))))
+      (is (= :kikka (as-> "KikKa" $
+                          (st/decode ::my-spec $ st/string-transformer)
+                          (st/encode ::my-spec $ st/string-transformer)
+                          (st/decode ::my-spec $ st/string-transformer)))))))
 
 (deftest conform!-test
   (testing "suceess"

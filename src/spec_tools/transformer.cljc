@@ -3,7 +3,8 @@
   (:require [clojure.spec.alpha :as s]
     #?@(:cljs [[goog.date.UtcDateTime]
                [goog.date.Date]])
-            [clojure.set :as set])
+            [clojure.set :as set]
+            [clojure.string :as str])
   #?(:clj
      (:import (java.util Date UUID)
               (com.fasterxml.jackson.databind.util StdDateFormat)
@@ -75,7 +76,7 @@
   (if (inst? x)
     (try
       #?(:clj  (.format (StdDateFormat.) x)
-         :cljs (.toISOString x))
+         :cljs (str/replace (.toISOString x) #"Z$" "+0000"))
       (catch #?(:clj Exception, :cljs js/Error) _ x))
     x))
 
@@ -156,12 +157,13 @@
    :uri any->string
    :bigdec any->string
    :date date->string
+   :map any->any
+   :set any->any
+   :vector any->any
    #?@(:clj [:ratio number->double])})
 
 (def string-type-encoders
-  {:keyword keyword->string
-   #?@(:clj [:ratio number->double])
-   :date date->string
-   :map any->any
-   :set any->any
-   :vector any->any})
+  (merge
+    json-type-encoders
+    {:long any->string
+     :double any->string}))

@@ -43,6 +43,10 @@
   (is (= #inst "2018-04-27T05:00:00Z" (stt/string->date _ #inst "2018-04-27T08:00:00+03:00")))
   (is (= "abba" (stt/string->date _ "abba"))))
 
+(deftest date->string
+  (is (= "2014-02-18T18:25:37.000+0000" (stt/date->string _ #inst "2014-02-18T18:25:37Z")))
+  (is (= "abba" (stt/date->string _ "abba"))))
+
 (deftest string->symbol
   (is (= 'inc (stt/string->symbol _ "inc")))
   (is (= 'inc (stt/string->symbol _ 'inc))))

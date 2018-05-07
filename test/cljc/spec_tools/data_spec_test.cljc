@@ -319,3 +319,48 @@
 
 (deftest pithyless-test
   (is (map? (st/explain-data (ds/spec ::foo {:foo string?}) {:foo 42}))))
+
+(deftest encode-decode-test
+  (let [spec (ds/spec
+               {:name ::order
+                :spec {:id int?
+                       :address {:street string?
+                                 :country keyword?}
+                       :tags #{keyword?}
+                       :symbol symbol?
+                       :price double?
+                       :uuid uuid?
+                       :shipping inst?
+                       :secret (st/spec
+                                 {:spec string?
+                                  :encode/string #(apply str (reverse %2))
+                                  :decode/string #(apply str (reverse %2))})}})
+        value {:id 1
+               :address {:street "Pellavatehtaankatu 10b"
+                         :country :fi}
+               :tags #{:bean :coffee :good}
+               :symbol 'metosin
+               :price 9.99
+               :uuid #uuid"655b4976-9b2e-4c4a-b9b5-fa6efa909de6"
+               :shipping #inst "2014-02-18T18:25:37.000-00:00"
+               :secret "salaisuus-on-turvassa"}
+        value-string {:id "1"
+                      :address {:street "Pellavatehtaankatu 10b"
+                                :country "fi"}
+                      :tags #{"bean" "coffee" "good"}
+                      :symbol "metosin"
+                      :price "9.99"
+                      :uuid "655b4976-9b2e-4c4a-b9b5-fa6efa909de6"
+                      :shipping "2014-02-18T18:25:37.000+0000"
+                      :secret "assavrut-no-suusialas"}]
+
+    (testing "encode"
+      (is (= value-string (st/encode spec value st/string-transformer))))
+    (testing "decode"
+      (is (= value (st/decode spec value-string st/string-transformer))))
+    (testing "roundtrip"
+      (is (= value-string (as-> value-string $
+                                (st/decode spec $ st/string-transformer)
+                                (st/encode spec $ st/string-transformer)))))))
+
+
