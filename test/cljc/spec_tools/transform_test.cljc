@@ -1,6 +1,6 @@
 (ns spec-tools.transform-test
   (:require [clojure.test :refer [deftest testing is]]
-            [spec-tools.transformer :as stt]))
+            [spec-tools.transform :as stt]))
 
 (def _ ::irrelevant)
 

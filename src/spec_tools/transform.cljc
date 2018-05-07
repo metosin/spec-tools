@@ -1,4 +1,4 @@
-(ns spec-tools.transformer
+(ns spec-tools.transform
   #?(:cljs (:refer-clojure :exclude [Inst Keyword UUID]))
   (:require [clojure.spec.alpha :as s]
     #?@(:cljs [[goog.date.UtcDateTime]

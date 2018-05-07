@@ -5,7 +5,7 @@
             [spec-tools.parse :as parse]
             [spec-tools.form :as form]
             [clojure.set :as set]
-            [spec-tools.transformer :as stt]
+            [spec-tools.transform :as stt]
             [clojure.spec.alpha :as s]
     #?@(:clj  [
             [clojure.spec.gen.alpha :as gen]

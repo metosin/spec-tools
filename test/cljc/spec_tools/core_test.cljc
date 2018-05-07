@@ -8,7 +8,7 @@
             [spec-tools.form :as form]
             [#?(:clj  clojure.spec.gen.alpha
                 :cljs cljs.spec.gen.alpha) :as gen]
-            [spec-tools.transformer :as stt]))
+            [spec-tools.transform :as stt]))
 
 (s/def ::age (s/and spec/integer? #(> % 10)))
 (s/def ::over-a-million (s/and spec/int? #(> % 1000000)))
