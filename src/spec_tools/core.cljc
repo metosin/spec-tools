@@ -1,5 +1,5 @@
 (ns spec-tools.core
-  (:refer-clojure :exclude [merge])
+  (:refer-clojure :exclude [merge -name])
   #?(:cljs (:require-macros [spec-tools.core :refer [spec]]))
   (:require [spec-tools.impl :as impl]
             [spec-tools.parse :as parse]
@@ -78,7 +78,7 @@
 (def ^:dynamic ^:private *encode?* nil)
 
 (defprotocol Transformer
-  (-transformer-name [this])
+  (-name [this])
   (-encoder [this spec value])
   (-decoder [this spec value]))
 
@@ -88,7 +88,7 @@
         decode-key (some->> transformer-name name (str "decode/") keyword)]
     (reify
       Transformer
-      (-transformer-name [_] transformer-name)
+      (-name [_] transformer-name)
       (-encoder [_ spec _]
         (or (get spec encode-key)
             (get encoders (:type spec))
