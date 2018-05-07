@@ -3,13 +3,14 @@
 * Fix `rational?` mapping for JSON Schema, fixes [#113](https://github.com/metosin/spec-tools/issues/113)
 * Remove `::swagger/extension` expansion in Swagger2 generation.
 * Date-conforming is now [ISO8601](https://en.wikipedia.org/wiki/ISO_8601)-compliant on Clojure too, thanks to [Fabrizio Ferrai](https://github.com/f-f).
-* new `st/IntoSpec` protocol to convert non-recursively vanilla `clojure.spec` Specs into `st/Spec`:s. Called for top-level specs in `st/encode`, `st/decode`, `st/explain`, `st/explain-data`, `st/conform` and `st/conform!`.
+* new `st/IntoSpec` protocol to convert non-recursively vanilla `clojure.spec` Specs into `st/Spec`:s. Used in `st/encode`, `st/decode`, `st/explain`, `st/explain-data`, `st/conform` and `st/conform!`.
 * **BREAKING**: Bye bye conforming, welcome transformers!
   * removed: `st/type-conforming`, `st/json-conforming`, `st/string-conforming`
   * new `st/Transformer` protocol to drive spec-driven value transformations
   * spec values can be both encoded (`st/encode`) & decoded (`st/decode`) using a transformer, fixes [#96](https://github.com/metosin/spec-tools/issues/96)
   * renamed ns `spec-tools.conform` into `spec-tools.transformer`, covering both encoding & decoding of values
-  * `st/type-transformer`, supporting both `:type`-level transformations & `Spec` level transformations via new Spec keys with `encode` and `decode` namespaces + transformer name as name.
+  * `st/type-transformer`, supporting both `:type` and `Spec` level transformations
+  * Spec-driven transformations via keys in `encode` and `decode` namespaces.
   * `st/encode`, `st/decode`, `st/explain`, `st/explain-data`, `st/conform` and `st/conform!` take the transformer instance an optional third argument
      * `st/json-transformer` and `st/string-transformer` are shipped out-of-the-box
 
@@ -20,6 +21,62 @@
   (-transformer-name [this])
   (-encoder [this spec value])
   (-decoder [this spec value]))
+```
+
+
+### Spec-driven transformations
+
+* use `:encode/*` and `:decode/*` keys from Spec instances to declare how the values should be transformed
+
+```clj
+(require '[clojure.spec.alpha :as s])
+(require '[clojure.string :as str])
+
+(s/def ::spec
+  (st/spec
+    {:spec #(and (simple-keyword? %) (-> % name str/lower-case keyword (= %)))
+     :description "a lowercase keyword, encoded in uppercase in string-mode"
+     :decode/string #(-> %2 name str/lower-case keyword)
+     :encode/string #(-> %2 name str/upper-case)}))
+
+(st/decode ::spec :kikka)
+; :kikka
+
+(as-> "KiKka" $
+      (st/decode ::spec $))
+; :clojure.spec.alpha/invalid
+
+(as-> "KiKka" $
+      (st/decode ::spec $ st/string-transformer))
+; :kikka
+
+(as-> "KiKka" $
+      (st/decode ::spec $ st/string-transformer)
+      (st/encode ::spec $))
+; :clojure.spec.alpha/invalid
+
+(as-> "KiKka" $
+      (st/decode ::spec $ st/string-transformer)
+      (st/encode ::spec $ st/string-transformer))
+; "KIKKA"
+```
+
+### Spec [Bijections](https://en.wikipedia.org/wiki/Bijection)?
+
+no, as there can be multiple valid representations for a encoded value. But it's quaranteed that a decoded values X is always encoded into Y, which can be decoded back into X, `y -> X -> Y -> X`
+
+```clj
+(as-> "KikKa" $
+      (doto $ prn)
+      (st/encode ::spec $ st/string-transformer)
+      (doto $ prn)
+      (st/decode ::spec $ st/string-transformer)
+      (doto $ prn)
+      (st/encode ::spec $ st/string-transformer)
+      (prn $))
+; "KikKa"
+; "KIKKA"
+; :kikka
 ```
 
 ### Type-driven transformations
@@ -50,41 +107,19 @@
 ; "2014-02-18T18:25:37.000+0000"
 ```
 
-### Spec-driven transformations
-
-* use `:encode/*` and `:decode/*` keys from Spec instances
+`:type` gives you encoders & decoders (and docs) for free, like [Data.Unjson](https://hackage.haskell.org/package/unjson-0.15.2.0/docs/Data-Unjson.html):
 
 ```clj
-(require '[clojure.spec.alpha :as s])
-(require '[clojure.string :as str])
-
-(s/def ::spec
+(s/def ::kw
   (st/spec
-    {:spec #(and (simple-keyword? %) (-> % name str/lower-case keyword (= %)))
-     :description "a lowercase simple keyword, encoded in uppercase in string-mode"
-     :decode/string #(-> %2 name str/lower-case keyword)
-     :encode/string #(-> %2 name str/upper-case)}))
+    {:spec #(keyword %) ;; anonymous function
+     :type :keyword}))  ;; encode & decode like a keyword
 
-(st/decode ::spec :kikka)
-; :kikka
+(st/decode ::kw "kikka" st/string-transformer)
+;; :kikka
 
-(as-> "KiKka" $
-      (st/decode ::spec $))
-; :clojure.spec.alpha/invalid
-
-(as-> "KiKka" $
-      (st/decode ::spec $ st/string-transformer))
-; :kikka
-
-(as-> "KiKka" $
-      (st/decode ::spec $ st/string-transformer)
-      (st/encode ::spec $))
-; :clojure.spec.alpha/invalid
-
-(as-> "KiKka" $
-      (st/decode ::spec $ st/string-transformer)
-      (st/encode ::spec $ st/string-transformer))
-; "KIKKA"
+(st/decode ::kw "kikka" st/json-transformer)
+;; :kikka
 ```
 
 ## 0.6.1 (19.2.2018)
