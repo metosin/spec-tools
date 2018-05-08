@@ -165,25 +165,37 @@
                      :value value}]
            (throw (ex-info (str "Spec conform error: " data) data))))))))
 
-(defn select-spec [spec value]
-  (conform (into-spec spec) value strip-extra-keys-transformer))
-
 (defn decode
-  "Transform and validate value from external format into valid value
-  defined by the spec."
+  "Transforms and validates a value (using a [[Transformer]]) from external
+  format into a value defined by the spec. On error, returns `::s/invalid`."
   ([spec value]
    (decode spec value nil))
   ([spec value transformer]
    (binding [*transformer* transformer, *encode?* false]
-     (s/conform (into-spec spec) value))))
+     (let [spec (into-spec spec)
+           conformed (s/conform spec value)]
+       (if (= conformed +invalid+)
+         +invalid+
+         (s/unform spec conformed))))))
 
 (defn encode
-  "Transform (without validation) a value into external format."
+  "Transforms a value (using a [[Transformer]]) from external
+  format into a value defined by the spec. On error, returns `::s/invalid`."
   ([spec value]
    (encode spec value nil))
   ([spec value transformer]
    (binding [*transformer* transformer, *encode?* true]
-     (s/conform (into-spec spec) value))))
+     (let [spec (into-spec spec)
+           conformed (s/conform spec value)]
+       (if (= conformed +invalid+)
+         +invalid+
+         (s/unform spec conformed))))))
+
+(defn select-spec
+  "Drops all extra keys out of a Keys spec value. To use this recursively,
+  wrap all child Keys Specs into Spec Records. See CLJ-2116 for details."
+  [spec value]
+  (decode spec value strip-extra-keys-transformer))
 
 ;;
 ;; Spec Record
@@ -218,7 +230,7 @@
               (let [conformed (s/conform spec transformed)]
                 ;; it's ok if encode transforms the value into invalid
                 (or (and encode? (= +invalid+ conformed) transformed) conformed))))
-        (if encode? +invalid+ (s/conform spec x)))))
+        (s/conform spec x))))
   (unform* [_ x]
     (s/unform spec x))
   (explain* [this path via in x]

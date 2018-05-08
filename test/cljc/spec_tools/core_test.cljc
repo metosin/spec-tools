@@ -33,7 +33,7 @@
   (is (= spec/boolean? (st/coerce-spec spec/boolean?)))
   (is (thrown? #?(:clj Exception, :cljs js/Error) (st/coerce-spec ::INVALID))))
 
-(s/def ::regex (s/or :int int? :string string?))
+(s/def ::regex (s/or :int spec/int? :string string?))
 (s/def ::spec (s/spec int?))
 
 (deftest spec-name-test
@@ -290,7 +290,7 @@
             (is (= decoded (st/decode ::my-spec-map decoded st/string-transformer)))
             (is (= decoded (st/decode ::my-spec-map encoded st/string-transformer))))
           (testing "encoding is applied without validation, if defined"
-            (is (= ::s/invalid (st/encode ::my-spec-map decoded my-type-transformer)))
+            (is (= decoded (st/encode ::my-spec-map decoded my-type-transformer)))
             (is (= encoded (st/encode ::my-spec-map encoded st/string-transformer)))
             (is (= encoded (st/encode ::my-spec-map decoded st/string-transformer)))))))
     (testing "type-driven encode & decode"
@@ -309,7 +309,7 @@
             (is (= decoded (st/decode ::my-type-map decoded st/string-transformer)))
             (is (= decoded (st/decode ::my-type-map encoded st/string-transformer))))
           (testing "encoding is applied without validation, if defined"
-            (is (= ::s/invalid (st/encode ::my-type-map decoded my-type-transformer)))
+            (is (= decoded (st/encode ::my-type-map decoded my-type-transformer)))
             (is (= encoded (st/encode ::my-type-map encoded st/string-transformer)))
             (is (= encoded (st/encode ::my-type-map decoded st/string-transformer)))))))
     (testing "roundtrip"
@@ -321,7 +321,10 @@
       (is (= :kikka (as-> "KikKa" $
                           (st/decode ::my-spec $ st/string-transformer)
                           (st/encode ::my-spec $ st/string-transformer)
-                          (st/decode ::my-spec $ st/string-transformer)))))))
+                          (st/decode ::my-spec $ st/string-transformer)))))
+    (testing "encode and decode also unform"
+      (is (= "1" (st/encode ::regex 1 st/string-transformer)))
+      (is (= 1 (st/decode ::regex "1" st/string-transformer))))))
 
 (deftest conform!-test
   (testing "suceess"
