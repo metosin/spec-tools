@@ -3,7 +3,7 @@
 Clojure/Script tools for [clojure.spec](http://clojure.org/about/spec).
 
 * [Spec Records](#spec-records)
-* [Spec-driven Transformations](#spec-driven-transformations)
+* [Spec Driven Transformations](#spec-driven-transformations)
 * [Data Specs](#data-specs)
 * [Spec Visitors](#spec-visitors)
 * [Generating JSON Schemas](#generating-json-schemas)
@@ -24,7 +24,7 @@ Requires Java 1.8 & Clojure `1.9.0` and/or ClojureScript `1.9.908`+.
 
 ## Spec Records
 
-To enable spec metadata and features like [Spec-driven transformations](#spec-driven-transformations), Spec-tools introduces extendable Spec Records, `Spec`s. They wrap specs and act like specs or 1-arity functions. Specs are created with `spec-tools.core/spec` macro or with the underlying `spec-tools.core/create-spec` function.
+To enable spec metadata and features like [Spec driven transformations](#spec-driven-transformations), Spec-tools introduces extendable Spec Records, `Spec`s. They wrap specs and act like specs or 1-arity functions. Specs are created with `spec-tools.core/spec` macro or with the underlying `spec-tools.core/create-spec` function.
 
 The following Spec keys having a special meaning:
 
@@ -144,7 +144,7 @@ Can be added to a Spec via the key `:reason`
 ; #:clojure.spec.alpha{:problems [{:path [], :pred pos-int?, :val -1, :via [], :in [], :reason "positive"}]}
 ```
 
-## Spec-driven Transformations
+## Spec Driven Transformations
 
 Like [Plumatic Schema](https://github.com/plumatic/schema), Spec-tools differentiates specs (what) and transformers (how). This enables spec values to be transformed between different formats like JSON and EDN. Core concept is the `Transformer` protocol:
 
