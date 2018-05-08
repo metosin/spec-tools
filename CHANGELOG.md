@@ -13,7 +13,7 @@
   * `st/type-transformer`, supporting both `:type` and `Spec` level transformations
   * Spec-driven transformations via keys in `encode` and `decode` namespaces.
   * `st/encode`, `st/decode`, `st/explain`, `st/explain-data`, `st/conform` and `st/conform!` take the transformer instance an optional third argument
-     * `st/json-transformer` and `st/string-transformer` are shipped out-of-the-box
+     * `st/json-transformer`, `st/string-transformer`, `strip-extra-keys-transformer` and `fail-on-extra-keys-transformer` are shipped out-of-the-box.
 
 ### Transformer
 
@@ -31,6 +31,7 @@
 
 ```clj
 (require '[clojure.spec.alpha :as s])
+(require '[spec-tools.core :as st])
 (require '[clojure.string :as str])
 
 (s/def ::spec
@@ -78,6 +79,7 @@ no, as there can be multiple valid representations for a encoded value. But it's
 ; "KikKa"
 ; "KIKKA"
 ; :kikka
+; "KIKKA"
 ```
 
 ### Type-driven transformations
@@ -85,8 +87,6 @@ no, as there can be multiple valid representations for a encoded value. But it's
 * use `:type` information from Specs (mostly resolved automatically)
 
 ```clj
-(require '[spec-tools.core :as st])
-
 (as-> "2014-02-18T18:25:37Z" $
       (st/decode inst? $))
 ; :clojure.spec.alpha/invalid

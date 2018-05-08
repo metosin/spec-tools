@@ -173,7 +173,6 @@ Functions `encode`, `decode`, `explain`, `explain-data`, `conform` and `conform!
 * both take a 2-arity function of `spec value => value` to do the actual transformation
 
 ```clj
-(require '[clojure.spec.alpha :as s])
 (require '[clojure.string :as str])
 
 (s/def ::spec
@@ -232,8 +231,6 @@ no, as there can be multiple valid representations for a encoded value. But it c
   * standard types are: `:long`, `:double`, `:boolean`, `:string`, `:keyword`, `:symbol`, `:uuid`, `:uri`, `:bigdec`, `:date`, `:ratio`, `:map`, `:set` and `:vector`.
 
 ```clj
-(require '[spec-tools.core :as st])
-
 (as-> "2014-02-18T18:25:37Z" $
       (st/decode inst? $))
 ; :clojure.spec.alpha/invalid
