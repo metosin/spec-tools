@@ -2,7 +2,7 @@
   (:require [doo.runner :refer-macros [doo-tests]]
             spec-tools.core-test
             spec-tools.impl-test
-            spec-tools.conform-test
+            spec-tools.transform-test
             spec-tools.data-spec-test
             spec-tools.json-schema-test
             spec-tools.visitor-all-test
@@ -14,7 +14,7 @@
 
 (doo-tests 'spec-tools.core-test
            'spec-tools.impl-test
-           'spec-tools.conform-test
+           'spec-tools.transform-test
            'spec-tools.data-spec-test
            'spec-tools.json-schema-test
            'spec-tools.visitor-all-test

@@ -112,7 +112,7 @@
 
 (defn conform-test2 []
 
-  (suite "conforming set of keywords")
+  (suite "transformer set of keywords")
 
   (let [sizes-spec (s/coll-of (s/and spec/keyword? #{:L :M :S}) :into #{})
         sizes-schema #{(schema/enum :L :M :S)}]
@@ -121,7 +121,7 @@
     ; 1440ns (alpha12)
     ; 1160ns (alpha14)
     (title "spec: conform keyword enum")
-    (let [call #(st/conform sizes-spec ["L" "M"] st/string-conforming)]
+    (let [call #(st/conform sizes-spec ["L" "M"] st/string-transformer)]
       (assert (= (call) #{:L :M}))
       (cc/quick-bench
         (call)))
@@ -130,7 +130,7 @@
     ; 990ns (alpha12)
     ; 990ns (alpha14)
     (title "spec: conform keyword enum - no-op")
-    (let [call #(st/conform sizes-spec #{:L :M} st/string-conforming)]
+    (let [call #(st/conform sizes-spec #{:L :M} st/string-transformer)]
       (assert (= (call) #{:L :M}))
       (cc/quick-bench
         (call)))
@@ -212,12 +212,12 @@
 
 (defn conform-test3 []
 
-  (suite "conforming a nested map")
+  (suite "transformer a nested map")
 
   ; 4.5µs (alpha12)
   ; 3.9µs (alpha14)
   (title "spec: conform")
-  (let [call #(st/conform ::order sample-order st/string-conforming)]
+  (let [call #(st/conform ::order sample-order st/string-transformer)]
     (assert (= (call) sample-order-valid))
     (cc/quick-bench
       (call)))
@@ -225,7 +225,7 @@
   ; 2.8µs (alpha12)
   ; 2.7µs (alpha14)
   (title "spec: conform - no-op")
-  (let [call #(st/conform ::order sample-order-valid st/string-conforming)]
+  (let [call #(st/conform ::order sample-order-valid st/string-transformer)]
     (assert (= (call) sample-order-valid))
     (cc/quick-bench
       (call)))

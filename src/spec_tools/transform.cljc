@@ -1,9 +1,10 @@
-(ns spec-tools.conform
+(ns spec-tools.transform
   #?(:cljs (:refer-clojure :exclude [Inst Keyword UUID]))
   (:require [clojure.spec.alpha :as s]
     #?@(:cljs [[goog.date.UtcDateTime]
                [goog.date.Date]])
-            [clojure.set :as set])
+            [clojure.set :as set]
+            [clojure.string :as str])
   #?(:clj
      (:import (java.util Date UUID)
               (com.fasterxml.jackson.databind.util StdDateFormat)
@@ -36,6 +37,13 @@
     (keyword x)
     x))
 
+(defn keyword->string [_ x]
+  (if (keyword? x)
+    (let [name (name x)]
+      (if-let [ns (namespace x)]
+        (str ns "/" name) name))
+    x))
+
 (defn string->boolean [_ x]
   (if (string? x)
     (cond
@@ -61,7 +69,15 @@
     (try
       #?(:clj  (.parse (StdDateFormat.) x)
          :cljs (js/Date. (.getTime (goog.date.UtcDateTime.fromIsoString x))))
-      (catch #?(:clj  Exception, :cljs js/Error) _ x))
+      (catch #?(:clj Exception, :cljs js/Error) _ x))
+    x))
+
+(defn date->string [_ x]
+  (if (inst? x)
+    (try
+      #?(:clj  (.format (StdDateFormat.) x)
+         :cljs (str/replace (.toISOString x) #"Z$" "+0000"))
+      (catch #?(:clj Exception, :cljs js/Error) _ x))
     x))
 
 (defn string->symbol [_ x]
@@ -73,6 +89,17 @@
   (if (= "" x)
     nil
     x))
+
+(defn any->string [_ x]
+  (if-not (nil? x)
+    (str x)))
+
+(defn number->double [_ x]
+  (if (number? x)
+    (double x)
+    x))
+
+(defn any->any [_ x] x)
 
 ;;
 ;; Maps
@@ -90,10 +117,10 @@
     x))
 
 ;;
-;; type conforming
+;; type decoders
 ;;
 
-(def json-type-conforming
+(def json-type-decoders
   (merge
     {:keyword string->keyword
      :uuid string->uuid
@@ -104,17 +131,39 @@
         :bigdec nil
         :ratio nil})))
 
-(def string-type-conforming
+(def string-type-decoders
   (merge
-    json-type-conforming
+    json-type-decoders
     {:long string->long
      :double string->double
      :boolean string->boolean
      :nil string->nil
      :string nil}))
 
-(def strip-extra-keys-type-conforming
+(def strip-extra-keys-type-decoders
   {:map strip-extra-keys})
 
-(def fail-on-extra-keys-type-conforming
+(def fail-on-extra-keys-type-decoders
   {:map fail-on-extra-keys})
+
+;;
+;; type encoders
+;;
+
+(def json-type-encoders
+  {:keyword keyword->string
+   :symbol any->string
+   :uuid any->string
+   :uri any->string
+   :bigdec any->string
+   :date date->string
+   :map any->any
+   :set any->any
+   :vector any->any
+   #?@(:clj [:ratio number->double])})
+
+(def string-type-encoders
+  (merge
+    json-type-encoders
+    {:long any->string
+     :double any->string}))

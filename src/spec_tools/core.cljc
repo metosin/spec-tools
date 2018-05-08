@@ -1,11 +1,11 @@
 (ns spec-tools.core
-  (:refer-clojure :exclude [merge])
+  (:refer-clojure :exclude [merge -name])
   #?(:cljs (:require-macros [spec-tools.core :refer [spec]]))
   (:require [spec-tools.impl :as impl]
             [spec-tools.parse :as parse]
             [spec-tools.form :as form]
             [clojure.set :as set]
-            [spec-tools.conform :as conform]
+            [spec-tools.transform :as stt]
             [clojure.spec.alpha :as s]
     #?@(:clj  [
             [clojure.spec.gen.alpha :as gen]
@@ -24,6 +24,7 @@
 ;;
 
 (declare spec?)
+(declare into-spec)
 
 (defn ^:skip-wiki registry
   ([]
@@ -70,62 +71,79 @@
 (def +problems+ #?(:clj :clojure.spec.alpha/problems, :cljs :cljs.spec.alpha/problems))
 
 ;;
-;; Dynamic conforming
+;; Transformers
 ;;
 
-(def ^:dynamic ^:private *conforming* nil)
+(def ^:dynamic ^:private *transformer* nil)
 (def ^:dynamic ^:private *encode?* nil)
 
-(defn type-conforming
-  ([opts]
-   (type-conforming nil opts))
-  ([cname decode-opts]
-   (type-conforming cname decode-opts nil))
-  ([cname decode-opts encode-opts]
-   (let [encode-name (some->> cname name (str "encode/") keyword)
-         decode-name (some->> cname name (str "decode/") keyword)]
-     (fn
-       ([spec]
-        (or (get spec decode-name)
-            (get decode-opts (:type spec))))
-       ([spec _]
-        (or (get spec encode-name)
-            (get encode-opts (:type spec))))))))
+(defprotocol Transformer
+  (-name [this])
+  (-encoder [this spec value])
+  (-decoder [this spec value]))
 
-(def json-conforming
-  (type-conforming ::conform/json conform/json-type-conforming))
+(defn type-transformer [{transformer-name :name
+                         :keys [encoders decoders default-encoder default-decoder]}]
+  (let [encode-key (some->> transformer-name name (str "encode/") keyword)
+        decode-key (some->> transformer-name name (str "decode/") keyword)]
+    (reify
+      Transformer
+      (-name [_] transformer-name)
+      (-encoder [_ spec _]
+        (or (get spec encode-key)
+            (get encoders (:type spec))
+            default-encoder))
+      (-decoder [_ spec _]
+        (or (get spec decode-key)
+            (get decoders (:type spec))
+            default-decoder)))))
 
-(def string-conforming
-  (type-conforming ::conform/string conform/string-type-conforming))
+(def json-transformer
+  (type-transformer
+    {:name :json
+     :decoders stt/json-type-decoders
+     :encoders stt/json-type-encoders
+     :default-encoder stt/any->any}))
 
-(def strip-extra-keys-conforming
-  (type-conforming conform/strip-extra-keys-type-conforming))
+(def string-transformer
+  (type-transformer
+    {:name :string
+     :decoders stt/string-type-decoders
+     :encoders stt/string-type-encoders
+     :default-encoder stt/any->any}))
 
-(def fail-on-extra-keys-conforming
-  (type-conforming conform/fail-on-extra-keys-type-conforming))
+(def strip-extra-keys-transformer
+  (type-transformer
+    {:name ::strip-extra-keys
+     :decoders stt/strip-extra-keys-type-decoders}))
+
+(def fail-on-extra-keys-transformer
+  (type-transformer
+    {:name ::fail-on-extra-keys
+     :decoders stt/fail-on-extra-keys-type-decoders}))
 
 (defn explain
   ([spec value]
    (explain spec value nil))
-  ([spec value conforming]
-   (binding [*conforming* conforming, *encode?* false]
-     (s/explain spec value))))
+  ([spec value transformer]
+   (binding [*transformer* transformer, *encode?* false]
+     (s/explain (into-spec spec) value))))
 
 (defn explain-data
   ([spec value]
    (explain-data spec value nil))
-  ([spec value conforming]
-   (binding [*conforming* conforming, *encode?* false]
-     (s/explain-data spec value))))
+  ([spec value transformer]
+   (binding [*transformer* transformer, *encode?* false]
+     (s/explain-data (into-spec spec) value))))
 
 (defn conform
   "Given a spec and a value, returns the possibly destructured value
    or ::s/invalid"
   ([spec value]
    (conform spec value nil))
-  ([spec value conforming]
-   (binding [*conforming* conforming, *encode?* false]
-     (s/conform spec value))))
+  ([spec value transformer]
+   (binding [*transformer* transformer, *encode?* false]
+     (s/conform (into-spec spec) value))))
 
 (defn conform!
   "Given a spec and a value, returns the possibly destructured value
@@ -134,37 +152,48 @@
    actual conformed value."
   ([spec value]
    (conform! spec value nil))
-  ([spec value conforming]
-   (binding [*conforming* conforming, *encode?* false]
-     (let [conformed (s/conform spec value)]
+  ([spec value transformer]
+   (binding [*transformer* transformer, *encode?* false]
+     (let [spec' (into-spec spec)
+           conformed (s/conform spec' value)]
        (if-not (= conformed +invalid+)
          conformed
-         (let [problems (s/explain-data spec value)
+         (let [problems (s/explain-data spec' value)
                data {:type ::conform
                      :problems (+problems+ problems)
                      :spec spec
                      :value value}]
            (throw (ex-info (str "Spec conform error: " data) data))))))))
 
-(defn select-spec [spec value]
-  (conform spec value strip-extra-keys-conforming))
-
 (defn decode
-  "Transform and validate value from external format into valid value
-  defined by the spec."
+  "Transforms and validates a value (using a [[Transformer]]) from external
+  format into a value defined by the spec. On error, returns `::s/invalid`."
   ([spec value]
    (decode spec value nil))
-  ([spec value conforming]
-   (binding [*conforming* conforming, *encode?* false]
-     (s/conform spec value))))
+  ([spec value transformer]
+   (binding [*transformer* transformer, *encode?* false]
+     (let [spec (into-spec spec)
+           conformed (s/conform spec value)]
+       (if (= conformed +invalid+)
+         +invalid+
+         (s/unform spec conformed))))))
 
 (defn encode
-  "Transform (without validation) a value into external format."
-  ([spec value]
-   (encode spec value nil))
-  ([spec value conforming]
-   (binding [*conforming* conforming, *encode?* true]
-     (s/conform spec value))))
+  "Transforms a value (using a [[Transformer]]) from external
+  format into a value defined by the spec. On error, returns `::s/invalid`."
+  [spec value transformer]
+  (binding [*transformer* transformer, *encode?* true]
+    (let [spec (into-spec spec)
+          conformed (s/conform spec value)]
+      (if (= conformed +invalid+)
+        +invalid+
+        (s/unform spec conformed)))))
+
+(defn select-spec
+  "Drops all extra keys out of a Keys spec value. To use this recursively,
+  wrap all child Keys Specs into Spec Records. See CLJ-2116 for details."
+  [spec value]
+  (decode spec value strip-extra-keys-transformer))
 
 ;;
 ;; Spec Record
@@ -188,18 +217,23 @@
 
   s/Spec
   (conform* [this x]
-    (let [conforming *conforming*, encode? *encode?*]
-      (if-let [transform (if conforming (if encode? (conforming this encode?) (conforming this)))]
+    (let [transformer *transformer*, encode? *encode?*]
+      ;; if there is a transformer present
+      (if-let [transform (if transformer ((if encode? -encoder -decoder) transformer this x))]
+        ;; let's transform it
         (let [transformed (transform this x)]
+          ;; short-circuit on ::s/invalid
           (or (and (= +invalid+ transformed) transformed)
-              (if encode? transformed (s/conform spec transformed))))
-        ;; TODO: should the encode default to `str`?
-        (if encode? +invalid+ (s/conform spec x)))))
+              ;; recur
+              (let [conformed (s/conform spec transformed)]
+                ;; it's ok if encode transforms the value into invalid
+                (or (and encode? (= +invalid+ conformed) transformed) conformed))))
+        (s/conform spec x))))
   (unform* [_ x]
     (s/unform spec x))
   (explain* [this path via in x]
     (let [problems (if (or (s/spec? spec) (s/regex? spec))
-                     ;; conforming might fail deliberately, while the vanilla
+                     ;; transformer might fail deliberately, while the vanilla
                      ;; conform would succeed - we'll short-circuit it here.
                      ;; https://dev.clojure.org/jira/browse/CLJ-2115 would help
                      (let [conformed (s/conform* this x)
@@ -338,26 +372,9 @@
              {:form form#
               :spec ~pred}))))))
 
-#?(:clj
-   (defmacro doc
-     "Creates a Spec instance with one or two arguments,
-      setting the :type to nil (e.g. no dynamic conforming).
 
-      ;; using type inference
-      (doc integer?)
-
-      ;; with explicit type
-      (doc integer? {:name \"it's a integer\"})
-
-      ;; map form
-      (doc {:spec integer?, :name \"it's a integer\"}})
-
-      calls `spec`, see it for details."
-     ([pred-or-info]
-      (let [[spec info] (impl/extract-pred-and-info pred-or-info)]
-        `(doc ~spec ~info)))
-     ([spec info]
-      `(spec ~spec (clojure.core/merge ~info {:type nil})))))
+(defn into-spec [x]
+  (if (spec? x) x (create-spec {:spec x})))
 
 ;;
 ;; merge

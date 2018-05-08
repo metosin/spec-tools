@@ -178,9 +178,9 @@
           (testing "maybe values"
             (is (true? (s/valid? person-spec (assoc value :address nil)))))
 
-          (testing "map-conforming works recursively"
+          (testing "map-transformer works recursively"
             (is (= value
-                   (st/conform person-spec bloated st/strip-extra-keys-conforming))))))))
+                   (st/conform person-spec bloated st/strip-extra-keys-transformer))))))))
 
   (testing "or spec"
     (let [strings-or-keywords (ds/or {::ui-target {:id string?}
@@ -260,12 +260,12 @@
         (= false
            (s/valid? spec {:three "beers"})))))
 
-  (testing "map-of key conforming"
+  (testing "map-of key transformer"
     (is (= {:thanks :alex}
            (st/conform
              (ds/spec ::kikka {keyword? keyword?})
              {"thanks" "alex"}
-             st/string-conforming)))))
+             st/string-transformer)))))
 
 (deftest top-level-maybe-test
   (let [spec (ds/spec ::maybe (ds/maybe {:n int?}))]
@@ -319,3 +319,48 @@
 
 (deftest pithyless-test
   (is (map? (st/explain-data (ds/spec ::foo {:foo string?}) {:foo 42}))))
+
+(deftest encode-decode-test
+  (let [spec (ds/spec
+               {:name ::order
+                :spec {:id int?
+                       :address {:street string?
+                                 :country keyword?}
+                       :tags #{keyword?}
+                       :symbol symbol?
+                       :price double?
+                       :uuid uuid?
+                       :shipping inst?
+                       :secret (st/spec
+                                 {:spec string?
+                                  :encode/string #(apply str (reverse %2))
+                                  :decode/string #(apply str (reverse %2))})}})
+        value {:id 1
+               :address {:street "Pellavatehtaankatu 10b"
+                         :country :fi}
+               :tags #{:bean :coffee :good}
+               :symbol 'metosin
+               :price 9.99
+               :uuid #uuid"655b4976-9b2e-4c4a-b9b5-fa6efa909de6"
+               :shipping #inst "2014-02-18T18:25:37.000-00:00"
+               :secret "salaisuus-on-turvassa"}
+        value-string {:id "1"
+                      :address {:street "Pellavatehtaankatu 10b"
+                                :country "fi"}
+                      :tags #{"bean" "coffee" "good"}
+                      :symbol "metosin"
+                      :price "9.99"
+                      :uuid "655b4976-9b2e-4c4a-b9b5-fa6efa909de6"
+                      :shipping "2014-02-18T18:25:37.000+0000"
+                      :secret "assavrut-no-suusialas"}]
+
+    (testing "encode"
+      (is (= value-string (st/encode spec value st/string-transformer))))
+    (testing "decode"
+      (is (= value (st/decode spec value-string st/string-transformer))))
+    (testing "roundtrip"
+      (is (= value-string (as-> value-string $
+                                (st/decode spec $ st/string-transformer)
+                                (st/encode spec $ st/string-transformer)))))))
+
+
