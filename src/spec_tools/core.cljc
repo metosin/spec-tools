@@ -181,15 +181,13 @@
 (defn encode
   "Transforms a value (using a [[Transformer]]) from external
   format into a value defined by the spec. On error, returns `::s/invalid`."
-  ([spec value]
-   (encode spec value nil))
-  ([spec value transformer]
-   (binding [*transformer* transformer, *encode?* true]
-     (let [spec (into-spec spec)
-           conformed (s/conform spec value)]
-       (if (= conformed +invalid+)
-         +invalid+
-         (s/unform spec conformed))))))
+  [spec value transformer]
+  (binding [*transformer* transformer, *encode?* true]
+    (let [spec (into-spec spec)
+          conformed (s/conform spec value)]
+      (if (= conformed +invalid+)
+        +invalid+
+        (s/unform spec conformed)))))
 
 (defn select-spec
   "Drops all extra keys out of a Keys spec value. To use this recursively,

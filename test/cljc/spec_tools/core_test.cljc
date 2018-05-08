@@ -283,7 +283,7 @@
             (is (= ::s/invalid (st/decode ::my-spec-map encoded)))
             (is (= decoded (st/decode ::my-spec-map decoded))))
           (testing "encode fails if no encoder is defined"
-            (is (= ::s/invalid (st/encode ::my-spec-map invalid)))))
+            (is (= ::s/invalid (st/encode ::my-spec-map invalid nil)))))
         (testing "with transformer"
           (testing "decoding is applied before validation, if defined"
             (is (= ::s/invalid (st/decode ::my-spec-map encoded my-type-transformer)))
@@ -302,7 +302,7 @@
             (is (= ::s/invalid (st/decode ::my-type-map encoded)))
             (is (= decoded (st/decode ::my-type-map decoded))))
           (testing "encode fails if no encoder is defined"
-            (is (= ::s/invalid (st/encode ::my-type-map invalid)))))
+            (is (= ::s/invalid (st/encode ::my-type-map invalid nil)))))
         (testing "with transformer"
           (testing "decoding is applied before validation, if defined"
             (is (= ::s/invalid (st/decode ::my-type-map encoded my-type-transformer)))

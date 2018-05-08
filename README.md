@@ -195,11 +195,6 @@ Functions `encode`, `decode`, `explain`, `explain-data`, `conform` and `conform!
 
 (as-> "KiKka" $
       (st/decode ::spec $ st/string-transformer)
-      (st/encode ::spec $))
-; :clojure.spec.alpha/invalid
-
-(as-> "KiKka" $
-      (st/decode ::spec $ st/string-transformer)
       (st/encode ::spec $ st/string-transformer))
 ; "KIKKA"
 ```
@@ -239,11 +234,6 @@ no, as there can be multiple valid representations for a encoded value. But it c
 (as-> "2014-02-18T18:25:37Z" $
       (st/decode inst? $ st/string-transformer))
 ; #inst"2014-02-18T18:25:37.000-00:00"
-
-(as-> "2014-02-18T18:25:37Z" $
-      (st/decode inst? $ st/string-transformer)
-      (st/encode inst? $))
-; :clojure.spec.alpha/invalid
 
 ;; encode using string-transformer
 (as-> "2014-02-18T18:25:37Z" $
