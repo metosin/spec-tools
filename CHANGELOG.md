@@ -5,10 +5,11 @@
 * Date-conforming is now [ISO8601](https://en.wikipedia.org/wiki/ISO_8601)-compliant on Clojure too, thanks to [Fabrizio Ferrai](https://github.com/f-f).
 * new `st/IntoSpec` protocol to convert non-recursively vanilla `clojure.spec` Specs into `st/Spec`:s. Used in `st/encode`, `st/decode`, `st/explain`, `st/explain-data`, `st/conform` and `st/conform!`.
 * **BREAKING**: Bye bye conforming, welcome transformers!
+  * Guide: https://github.com/metosin/spec-tools#spec-driven-transformations
   * removed: `st/type-conforming`, `st/json-conforming`, `st/string-conforming`
   * new `st/Transformer` protocol to drive spec-driven value transformations
-  * spec values can be both encoded (`st/encode`) & decoded (`st/decode`) using a transformer, fixes [#96](https://github.com/metosin/spec-tools/issues/96)
-  * renamed ns `spec-tools.conform` into `spec-tools.transformer`, covering both encoding & decoding of values
+  * spec values can be both encoded (`st/encode`) & decoded (`st/decode`) using a transformer, fixes [#96](https://github.com/metosin/spec-tools/issues/96).
+  * renamed ns `spec-tools.conform` into `spec-tools.transform`, covering both encoding & decoding of values
   * `st/type-transformer`, supporting both `:type` and `Spec` level transformations
   * Spec-driven transformations via keys in `encode` and `decode` namespaces.
   * `st/encode`, `st/decode`, `st/explain`, `st/explain-data`, `st/conform` and `st/conform!` take the transformer instance an optional third argument
@@ -18,7 +19,7 @@
 
 ```clj
 (defprotocol Transformer
-  (-transformer-name [this])
+  (-name [this])
   (-encoder [this spec value])
   (-decoder [this spec value]))
 ```

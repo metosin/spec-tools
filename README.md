@@ -3,7 +3,7 @@
 Clojure/Script tools for [clojure.spec](http://clojure.org/about/spec).
 
 * [Spec Records](#spec-records)
-* [Two-way Spec Coercion](#spec-coercion)
+* [Spec-driven Transformations](#spec-driven-transformations)
 * [Data Specs](#data-specs)
 * [Spec Visitors](#spec-visitors)
 * [Generating JSON Schemas](#generating-json-schemas)
@@ -24,7 +24,7 @@ Requires Java 1.8 & Clojure `1.9.0` and/or ClojureScript `1.9.908`+.
 
 ## Spec Records
 
-To enable spec metadata and features like [spec coercion](#spec-coercion), Spec-tools introduces extendable Spec Records, `Spec`s. They wrap specs and act like specs or 1-arity functions. Specs are created with `spec-tools.core/spec` macro or with the underlying `spec-tools.core/create-spec` function.
+To enable spec metadata and features like [Spec-driven transformations](#spec-driven-transformations), Spec-tools introduces extendable Spec Records, `Spec`s. They wrap specs and act like specs or 1-arity functions. Specs are created with `spec-tools.core/spec` macro or with the underlying `spec-tools.core/create-spec` function.
 
 The following Spec keys having a special meaning:
 
@@ -144,55 +144,135 @@ Can be added to a Spec via the key `:reason`
 ; #:clojure.spec.alpha{:problems [{:path [], :pred pos-int?, :val -1, :via [], :in [], :reason "positive"}]}
 ```
 
-## Spec Coercion
+## Spec-driven Transformations
 
-Like [Plumatic Schema](https://github.com/plumatic/schema), Spec-tools separates specs (what) and transformers (how). Internally, Spec Record use a dynamical conformer, which can be instructed at runtime to use a suitable conforming function (encode or decode) for the given spec. Data can be transformed differently from sources like JSON and Transit.
-
-Data can be both read and written into external formats using spec, see [encoding values with spec](#encoding-values-with-spec).
-
-By default, the dynamic conforming is a no-op. `spec-tools.core` has functions to bind the `spec => spec-conformer` using dynamic binding. These functions include `explain`, `explain-data`, `conform`, `conform!`, `encode` and `decode`.
-
-Spec-conformers are arity2 functions taking the Spec Records and the value and should return either conformed value or the original value.
-
-There are [CLJ-2116](https://dev.clojure.org/jira/browse/CLJ-2116) and [CLJ-2251](https://dev.clojure.org/jira/browse/CLJ-2251) to provide better support with `clojure.spec`.
-
-There are two ways to define coercion: [based on types](#type-based-coercion) and [based on specs](#spec-based-coercion).
-
-### Type based coercion
-
-A common way to do dynamic conforming is to select conformer based on the spec's `:type`. By default, the following types are supported (and mostly, auto-resolved): `:long`, `:double`, `:boolean`, `:string`, `:keyword`, `:symbol`, `:uuid`, `:uri`, `:bigdec`, `:date`, `:ratio`, `:map`, `:set` and `:vector`.
-
-The following type-based conforming are found in `spec-tools.core`:
-
-| Name                            | Description                                                                                                              |
-|---------------------------------|--------------------------------------------------------------------------------------------------------------------------|
-| `string-conforming`             | Conforms all specs from strings (things like `:query`, `:header` & `:path` -parameters).                                 |
-| `json-conforming`               | [JSON](http://json.org/) Conforming (numbers and booleans not conformed).                                                |
-| `strip-extra-keys-conforming`   | Strips out extra keys of `s/keys` Specs.                                                                                 |
-| `fail-on-extra-keys-conforming` | Fails if `s/keys` Specs have extra keys.                                                                                 |
-| `nil`                           | No extra conforming ([EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format)). |
-
-#### Coercion of simple specs
+Like [Plumatic Schema](https://github.com/plumatic/schema), Spec-tools differentiates specs (what) and transformers (how). This enables spec values to be transformed between different formats like JSON and EDN. Core concept is the `Transformer` protocol:
 
 ```clj
-(s/def ::age (s/and spec/integer? #(> % 18)))
-
-;; no conforming
-(s/conform ::age "20")
-(st/conform ::age "20")
-(st/conform ::age "20" nil)
-; ::s/invalid
-
-;; json-conforming
-(st/conform ::age "20" st/json-conforming)
-; ::s/invalid
-
-;; string-conforming
-(st/conform ::age "20" st/string-conforming)
-; 20
+(defprotocol Transformer
+  (-name [this])
+  (-encoder [this spec value])
+  (-decoder [this spec value]))
 ```
 
-#### Coercion of nested specs
+Spec-tools ships with following transformer implementations:
+
+| Name                             | Description                                                                                                            |
+|----------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| `string-transformer`             | String-formats like properties files, query- & path-parameters.                                                        |
+| `json-transformer`               | [JSON](http://json.org/) format, like string, but numbers and booleans are supported                                   |
+| `strip-extra-keys-transformer`   | Decoding strips out extra keys of `s/keys` specs.                                                                      |
+| `fail-on-extra-keys-transformer` | Decoding fails if `s/keys` specs have extra keys.                                                                      |
+| `nil`                            | No transformations, [EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format). |
+
+Functions `encode`, `decode`, `explain`, `explain-data`, `conform` and `conform!` take the transformer an optional third argument and pass it into Specs via dynamic binding. Spec Records apply either the encoder or decoder in it's conforming stage. Both `encode` & `decode` also unform the data.
+
+### Spec-driven transformations
+
+* `:encode/*` and `:decode/*` keys from Specs to declare how the values should be transformed in & out from different formats
+* both take a 2-arity function of `spec value => value` to do the actual transformation
+
+```clj
+(require '[clojure.spec.alpha :as s])
+(require '[clojure.string :as str])
+
+(s/def ::spec
+  (st/spec
+    {:spec #(and (simple-keyword? %) (-> % name str/lower-case keyword (= %)))
+     :description "a lowercase keyword, encoded in uppercase in string-mode"
+     :decode/string #(-> %2 name str/lower-case keyword)
+     :encode/string #(-> %2 name str/upper-case)}))
+
+(st/decode ::spec :kikka)
+; :kikka
+
+(as-> "KiKka" $
+      (st/decode ::spec $))
+; :clojure.spec.alpha/invalid
+
+(as-> "KiKka" $
+      (st/decode ::spec $ st/string-transformer))
+; :kikka
+
+(as-> "KiKka" $
+      (st/decode ::spec $ st/string-transformer)
+      (st/encode ::spec $))
+; :clojure.spec.alpha/invalid
+
+(as-> "KiKka" $
+      (st/decode ::spec $ st/string-transformer)
+      (st/encode ::spec $ st/string-transformer))
+; "KIKKA"
+```
+
+### Spec [Bijections](https://en.wikipedia.org/wiki/Bijection)?
+
+no, as there can be multiple valid representations for a encoded value. But it can be quaranteed that a decoded values X is always encoded into Y, which can be decoded back into X: `y -> X -> Y -> X`
+
+```clj
+(as-> "KikKa" $
+      (doto $ prn)
+      (st/encode ::spec $ st/string-transformer)
+      (doto $ prn)
+      (st/decode ::spec $ st/string-transformer)
+      (doto $ prn)
+      (st/encode ::spec $ st/string-transformer)
+      (prn $))
+; "KikKa"
+; "KIKKA"
+; :kikka
+; "KIKKA"
+```
+
+### Type-driven transformations
+
+* Uses `:type` information from Specs
+  * resolved automatically for most core predicates.
+  * top-level spec arguments in `encode` & `decode` etc are transformed into Spec Records automatically using `IntoSpec` protocol.
+  * standard types are: `:long`, `:double`, `:boolean`, `:string`, `:keyword`, `:symbol`, `:uuid`, `:uri`, `:bigdec`, `:date`, `:ratio`, `:map`, `:set` and `:vector`.
+
+```clj
+(require '[spec-tools.core :as st])
+
+(as-> "2014-02-18T18:25:37Z" $
+      (st/decode inst? $))
+; :clojure.spec.alpha/invalid
+
+;; decode using string-transformer
+(as-> "2014-02-18T18:25:37Z" $
+      (st/decode inst? $ st/string-transformer))
+; #inst"2014-02-18T18:25:37.000-00:00"
+
+(as-> "2014-02-18T18:25:37Z" $
+      (st/decode inst? $ st/string-transformer)
+      (st/encode inst? $))
+; :clojure.spec.alpha/invalid
+
+;; encode using string-transformer
+(as-> "2014-02-18T18:25:37Z" $
+      (st/decode inst? $ st/string-transformer)
+      (st/encode inst? $ st/string-transformer))
+; "2014-02-18T18:25:37.000+0000"
+```
+
+When creating custom specs, `:type` gives you encoders & decoders (and docs!) for free, like with [Data.Unjson](https://hackage.haskell.org/package/unjson-0.15.2.0/docs/Data-Unjson.html).
+
+```clj
+(s/def ::kw
+  (st/spec
+    {:spec #(keyword %) ;; anonymous function
+     :type :keyword}))  ;; encode & decode like a keyword
+
+(st/decode ::kw "kikka" st/string-transformer)
+;; :kikka
+
+(st/decode ::kw "kikka" st/json-transformer)
+;; :kikka
+```
+
+### Transforming nested specs
+
+Because of current design of clojure.spec, we need to wrap all non top-level specs into Spec Records manually to enable transformations.
 
 ```clj
 (s/def ::name string?)
@@ -214,23 +294,23 @@ The following type-based conforming are found in `spec-tools.core`:
    :languages ["clj" "cljs"]
    :birthdate "1968-01-02T15:04:05Z"})
 
-;; no conforming
-(st/conform ::user data)
+;; no transformer
+(st/decode ::user data)
 ; ::s/invalid
 
-;; json-conforming doesn't conform numbers
-(st/conform ::user data st/json-conforming)
+;; json-transformer doesn't transform numbers
+(st/decode ::user data st/json-tranformer)
 ; ::s/invalid
 
-;; string-conforming for the rescue
-(st/conform ::user data st/string-conforming)
+;; string-transformer for the rescue
+(st/decode ::user data st/string-transformer)
 ; {:name "Ilona"
 ;  :age 48
 ;  :languages #{:clj :cljs}
 ;  :birthdate #inst"1968-01-02T15:04:05.000-00:00"}
 ```
 
-#### Coercion of map specs
+#### Transforming Map Specs
 
 To strip out extra keys from a keyset:
 
@@ -246,10 +326,7 @@ To strip out extra keys from a keyset:
    :address {:street "Satamakatu"
              :city "Tampere"}})
 
-(st/conform
-  ::user
-  inkeri
-  st/strip-extra-keys-conforming)
+(st/decode ::user inkeri st/strip-extra-keys-transformer)
 ; {:name "Inkeri"
 ;  :address {:street "Satamakatu"}}
 ```
@@ -262,103 +339,60 @@ There are also a shortcut for this, `select-spec`:
 ;  :address {:street "Satamakatu"}}
 ```
 
-### Encoding Values with Spec
+### Custom Transformers
 
- * `st/decode` transforms and validates values from external format into valid values defined by the spec
- * `st/encode` transforms (without validation) values into external format
-
-By default, the type-conforming doesn't define any encoders out-of-the-box. Subject to change.
-
-See [Spec based coercion](#spec-based-coercion) for exampes.
-
-### Spec based coercion
-
-Spec Records can define how they are transformed in and out from external formats. This is done using spec data with keys having `decode` and `encode` namespaces and a name of the format as the name. By default `json` and `string` formats are supported but any new formats can be added (`xml`, `avro` etc.).
-
-```clj
-(require '[clojure.spec.alpha :as s])
-(require '[spec-tools.core :as st])
-
-(s/def ::spec
-  (st/spec
-    {:spec #(and (simple-keyword? %) (-> % name str/lower-case keyword (= %)))
-     :description "a lowercase simple keyword, encoded in uppercase in string-mode"
-     :decode/string #(-> %2 name str/lower-case keyword)
-     :encode/string #(-> %2 name str/upper-case)}))
-
-; decode also validates
-(st/decode ::spec "kikka")
-; => :clojure.spec.alpha/invalid
-
-(st/decode ::spec "kikka" st/string-conforming)
-; => :kikka
-
-; encode fails if no encoder present
-(st/encode ::spec "kikka")
-; => :clojure.spec.alpha/invalid
-
-; encode doesn't validate!
-(st/encode ::spec "kikka" st/string-conforming)
-; => "KIKKA"
-
-; not real bijections (https://en.wikipedia.org/wiki/Bijection)
-(as-> "KikKa" $
-      (doto $ prn)
-      (st/encode ::spec $ st/string-conforming)
-      (doto $ prn)
-      (st/decode ::spec $ st/string-conforming)
-      (doto $ prn)
-      (st/encode ::spec $ st/string-conforming)
-      (prn $))
-; "KikKa"
-; "KIKKA"
-; :kikka
-; "KIKKA"
-; => nil
-```
-
-### Custom conforming
-
-It's easy to create custom conforming. It should have a name and optional type-conformings for both decode & encode.
+Transformers should have a simple keyword name and optionally type-based decoders, encoders, default decoder and -encoder set. Currently there is no utility to verify that `y -> X -> Y -> X` holds for custom transformers.
 
 ```clj
 (require '[clojure.string :as str])
+(require '[spec-tools.transform :as stt])
 
-(def my-string-conforming
-  :my-string
-  (st/type-conforming
-    (assoc
-      conform/string-type-conforming
-      :keyword
-      (fn [_ value]
-        (-> value
-            str/upper-case
-            str/reverse
-            keyword))))
+(defn transform [_ value]
+  (-> value
+      str/upper-case
+      str/reverse
+      keyword))
 
-(st/conform spec/keyword? "kikka")
-; ::s/invalid
+;; string-decoding + special keywords
+;; encoding writes strings by default
+(def my-string-transformer
+  (type-transformer
+    {:name :custom
+     :decoders (merge
+                 stt/string-type-decoders
+                 {:keyword transform})
+     :default-encoder stt/any->string}))
 
-(st/conform spec/keyword? "kikka" st/string-conforming)
-; :kikka
+(decode keyword? "kikka")
+; :clojure.spec.alpha/invalid
 
-(st/conform spec/keyword? "kikka" my-string-conforming)
+(decode keyword? "kikka" my-string-transformer)
 ; :AKKIK
+
+; spec-driven transforming
+(decode
+  (spec
+    {:spec #(keyword? %)
+     :decode/custom transform})
+  "kikka"
+  my-string-transformer)
+; :AKKIK
+
+;; defaut encoding to strings
+(encode int? 1 my-string-transformer)
+; "1"
 ```
 
-### Composing conforming
-
-Type-based conforming mappings are defined as data, so they are easy to combine and extend.
+Type-based transformer encoding & decoding mappings are defined as data, so they are easy to compose:
 
 ```clj
-(require '[spec-tools.conform :as conform])
-
-(def strict-json-conforming
-  (st/type-conforming
-    :json
-    (merge
-      conform/json-type-conforming
-      conform/strip-extra-keys-type-conforming)))
+(def strict-json-transformer
+  (type-transformer
+    {:name :custom
+     :decoders (merge
+                 stt/json-type-decoders
+                 stt/strip-extra-keys-type-decoders)
+     :encoders stt/json-type-encoders}))
 ```
 
 ### Data Macros
@@ -476,10 +510,10 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
 ; true
 ```
 
-* all generated specs are wrapped into Specs Records so dynamic conforming works out of the box:
+* all generated specs are wrapped into Specs Records so transformations works out of the box:
 
 ```clj
-(st/conform!
+(st/encode
   new-person-spec
   {::age "63"
    :boss "true"
@@ -490,7 +524,7 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
             {:id "2", :description "kebab"}]
    :description "Liisa is a valid boss"
    :address nil}
-  st/string-conforming)
+  st/string-transformer)
 ; {::age 63
 ;  :boss true
 ;  :name "Liisa"
