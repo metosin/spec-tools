@@ -1,4 +1,4 @@
-# 0.7.0-SNAPSHOT
+# 0.7.0 (14.5.2018)
 
 * Fix `rational?` mapping for JSON Schema, fixes [#113](https://github.com/metosin/spec-tools/issues/113)
 * Remove `::swagger/extension` expansion in Swagger2 generation.
