@@ -122,6 +122,9 @@
     {:name ::fail-on-extra-keys
      :decoders stt/fail-on-extra-keys-type-decoders}))
 
+(def no-op-transformer
+  (type-transformer {}))
+
 (defn explain
   ([spec value]
    (explain spec value nil))
@@ -179,8 +182,9 @@
          (s/unform spec conformed))))))
 
 (defn encode
-  "Transforms a value (using a [[Transformer]]) from external
-  format into a value defined by the spec. On error, returns `::s/invalid`."
+  "Transforms a valid value (using a [[Transformer]]) from external
+  format into a value defined by the spec. Allows values to be
+  transformed into illegal ones."
   [spec value transformer]
   (binding [*transformer* transformer, *encode?* true]
     (let [spec (into-spec spec)

@@ -220,14 +220,26 @@
 (deftest spec-tools-transform-test
   (testing "in default mode"
     (testing "nothing is conformed"
-      (is (= st/+invalid+ (st/conform ::age "12")))
-      (is (= st/+invalid+ (st/conform ::over-a-million "1234567")))
-      (is (= st/+invalid+ (st/conform ::lat "23.1234")))
-      (is (= st/+invalid+ (st/conform ::language "clojure")))
-      (is (= st/+invalid+ (st/conform ::truth "false")))
-      (is (= st/+invalid+ (st/conform ::uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e")))
-      (is (= st/+invalid+ (st/conform ::birthdate "2014-02-18T18:25:37.456Z")))
-      (is (= st/+invalid+ (st/conform ::birthdate "2014-02-18T18:25:37Z")))))
+      (is (= ::s/invalid (st/conform ::age "12")))
+      (is (= ::s/invalid (st/conform ::over-a-million "1234567")))
+      (is (= ::s/invalid (st/conform ::lat "23.1234")))
+      (is (= ::s/invalid (st/conform ::language "clojure")))
+      (is (= ::s/invalid (st/conform ::truth "false")))
+      (is (= ::s/invalid (st/conform ::uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e")))
+      (is (= ::s/invalid (st/conform ::birthdate "2014-02-18T18:25:37.456Z")))
+      (is (= ::s/invalid (st/conform ::birthdate "2014-02-18T18:25:37Z")))))
+
+  (testing "no-op-transformer"
+    (let [conform #(st/conform %1 %2 st/no-op-transformer)]
+      (testing "nothing is conformed"
+        (is (= ::s/invalid (conform ::age "12")))
+        (is (= ::s/invalid (conform ::over-a-million "1234567")))
+        (is (= ::s/invalid (conform ::lat "23.1234")))
+        (is (= ::s/invalid (conform ::language "clojure")))
+        (is (= ::s/invalid (conform ::truth "false")))
+        (is (= ::s/invalid (conform ::uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e")))
+        (is (= ::s/invalid (conform ::birthdate "2014-02-18T18:25:37.456Z")))
+        (is (= ::s/invalid (conform ::birthdate "2014-02-18T18:25:37Z"))))))
 
   (testing "string-transformer"
     (let [conform #(st/conform %1 %2 st/string-transformer)]
@@ -247,10 +259,10 @@
   (testing "json-transformer"
     (let [conform #(st/conform %1 %2 st/json-transformer)]
       (testing "some are not conformed"
-        (is (= st/+invalid+ (conform ::age "12")))
-        (is (= st/+invalid+ (conform ::over-a-million "1234567")))
-        (is (= st/+invalid+ (conform ::lat "23.1234")))
-        (is (= st/+invalid+ (conform ::truth "false"))))
+        (is (= ::s/invalid (conform ::age "12")))
+        (is (= ::s/invalid (conform ::over-a-million "1234567")))
+        (is (= ::s/invalid (conform ::lat "23.1234")))
+        (is (= ::s/invalid (conform ::truth "false"))))
       (testing "some are conformed"
         (is (= :clojure (conform ::language "clojure")))
         (is (= #uuid "07dbf30f-c99e-4e5d-b76e-5cbdac3b381e"
@@ -344,7 +356,7 @@
 (deftest explain-tests
   (testing "without transformer"
     (let [expected-problem {:path [], :pred `int?, :val "12", :via [], :in []}]
-      (is (= st/+invalid+ (st/conform spec/int? "12")))
+      (is (= ::s/invalid (st/conform spec/int? "12")))
       (is (= #?(:clj  #:clojure.spec.alpha{:problems [expected-problem]
                                            :spec spec/int?
                                            :value "12"}
@@ -364,14 +376,14 @@
   (testing "specs"
     (let [spec (st/spec (s/or :int spec/int? :bool spec/boolean?))
           value "1"]
-      (is (= st/+invalid+ (st/conform spec value)))
+      (is (= ::s/invalid (st/conform spec value)))
       (is (= [:int 1] (st/conform spec value st/string-transformer)))
       (is (= 1 (s/unform spec (st/conform spec value st/string-transformer))))
       (is (= nil (st/explain-data spec value st/string-transformer)))))
   (testing "regexs"
     (let [spec (st/spec (s/* (s/cat :key spec/keyword? :val spec/int?)))
           value [:a "1" :b "2"]]
-      (is (= st/+invalid+ (st/conform spec value)))
+      (is (= ::s/invalid (st/conform spec value)))
       (is (= [{:key :a, :val 1} {:key :b, :val 2}] (st/conform spec value st/string-transformer)))
       (is (= [:a 1 :b 2] (s/unform spec (st/conform spec value st/string-transformer))))
       (is (= nil (st/explain-data spec value st/string-transformer))))))
@@ -399,7 +411,7 @@
              (st/select-spec ::person-spec person))))
 
     (testing "failing on extra keys"
-      (is (= st/+invalid+
+      (is (= ::s/invalid
              (st/conform ::person person st/fail-on-extra-keys-transformer)
              (st/conform ::person-spec person st/fail-on-extra-keys-transformer))))
 

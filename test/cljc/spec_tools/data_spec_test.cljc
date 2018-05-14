@@ -362,5 +362,3 @@
       (is (= value-string (as-> value-string $
                                 (st/decode spec $ st/string-transformer)
                                 (st/encode spec $ st/string-transformer)))))))
-
-
