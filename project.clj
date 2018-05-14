@@ -14,7 +14,7 @@
   :dependencies [[org.clojure/spec.alpha "0.1.143"]
                  [com.fasterxml.jackson.core/jackson-databind "2.9.5"]]
 
-  :profiles {:dev {:plugins [[jonase/eastwood "0.2.5"]
+  :profiles {:dev {:plugins [[jonase/eastwood "0.2.6"]
                              [lein-tach "1.0.0"]
                              [lein-doo "0.1.10"]
                              [lein-cljsbuild "1.1.7"]
@@ -25,10 +25,10 @@
                    :dependencies [[org.clojure/clojure "1.9.0"]
                                   [org.clojure/clojurescript "1.9.946"]
                                   [criterium "0.4.4"]
-                                  [prismatic/schema "1.1.7"]
+                                  [prismatic/schema "1.1.9"]
                                   [org.clojure/test.check "0.9.0"]
                                   [org.clojure/tools.namespace "0.2.11"]
-                                  [com.gfredericks/test.chuck "0.2.8"]
+                                  [com.gfredericks/test.chuck "0.2.9"]
                                   [metosin/ring-swagger "0.26.0"]
                                   [metosin/scjsv "0.4.1"]]}
              :perf {:jvm-opts ^:replace ["-server"]}}
