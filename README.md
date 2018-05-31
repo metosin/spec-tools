@@ -286,7 +286,7 @@ Because of current design of clojure.spec, we need to wrap all non top-level spe
 ; ::s/invalid
 
 ;; json-transformer doesn't transform numbers
-(st/decode ::user data st/json-tranformer)
+(st/decode ::user data st/json-transformer)
 ; ::s/invalid
 
 ;; string-transformer for the rescue
