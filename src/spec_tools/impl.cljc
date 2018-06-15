@@ -9,16 +9,18 @@
     #?@(:clj
         [(clojure.lang Var)])))
 
-(defn in-cljs? [env]
-  (:ns env))
+#?(:clj
+   (defn in-cljs? [env]
+     (:ns env)))
 
 ;; ClojureScript 1.9.655 and later have a resolve macro - maybe this can be
 ;; eventually converted to use it.
-(defmacro resolve
-  [env sym]
-  `(if (in-cljs? ~env)
-     ((clojure.core/resolve 'cljs.analyzer.api/resolve) ~env ~sym)
-     (clojure.core/resolve ~env ~sym)))
+#?(:clj
+   (defmacro resolve
+     [env sym]
+     `(if (in-cljs? ~env)
+        ((clojure.core/resolve 'cljs.analyzer.api/resolve) ~env ~sym)
+        (clojure.core/resolve ~env ~sym))))
 
 (defn- cljs-sym [x]
   (if (map? x)
