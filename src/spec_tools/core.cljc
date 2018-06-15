@@ -407,6 +407,7 @@
                                       :type :map}
                                      (apply merge-with set/union form-keys)))))
 
-(defmacro merge [& forms]
-  `(let [merge-spec# (s/merge ~@forms)]
-     (merge-impl ~(vec forms) '(spec-tools.core/merge ~@(map #(impl/resolve-form &env %) forms)) merge-spec#)))
+#?(:clj
+   (defmacro merge [& forms]
+     `(let [merge-spec# (s/merge ~@forms)]
+        (merge-impl ~(vec forms) '(spec-tools.core/merge ~@(map #(impl/resolve-form &env %) forms)) merge-spec#))))
