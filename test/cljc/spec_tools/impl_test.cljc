@@ -25,3 +25,13 @@
             :c {:a 2, :b 1}}
            {:a 2
             :b [3 4]}))))
+
+(deftest unlift-keys-test
+  (is (= {:olut 0.5
+          :sielu true}
+         (impl/unlift-keys
+           {:iso/olut 0.5
+            :iso/sielu true
+            :olipa "kerran"
+            :kikka/kukka "kakka"}
+           "iso"))))

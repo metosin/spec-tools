@@ -1,6 +1,23 @@
 # 0.7.1
 
 * Not setting a Swagger response model doesn't emit empty schema `{}`.
+* Spec keys with `swagger` namespace are merged into Swagger schemas, overriding values from `json-schema` namespaced keys:
+
+```clj
+(require '[spec-tools.core :as st])
+(require '[spec-tools.swagger.core :as swagger])
+
+(swagger/transform
+  (st/spec
+    {:spec string?
+     :json-schema/default ""
+     :json-schema/example "json-schema-example"
+     :swagger/example "swagger-example"}))
+; {:type "string"
+;  :default ""
+;  :example "swagger-example"}
+```
+
 * updated deps:
 
 ```clj

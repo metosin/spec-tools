@@ -4,8 +4,8 @@
     [spec-tools.swagger.core :as swagger]
     [clojure.spec.alpha :as s]
     [spec-tools.spec :as spec]
-    #?(:clj
-    [ring.swagger.validator :as v])))
+    #?(:clj [ring.swagger.validator :as v])
+    [spec-tools.core :as st]))
 
 (s/def ::integer integer?)
 (s/def ::string string?)
@@ -134,7 +134,14 @@
    {:type "object", :additionalProperties {:type "integer"}}
 
    (s/nilable string?)
-   {:type "string", :x-nullable true}})
+   {:type "string", :x-nullable true}
+
+   (st/spec
+     {:spec string?
+      :json-schema/default ""
+      :json-schema/example "json-schema-example"
+      :swagger/example "swagger-example"})
+   {:type "string", :default "", :example "swagger-example"}})
 
 (deftest test-expectations
   (doseq [[spec swagger-spec] exceptations]

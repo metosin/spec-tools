@@ -138,6 +138,14 @@
     :else
     (last values)))
 
+(defn unlift-keys [data ns-name]
+  (reduce
+    (fn [acc [k v]]
+      (if (= ns-name (namespace k))
+        (assoc acc (keyword (name k)) v)
+        acc))
+    {} data))
+
 ;;
 ;; FIXME: using ^:skip-wiki functions from clojure.spec. might break.
 ;;
