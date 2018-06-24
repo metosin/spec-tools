@@ -251,8 +251,7 @@
                    :required ["id" "name" "address"]
                    :title "spec-tools.swagger.core-test/user"}
                   :description ""}
-             404 {:schema {}
-                  :description "Ohnoes."}
+             404 {:description "Ohnoes."}
              500 {:description "fail"}}}
            (swagger/swagger-spec
              {:responses {404 {:description "fail"}

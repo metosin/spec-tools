@@ -1,5 +1,6 @@
 # 0.7.1
 
+* Not setting a Swagger response model doesn't emit empty schema `{}`.
 * updated deps:
 
 ```clj

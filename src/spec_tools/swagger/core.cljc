@@ -107,9 +107,9 @@
    (into
      (or (:responses acc) {})
      (for [[status response] v]
-       [status (-> response
-                   (update :schema transform {:type :schema})
-                   (update :description (fnil identity "")))]))})
+       [status (as-> response $
+                     (if (:schema $) (update $ :schema transform {:type :schema}) $)
+                     (update $ :description (fnil identity "")))]))})
 
 (defmethod expand ::parameters [_ v acc _]
   (let [old (or (:parameters acc) [])
@@ -124,7 +124,8 @@
                             acc)))
                       [[] #{}])
                     (first)
-                    (reverse))]
+                    (reverse)
+                    (vec))]
     {:parameters merged}))
 
 (defn expand-qualified-keywords [x options]
