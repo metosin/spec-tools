@@ -1,3 +1,11 @@
+# 0.7.1
+
+* updated deps:
+
+```clj
+[com.fasterxml.jackson.core/jackson-databind "2.9.6"] is available but we use "2.9.5"
+```
+
 # 0.7.0 (14.5.2018)
 
 * Fix `rational?` mapping for JSON Schema, fixes [#113](https://github.com/metosin/spec-tools/issues/113)
@@ -23,7 +31,6 @@
   (-encoder [this spec value])
   (-decoder [this spec value]))
 ```
-
 
 ### Spec-driven transformations
 

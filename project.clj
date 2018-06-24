@@ -1,4 +1,4 @@
-(defproject metosin/spec-tools "0.7.0"
+(defproject metosin/spec-tools "0.7.1"
   :description "Clojure(Script) tools for clojure.spec"
   :url "https://github.com/metosin/spec-tools"
   :license {:name "Eclipse Public License"
@@ -12,7 +12,7 @@
           :metadata {:doc/format :markdown}}
 
   :dependencies [[org.clojure/spec.alpha "0.1.143"]
-                 [com.fasterxml.jackson.core/jackson-databind "2.9.5"]]
+                 [com.fasterxml.jackson.core/jackson-databind "2.9.6"]]
 
   :profiles {:dev {:plugins [[jonase/eastwood "0.2.6"]
                              [lein-tach "1.0.0"]
@@ -23,7 +23,7 @@
                    :jvm-opts ^:replace ["-server"]
                    ;:global-vars {*warn-on-reflection* true}
                    :dependencies [[org.clojure/clojure "1.9.0"]
-                                  [org.clojure/clojurescript "1.9.946"]
+                                  [org.clojure/clojurescript "1.10.329"]
                                   [criterium "0.4.4"]
                                   [prismatic/schema "1.1.9"]
                                   [org.clojure/test.check "0.9.0"]
