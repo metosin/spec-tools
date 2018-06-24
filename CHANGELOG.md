@@ -1,4 +1,4 @@
-# 0.7.1
+# 0.7.1-SNAPSHOT
 
 * Not setting a Swagger response model doesn't emit empty schema `{}`.
 * Spec keys with `swagger` namespace are merged into Swagger schemas, overriding values from `json-schema` namespaced keys:
