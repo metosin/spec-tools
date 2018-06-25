@@ -1,3 +1,29 @@
+# 0.7.1-SNAPSHOT
+
+* Not setting a Swagger response model doesn't emit empty schema `{}`.
+* Spec keys with `swagger` namespace are merged into Swagger schemas, overriding values from `json-schema` namespaced keys:
+
+```clj
+(require '[spec-tools.core :as st])
+(require '[spec-tools.swagger.core :as swagger])
+
+(swagger/transform
+  (st/spec
+    {:spec string?
+     :json-schema/default ""
+     :json-schema/example "json-schema-example"
+     :swagger/example "swagger-example"}))
+; {:type "string"
+;  :default ""
+;  :example "swagger-example"}
+```
+
+* updated deps:
+
+```clj
+[com.fasterxml.jackson.core/jackson-databind "2.9.6"] is available but we use "2.9.5"
+```
+
 # 0.7.0 (14.5.2018)
 
 * Fix `rational?` mapping for JSON Schema, fixes [#113](https://github.com/metosin/spec-tools/issues/113)
@@ -23,7 +49,6 @@
   (-encoder [this spec value])
   (-decoder [this spec value]))
 ```
-
 
 ### Spec-driven transformations
 

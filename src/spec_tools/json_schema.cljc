@@ -263,13 +263,7 @@
 
 (defmethod accept-spec ::visitor/spec [_ spec children _]
   (let [[_ data] (impl/extract-form spec)
-        json-schema-meta (reduce-kv
-                           (fn [acc k v]
-                             (if (= "json-schema" (namespace k))
-                               (assoc acc (keyword (name k)) v)
-                               acc))
-                           {}
-                           (into {} data))
+        json-schema-meta (impl/unlift-keys data "json-schema")
         extra-info (-> data
                        (select-keys [:name :description])
                        (set/rename-keys {:name :title}))]

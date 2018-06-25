@@ -55,6 +55,11 @@
   (let [k (if (and (= type :parameter) (not= in :body)) :allowEmptyValue :x-nullable)]
     (assoc (impl/unwrap children) k true)))
 
+(defmethod accept-spec ::visitor/spec [dispatch spec children options]
+  (let [[_ data] (impl/extract-form spec)
+        swagger-meta (impl/unlift-keys data "swagger")]
+    (merge (json-schema/accept-spec dispatch spec children options) swagger-meta)))
+
 (defmethod accept-spec ::default [dispatch spec children options]
   (json-schema/accept-spec dispatch spec children options))
 
@@ -107,9 +112,9 @@
    (into
      (or (:responses acc) {})
      (for [[status response] v]
-       [status (-> response
-                   (update :schema transform {:type :schema})
-                   (update :description (fnil identity "")))]))})
+       [status (as-> response $
+                     (if (:schema $) (update $ :schema transform {:type :schema}) $)
+                     (update $ :description (fnil identity "")))]))})
 
 (defmethod expand ::parameters [_ v acc _]
   (let [old (or (:parameters acc) [])
@@ -124,7 +129,8 @@
                             acc)))
                       [[] #{}])
                     (first)
-                    (reverse))]
+                    (reverse)
+                    (vec))]
     {:parameters merged}))
 
 (defn expand-qualified-keywords [x options]

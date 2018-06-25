@@ -44,6 +44,7 @@ The following Spec keys having a special meaning:
 | `:decode/...`      | 2-arity function to transform a value from an external format.              |
 | `:encode/...`      | 2-arity function to transform a value into external format.                 |
 | `:json-schema/...` | Extra data that is merged with unqualifed keys into json-schema             |
+| `:swagger/...`     | Extra data that is merged with unqualifed keys into swagger-schema          |
 
 ### Creating Specs
 
