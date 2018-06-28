@@ -114,7 +114,7 @@
 (defn nilable-spec? [spec]
   (let [form (and spec (s/form spec))]
     (boolean
-      (if-not (= form ::s/unknown)
+      (if (seq? form)
         (some-> form
                 seq
                 first

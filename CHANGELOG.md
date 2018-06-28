@@ -1,3 +1,10 @@
+# UNRELEASED
+
+```clj
+[org.clojure/spec.alpha "0.2.168"] is available but we use "0.1.143"
+[org.clojure/clojurescript "1.10.339"] is available but we use "1.10.329"
+```
+
 # 0.7.1 (25.6.2018)
 
 * Not setting a Swagger response model doesn't emit empty schema `{}`.

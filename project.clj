@@ -11,7 +11,7 @@
           :source-uri "https://github.com/metosin/spec-tools/{version}/{filepath}#L{line}"
           :metadata {:doc/format :markdown}}
 
-  :dependencies [[org.clojure/spec.alpha "0.1.143"]
+  :dependencies [[org.clojure/spec.alpha "0.2.168"]
                  [com.fasterxml.jackson.core/jackson-databind "2.9.6"]]
 
   :profiles {:dev {:plugins [[jonase/eastwood "0.2.6"]
@@ -23,7 +23,7 @@
                    :jvm-opts ^:replace ["-server"]
                    ;:global-vars {*warn-on-reflection* true}
                    :dependencies [[org.clojure/clojure "1.9.0"]
-                                  [org.clojure/clojurescript "1.10.329"]
+                                  [org.clojure/clojurescript "1.10.339"]
                                   [criterium "0.4.4"]
                                   [prismatic/schema "1.1.9"]
                                   [org.clojure/test.check "0.9.0"]

@@ -118,9 +118,10 @@
 ;; tests
 ;;
 
-(deftest CLJ-2152-test
-  (testing "this should fail when the issues is fixed"
-    (is (not (= `(s/& int?) (s/form (s/& int?)))))))
+#?(:cljs
+   (deftest CLJ-2152-test
+     (testing "this should fail when the issues is fixed"
+       (is (not (= `(s/& int?) (s/form (s/& int?))))))))
 
 (deftest nested-regexp-test
   (is (= #{::p1 ::p2 ::p3}
@@ -134,7 +135,7 @@
   (testing "visitor visits all specs but not s/& & s/keys* inner specs"
     (is (= #{::p1 ::p2 ::p3 ::p4 ::p5 ::p6 ::p7 ::p8 ::p9 ::p10
              ::p11 ::p12 ::p13 ::p14 ::p15 ::p16 ::p17 ::p18 ::p19 ::p20
-             ::p21 ::p22 ::p23 ::p24 #_::p25 ::p26 ::p27 #_::p28 #_::p29 #_::p30
+             ::p21 ::p22 ::p23 ::p24 #?(:clj ::p25) ::p26 ::p27 #_::p28 #_::p29 #_::p30
              #_::p31 #_::p32 #_:p33 ::p34
              ::pred ::keys ::keys2 ::keys3
              ::or ::and ::merge ::every ::every-kv ::coll-of ::map-of
