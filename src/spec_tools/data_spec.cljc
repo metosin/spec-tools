@@ -115,7 +115,7 @@
                 (if-let [kns (namespace k)]
                   (str "$" kns)) "/" (name k))))
 
-(declare spec)
+(declare spec-helper)
 
 (defn- -map-spec [data {n :name :keys [keys-spec keys-default] :or {keys-spec keys-spec} :as opts}]
   ;; predicate keys
@@ -126,7 +126,7 @@
                               (clojure.core/or (keyword? k)
                                                (wrapped-key? k)))
                             [k v])))]
-    (st/create-spec {:spec (map-of-spec (spec n k') (spec {:name n, :spec v'}))})
+    (st/create-spec {:spec (map-of-spec (spec-helper n k') (spec-helper {:name n, :spec v'}))})
     ;; keyword keys
     (let [m (reduce-kv
               (fn [acc k v]
@@ -142,7 +142,7 @@
                                 [kv (if (not= kv v) kv)]
                                 (let [k' (nested-key n (unwrap-key kv))]
                                   [k' k']))
-                      v' (if n' (wrap (spec (-> opts (assoc :name n') (assoc :spec v)))))]
+                      v' (if n' (wrap (spec-helper (-> opts (assoc :name n') (assoc :spec v)))))]
                   (-> acc
                       (update rk (fnil conj []) k')
                       (cond-> v' (update ::defs (fnil conj []) [k' v'])))))
@@ -164,7 +164,7 @@
         {:name n
          :kind kind
          :values data})))
-  (let [spec (spec n (first data))]
+  (let [spec (spec-helper n (first data))]
     (st/create-spec {:spec (coll-of-spec spec kind)})))
 
 (defn- -or-spec [n v]
@@ -178,8 +178,43 @@
         {:name n
          :value v})))
   (or-spec (-> (for [[k v] v]
-                 [k (spec (nested-key n k) v)])
+                 [k (spec-helper (nested-key n k) v)])
                (into {}))))
+
+(defn- spec-helper
+  "Creates a clojure.spec.alpha/Spec out of a data-spec. Supports 2 arities:
+
+     ;; arity1
+     (ds/spec
+       {:spec {:i int?}
+        :name ::map})
+
+     ;; arity2 (legacy)
+     (ds/spec ::map {:i int?})
+
+  The following options are valid for the 1 arity case:
+
+               :spec the data-spec form (required)
+               :name fully qualified keyword name for the spec, used in keys-spec
+                     key spec registration, required if there are non-qualified
+                     keyword keys in maps.
+          :keys-spec function to generate keys-spec (default: [[keys-spec]])
+       :keys-default optional function to wrap the plain keyword keys, e.g. setting
+                     the value to [[opt]] maes all plain keyword keys optional."
+  ([{data :spec name :name :as opts}]
+   (assert data "missing :spec predicate in data-spec")
+   (let [opts (-> opts (assoc :name name) (dissoc :spec))]
+     (cond
+       (st/spec? data) data
+       (s/regex? data) data
+       (or? data) (-or-spec name (:v data))
+       (maybe? data) (nilable-spec (spec-helper name (:v data)))
+       (map? data) (-map-spec data opts)
+       (set? data) (-coll-spec data (assoc opts :kind #{}))
+       (vector? data) (-coll-spec data (assoc opts :kind []))
+       :else (st/create-spec {:spec data}))))
+  ([name data]
+   (spec-helper {:name name, :spec data})))
 
 (defn spec
   "Creates a clojure.spec.alpha/Spec out of a data-spec. Supports 2 arities:
@@ -201,17 +236,11 @@
           :keys-spec function to generate keys-spec (default: [[keys-spec]])
        :keys-default optional function to wrap the plain keyword keys, e.g. setting
                      the value to [[opt]] maes all plain keyword keys optional."
-  ([{data :spec name :name :as opts}]
-   (assert spec "missing :spec predicate in data-spec")
-   (let [opts (-> opts (assoc :name name) (dissoc :spec))]
-     (cond
-       (st/spec? data) data
-       (s/regex? data) data
-       (or? data) (-or-spec name (:v data))
-       (maybe? data) (nilable-spec (spec name (:v data)))
-       (map? data) (-map-spec data opts)
-       (set? data) (-coll-spec data (assoc opts :kind #{}))
-       (vector? data) (-coll-spec data (assoc opts :kind []))
-       :else (st/create-spec {:spec data}))))
+  ([{name :name :as opts}]
+   (let [data-spec (spec-helper opts)]
+     (if (and (not (nil? name))
+              (= spec_tools.core.Spec (class data-spec)))
+       (assoc data-spec :name name)
+       data-spec)))
   ([name data]
    (spec {:name name, :spec data})))

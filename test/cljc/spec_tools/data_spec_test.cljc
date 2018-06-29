@@ -130,7 +130,8 @@
                                         :spec-tools.data-spec-test$person/languages
                                         :spec-tools.data-spec-test$person/orders
                                         :spec-tools.data-spec-test$person/address]
-                               :opt-un [:spec-tools.data-spec-test$person/description]))]
+                               :opt-un [:spec-tools.data-spec-test$person/description])
+                             {:name ::person})]
 
       (testing "normal keys-spec-spec is generated"
         (is (= (s/form person-keys-spec)
@@ -287,7 +288,21 @@
                  :type :map
                  :keys #{::i}
                  :keys/req #{::i}})
-             (s/form spec1)
+             (s/form (dissoc spec1 :name))
+             (s/form (dissoc spec2 :name))))
+      (is (= `(spec-tools.core/spec
+                {:spec (clojure.spec.alpha/keys :req [::i])
+                 :type :map
+                 :name ::spec1
+                 :keys #{::i}
+                 :keys/req #{::i}})
+             (s/form spec1)))
+      (is (= `(spec-tools.core/spec
+                {:spec (clojure.spec.alpha/keys :req [::i])
+                 :type :map
+                 :name ::spec2
+                 :keys #{::i}
+                 :keys/req #{::i}})
              (s/form spec2)))))
 
   (testing ":name can be ommitted if no specs are registered"
@@ -363,4 +378,22 @@
                                 (st/decode spec $ st/string-transformer)
                                 (st/encode spec $ st/string-transformer)))))))
 
+(deftest data-spec-name-test
+  (let [spec (ds/spec {:name ::test-spec
+                       :spec {:id int?
+                              :uuid uuid?}})]
+    (testing "data spec has name"
+      (is (= ::test-spec (st/spec-name spec))))))
 
+(deftest data-spec-or-spec-test
+  (let [spec (ds/spec {:name ::test-spec
+                       :spec (ds/or {::ui-target {:id string?}
+                                     ::data-target [keyword?]})})]
+    (testing "data spec does not have a name"
+      (is (nil? (st/spec-name spec))))))
+
+(deftest data-spec-without-name-test
+  (let [spec (ds/spec {:spec {::id int?
+                              ::uuid uuid?}})]
+    (testing "data spec does not have a name"
+      (is (nil? (st/spec-name spec))))))

@@ -167,7 +167,8 @@
            "address" {:type "object"
                       :required ["street" "zip"]
                       :properties {"street" {:type "string"}
-                                   "zip" {:type "string"}}}}}
+                                   "zip" {:type "string"}}}}
+          :title      :spec-tools.json-schema-test/person}
          (jsc/transform person-spec))))
 
 (deftest additional-json-schema-data-test
@@ -187,7 +188,8 @@
           :items {:type "array"
                   :items {:type "array"
                           :items {:type "array"
-                                  :items {:type "string"}}}}}
+                                  :items {:type "string"}}}}
+          :title :spec-tools.json-schema-test/nested}
          (jsc/transform
            (ds/spec
              ::nested
