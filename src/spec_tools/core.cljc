@@ -7,8 +7,7 @@
             [clojure.set :as set]
             [spec-tools.transform :as stt]
             [clojure.spec.alpha :as s]
-    #?@(:clj  [
-            [clojure.spec.gen.alpha :as gen]
+            #?@(:clj  [[clojure.spec.gen.alpha :as gen]
             [clojure.edn]]
         :cljs [[goog.date.UtcDateTime]
                [cljs.reader]
@@ -67,7 +66,6 @@
   #?(:clj  (clojure.edn/read-string s)
      :cljs (cljs.reader/read-string s)))
 
-(def +invalid+ '::s/invalid)
 (def +problems+ #?(:clj :clojure.spec.alpha/problems, :cljs :cljs.spec.alpha/problems))
 
 ;;
@@ -156,7 +154,7 @@
    (binding [*transformer* transformer, *encode?* false]
      (let [spec' (into-spec spec)
            conformed (s/conform spec' value)]
-       (if-not (= conformed +invalid+)
+       (if-not (s/invalid? conformed)
          conformed
          (let [problems (s/explain-data spec' value)
                data {:type ::conform
@@ -174,8 +172,8 @@
    (binding [*transformer* transformer, *encode?* false]
      (let [spec (into-spec spec)
            conformed (s/conform spec value)]
-       (if (= conformed +invalid+)
-         +invalid+
+       (if (s/invalid? conformed)
+         conformed
          (s/unform spec conformed))))))
 
 (defn encode
@@ -185,8 +183,8 @@
   (binding [*transformer* transformer, *encode?* true]
     (let [spec (into-spec spec)
           conformed (s/conform spec value)]
-      (if (= conformed +invalid+)
-        +invalid+
+      (if (s/invalid? conformed)
+        conformed
         (s/unform spec conformed)))))
 
 (defn select-spec
@@ -210,8 +208,7 @@
       {:spec spec})))
 
 (defrecord Spec [spec form type]
-  #?@(:clj
-      [s/Specize
+  #?@(:clj [s/Specize
        (specize* [s] s)
        (specize* [s _] s)])
 
@@ -223,11 +220,11 @@
         ;; let's transform it
         (let [transformed (transform this x)]
           ;; short-circuit on ::s/invalid
-          (or (and (= +invalid+ transformed) transformed)
+          (or (and (s/invalid? transformed) transformed)
               ;; recur
               (let [conformed (s/conform spec transformed)]
                 ;; it's ok if encode transforms the value into invalid
-                (or (and encode? (= +invalid+ conformed) transformed) conformed))))
+                (or (and encode? (s/invalid? conformed) transformed) conformed))))
         (s/conform spec x))))
   (unform* [_ x]
     (s/unform spec x))
@@ -237,8 +234,8 @@
                      ;; conform would succeed - we'll short-circuit it here.
                      ;; https://dev.clojure.org/jira/browse/CLJ-2115 would help
                      (let [conformed (s/conform* this x)
-                           [explain? val] (if (= conformed +invalid+)
-                                            [(= (conform this x) +invalid+) x]
+                           [explain? val] (if (s/invalid? conformed)
+                                            [(s/invalid? (conform this x)) x]
                                             [true (s/unform spec conformed)])]
                        (if explain?
                          (s/explain* (s/specize* spec) path via in val)
@@ -247,7 +244,7 @@
                            :val val
                            :via via
                            :in in}]))
-                     (if (= +invalid+ (s/conform* this x))
+                     (if (s/invalid? (s/conform* this x))
                        [{:path path
                          :pred form
                          :val x
