@@ -206,8 +206,16 @@
 
 (defmethod accept-spec 'clojure.spec.alpha/merge [_ _ children _]
   {:type "object"
-   :properties (apply merge (map :properties children))
-   :required (into [] (reduce into (sorted-set) (map :required children)))})
+   :properties (->> (concat children
+                            (mapcat :anyOf children)
+                            (mapcat :allOf children))
+                    (map :properties)
+                    (reduce merge {}))
+   :required (->> (concat children
+                          (mapcat :allOf children))
+                  (map :required)
+                  (reduce into (sorted-set))
+                  (into []))})
 
 (defmethod accept-spec 'clojure.spec.alpha/every [_ spec children _]
   (let [form (impl/extract-form spec)
