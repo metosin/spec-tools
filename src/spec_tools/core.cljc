@@ -215,6 +215,12 @@
        (specize* [s] s)
        (specize* [s _] s)])
 
+  ;; https://dev.clojure.org/jira/browse/CLJS-1297
+  #?@(:cljs
+     [IKVReduce
+      (-kv-reduce [coll f init]
+        (reduce-kv f init (into {} coll)))])
+
   s/Spec
   (conform* [this x]
     (let [transformer *transformer*, encode? *encode?*]
