@@ -6,8 +6,8 @@
             [spec-tools.spec :as spec]
             [com.gfredericks.test.chuck.clojure-test :refer [checking]]
             [spec-tools.json-schema :as jsc]
-    #?(:clj
-            [scjsv.core :as scjsv])))
+            #?(:clj
+               [scjsv.core :as scjsv])))
 
 (s/def ::integer integer?)
 (s/def ::string string?)
@@ -157,17 +157,20 @@
 
 (deftest readme-test
   (is (= {:type "object"
+          :title :spec-tools.json-schema-test/person
           :required ["spec-tools.json-schema-test/id" "age" "name" "likes" "languages"]
-          :properties
-          {"spec-tools.json-schema-test/id" {:type "integer"}
-           "age" {:type "integer"}
-           "name" {:type "string"}
-           "likes" {:type "object" :additionalProperties {:type "boolean"}}
-           "languages" {:type "array", :items {:type "string"}, :uniqueItems true}
-           "address" {:type "object"
-                      :required ["street" "zip"]
-                      :properties {"street" {:type "string"}
-                                   "zip" {:type "string"}}}}}
+          :properties {"spec-tools.json-schema-test/id" {:type "integer"}
+                       "age" {:type "integer"}
+                       "name" {:type "string"}
+                       "likes" {:type "object"
+                                :title :spec-tools.json-schema-test$person/likes
+                                :additionalProperties {:type "boolean"}}
+                       "languages" {:type "array", :items {:type "string"}, :uniqueItems true}
+                       "address" {:type "object"
+                                  :title :spec-tools.json-schema-test$person/address
+                                  :required ["street" "zip"]
+                                  :properties {"street" {:type "string"}
+                                               "zip" {:type "string"}}}}}
          (jsc/transform person-spec))))
 
 (deftest additional-json-schema-data-test
