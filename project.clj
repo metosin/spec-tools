@@ -1,4 +1,4 @@
-(defproject metosin/spec-tools "0.7.1"
+(defproject metosin/spec-tools "0.7.2"
   :description "Clojure(Script) tools for clojure.spec"
   :url "https://github.com/metosin/spec-tools"
   :license {:name "Eclipse Public License"
@@ -11,15 +11,15 @@
           :source-uri "https://github.com/metosin/spec-tools/{version}/{filepath}#L{line}"
           :metadata {:doc/format :markdown}}
 
-  :dependencies [[org.clojure/spec.alpha "0.2.168"]
-                 [com.fasterxml.jackson.core/jackson-databind "2.9.6"]]
+  :dependencies [[org.clojure/spec.alpha "0.2.176"]
+                 [com.fasterxml.jackson.core/jackson-databind "2.9.7"]]
 
   :profiles {:dev {:plugins [[jonase/eastwood "0.2.6"]
                              [lein-tach "1.0.0"]
                              [lein-doo "0.1.10"]
                              [lein-cljsbuild "1.1.7"]
-                             [lein-cloverage "1.0.10"]
-                             [lein-codox "0.10.3"]]
+                             [lein-cloverage "1.0.13"]
+                             [lein-codox "0.10.4"]]
                    :jvm-opts ^:replace ["-server"]
                    ;:global-vars {*warn-on-reflection* true}
                    :dependencies [[org.clojure/clojure "1.9.0"]
@@ -29,8 +29,8 @@
                                   [org.clojure/test.check "0.9.0"]
                                   [org.clojure/tools.namespace "0.2.11"]
                                   [com.gfredericks/test.chuck "0.2.9"]
-                                  [metosin/ring-swagger "0.26.0"]
-                                  [metosin/scjsv "0.4.1"]]}
+                                  [metosin/ring-swagger "0.26.1"]
+                                  [metosin/scjsv "0.5.0"]]}
              :perf {:jvm-opts ^:replace ["-server"]}}
   :aliases {"all" ["with-profile" "dev"]
             "perf" ["with-profile" "default,dev,perf"]

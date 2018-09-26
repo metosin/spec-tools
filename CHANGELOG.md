@@ -1,8 +1,11 @@
-# UNRELEASED
+# 0.7.2 (26.9.2018)
+
+* Update deps:
 
 ```clj
-[org.clojure/spec.alpha "0.2.168"] is available but we use "0.1.143"
+[org.clojure/spec.alpha "0.2.176"] is available but we use "0.1.143"
 [org.clojure/clojurescript "1.10.339"] is available but we use "1.10.329"
+[com.fasterxml.jackson.core/jackson-databind "2.9.7"] is available but we use "2.9.6"
 ```
 
 # 0.7.1 (25.6.2018)
