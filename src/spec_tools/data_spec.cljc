@@ -209,7 +209,7 @@
        (s/regex? data) data
        (or? data) (-or-spec name (:v data))
        (maybe? data) (nilable-spec (spec name (:v data)))
-       (map? data) (-map-spec data opts)
+       (map? data) (assoc (-map-spec data opts) :name name)
        (set? data) (-coll-spec data (assoc opts :kind #{}))
        (vector? data) (-coll-spec data (assoc opts :kind []))
        :else (st/create-spec {:spec data}))))

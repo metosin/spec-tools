@@ -124,14 +124,15 @@
                                       :zip string?})}
           person-spec (ds/spec ::person person)
           person-keys-spec (st/spec
-                             (s/keys
-                               :req [::id ::age]
-                               :req-un [:spec-tools.data-spec-test$person/boss
-                                        :spec-tools.data-spec-test$person/name
-                                        :spec-tools.data-spec-test$person/languages
-                                        :spec-tools.data-spec-test$person/orders
-                                        :spec-tools.data-spec-test$person/address]
-                               :opt-un [:spec-tools.data-spec-test$person/description]))]
+                             {:name ::person
+                              :spec (s/keys
+                                      :req [::id ::age]
+                                      :req-un [:spec-tools.data-spec-test$person/boss
+                                               :spec-tools.data-spec-test$person/name
+                                               :spec-tools.data-spec-test$person/languages
+                                               :spec-tools.data-spec-test$person/orders
+                                               :spec-tools.data-spec-test$person/address]
+                                      :opt-un [:spec-tools.data-spec-test$person/description])})]
 
       (testing "normal keys-spec-spec is generated"
         (is (= (s/form person-keys-spec)
@@ -289,8 +290,8 @@
                  ::parse/key->spec {::i ::i}
                  ::parse/keys #{::i}
                  ::parse/keys-req #{::i}})
-             (s/form spec1)
-             (s/form spec2)))))
+             (s/form (dissoc spec1 :name))
+             (s/form (dissoc spec2 :name))))))
 
   (testing ":name can be ommitted if no specs are registered"
     (is (ds/spec {:spec {::i int?}})))
