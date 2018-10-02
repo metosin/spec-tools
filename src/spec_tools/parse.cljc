@@ -67,7 +67,6 @@
 (defmethod parse-form 'clojure.core/integer? [_ _] {:type :long})
 (defmethod parse-form 'clojure.core/int? [_ _] {:type :long})
 (defmethod parse-form 'clojure.core/pos-int? [_ _] {:type :long})
-(defmethod parse-form 'clojure.core/pos-int? [_ _] {:type :long})
 (defmethod parse-form 'clojure.core/neg-int? [_ _] {:type :long})
 (defmethod parse-form 'clojure.core/nat-int? [_ _] {:type :long})
 (defmethod parse-form 'clojure.core/float? [_ _] {:type :double})
