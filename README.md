@@ -40,7 +40,6 @@ The following Spec keys having a special meaning:
 | `:keys/req`        | Set of required map keys that the spec defines. Extracted from `s/keys` Specs.|
 | `:keys/opt`        | Set of optional map keys that the spec defines. Extracted from `s/keys` Specs.|
 | `:reason`          | Value is added to `s/explain-data` problems under key `:reason`             |
-| `:reason`          | Value is added to `s/explain-data` problems under key `:reason`             |
 | `:decode/...`      | 2-arity function to transform a value from an external format.              |
 | `:encode/...`      | 2-arity function to transform a value into external format.                 |
 | `:json-schema/...` | Extra data that is merged with unqualifed keys into json-schema             |

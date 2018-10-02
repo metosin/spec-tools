@@ -8,11 +8,11 @@
             [spec-tools.transform :as stt]
             [clojure.spec.alpha :as s]
             #?@(:clj  [[clojure.spec.gen.alpha :as gen]
-            [clojure.edn]]
-        :cljs [[goog.date.UtcDateTime]
-               [cljs.reader]
-               [clojure.test.check.generators]
-               [cljs.spec.gen.alpha :as gen]]))
+                       [clojure.edn]]
+                :cljs [[goog.date.UtcDateTime]
+                       [cljs.reader]
+                       [clojure.test.check.generators]
+                       [cljs.spec.gen.alpha :as gen]]))
   (:import
     #?@(:clj
         [(clojure.lang AFn IFn Var)
@@ -209,8 +209,8 @@
 
 (defrecord Spec [spec form type]
   #?@(:clj [s/Specize
-       (specize* [s] s)
-       (specize* [s _] s)])
+            (specize* [s] s)
+            (specize* [s _] s)])
 
   s/Spec
   (conform* [this x]
@@ -313,10 +313,10 @@
            :spec  the wrapped spec predicate (mandatory)
            :form  source code of the spec predicate, if :spec is a spec,
                   :form is read with `s/form` out of it. For non-spec
-                  preds, spec-tools.forms/resolve-form is called, if still
+                  preds, spec-tools.form/resolve-form is called, if still
                   not available, spec-creation will fail.
            :type  optional type for the spec. if not set, will be auto-
-                  resolved via spec-tools.forms/resolve-type (optional)
+                  resolved via spec-tools.form/resolve-type (optional)
          :reason  reason to be added to problems with s/explain (optional)
             :gen  generator function for the spec (optional)
            :name  name of the spec (optional)
