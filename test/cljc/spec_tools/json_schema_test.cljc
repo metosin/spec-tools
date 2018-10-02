@@ -205,3 +205,41 @@
           :required ["name" "parent"],
           :title "spec-tools.json-schema-test/user"}
          (jsc/transform ::user))))
+
+(s/def ::a string?)
+(s/def ::foo string?)
+(s/def ::bar string?)
+
+(deftest merge-comination-schemas-test
+  (is (= {:anyOf [{:type "object"
+                   :properties {"bar" {:type "string"}}
+                   :required ["bar"]}
+                  {:type "object"
+                   :properties {"foo" {:type "string"}}
+                   :required ["foo"]}]}
+         (jsc/transform
+           (s/or :bar (s/keys :req-un [::bar])
+                 :foo (s/keys :req-un [::foo]))))
+      "s/or generates anyOf")
+
+  (is (= {:type "object"
+          :properties {"a" {:type "string"}
+                       "foo" {:type "string"}
+                       "bar" {:type "string"}}
+          :required ["a"]}
+         (jsc/transform
+           (s/merge (s/keys :req-un [::a])
+                    (s/or :foo (s/keys :req-un [::foo])
+                          :bar (s/keys :req-un [::bar])))))
+      "anyOf properties are merged into properties")
+
+  (is (= {:type "object"
+          :properties {"a" {:type "string"}
+                       "foo" {:type "string"}
+                       "bar" {:type "string"}}
+          :required ["a" "bar" "foo"]}
+         (jsc/transform
+           (s/merge (s/keys :req-un [::a])
+                    (s/and (s/keys :req-un [::bar])
+                           (s/keys :req-un [::foo])))))
+      "allOf properties are merged into properties and required"))

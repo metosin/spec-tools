@@ -86,6 +86,16 @@
                  "string" {:type "string"}},
     :required ["integer" "string"]}
 
+   (s/merge (s/keys :req-un [::integer])
+            (s/or :foo (s/keys :req-un [::string])
+                  :bar (s/keys :req-un [::set])))
+   {:type "object",
+    :properties {"integer" {:type "integer"},
+                 "string" {:type "string"}
+                 "set" {:enum [1 3 2]
+                        :type "string"}},
+    :required ["integer"]}
+
    (s/every integer?)
    {:type "array", :items {:type "integer"}}
 

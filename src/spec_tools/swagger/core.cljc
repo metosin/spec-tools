@@ -28,6 +28,21 @@
     (first children)
     :x-allOf children))
 
+(defmethod accept-spec 'clojure.spec.alpha/merge [_ _ children _]
+  ;; Use x-anyOf and x-allOf instead of normal versions
+  {:type "object"
+   :properties (->> (concat children
+                            (mapcat :x-anyOf children)
+                            (mapcat :x-allOf children))
+                    (map :properties)
+                    (reduce merge {}))
+   ;; Don't include top schema from s/or.
+   :required (->> (concat (remove :x-anyOf children)
+                          (mapcat :x-allOf children))
+                  (map :required)
+                  (reduce into (sorted-set))
+                  (into []))})
+
 ;; anyOf is not supported
 (defmethod accept-spec 'clojure.spec.alpha/alt [_ _ children _]
   (assoc
