@@ -316,7 +316,7 @@
                   preds, spec-tools.form/resolve-form is called, if still
                   not available, spec-creation will fail.
            :type  optional type for the spec. if not set, will be auto-
-                  resolved via spec-tools.form/resolve-type (optional)
+                  resolved via spec-tools.parse/parse-spec (optional)
          :reason  reason to be added to problems with s/explain (optional)
             :gen  generator function for the spec (optional)
            :name  name of the spec (optional)
