@@ -4,6 +4,7 @@
     #?@(:cljs [[goog.date.UtcDateTime]
                [goog.date.Date]])
             [clojure.set :as set]
+            [spec-tools.parse :as parse]
             [clojure.string :as str])
   #?(:clj
      (:import (java.util Date UUID)
@@ -105,7 +106,7 @@
 ;; Maps
 ;;
 
-(defn strip-extra-keys [{:keys [keys]} x]
+(defn strip-extra-keys [{:keys [::parse/keys]} x]
   (if (and keys (map? x))
     (select-keys x keys)
     x))

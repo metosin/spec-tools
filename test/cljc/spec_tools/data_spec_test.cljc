@@ -3,6 +3,7 @@
             [clojure.spec.alpha :as s]
             [spec-tools.data-spec :as ds]
             [spec-tools.core :as st]
+            [spec-tools.parse :as parse]
             [spec-tools.spec :as spec])
   #?(:clj
      (:import clojure.lang.ExceptionInfo)))
@@ -285,8 +286,9 @@
       (is (= `(spec-tools.core/spec
                 {:spec (clojure.spec.alpha/keys :req [::i])
                  :type :map
-                 :keys #{::i}
-                 :keys/req #{::i}})
+                 ::parse/key->spec {::i ::i}
+                 ::parse/keys #{::i}
+                 ::parse/keys-req #{::i}})
              (s/form spec1)
              (s/form spec2)))))
 
