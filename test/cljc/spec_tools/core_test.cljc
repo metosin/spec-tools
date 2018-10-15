@@ -192,7 +192,9 @@
         (is (every? #{:kikka :kukka} (-> spec/keyword?
                                          (s/with-gen #(s/gen #{:kikka :kukka}))
                                          (s/exercise)
-                                         (->> (map first)))))))))
+                                         (->> (map first)))))
+
+        (is (-> (st/spec {:spec (s/+ (s/tuple #{:a :b :c} integer?))}) (s/gen) (gen/generate)))))))
 
 (deftest reason-test
   (let [expected-problem {:path [] :pred `pos-int?, :val -1, :via [], :in []}]

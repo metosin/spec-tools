@@ -262,7 +262,8 @@
       (gen)
       (or
         (gen/gen-for-pred spec)
-        (s/gen* spec overrides path rmap))))
+        (s/gen* (or (s/spec? spec) (s/specize* spec)) overrides path rmap))))
+
   (with-gen* [this gfn]
     (assoc this :gen gfn))
   (describe* [this]
