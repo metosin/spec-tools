@@ -1,3 +1,7 @@
+# UNRELEASED
+
+* Fix [fishy gen* call in your Spec protocol](https://github.com/metosin/spec-tools/issues/136).
+
 # 0.7.2 (26.9.2018)
 
 * Update deps:
