@@ -1,7 +1,79 @@
 # UNRELEASED
 
 * Fix [fishy gen* call in your Spec protocol](https://github.com/metosin/spec-tools/issues/136).
+* New `st/coerce` function to coerce a value using form parsing and spec transformers. Can only walk over simple specs (`s/or`, `s/and`, `s/coll-of`, `s/map-of`, `s/tuple`, `s/keys` and `s/nilable`) without any wrapping of specs. Inspired by [spec-coerce](https://github.com/wilkerlucio/spec-coerce).
 
+```clj
+(deftest coercion-test
+  (testing "predicates"
+    (is (= 1 (st/coerce int? "1" st/string-transformer)))
+    (is (= "1" (st/coerce int? "1" st/json-transformer)))
+    (is (= :user/kikka (st/coerce keyword? "user/kikka" st/string-transformer))))
+  (testing "s/and"
+    (is (= 1 (st/coerce (s/and int? keyword?) "1" st/string-transformer)))
+    (is (= :1 (st/coerce (s/and keyword? int?) "1" st/string-transformer))))
+  (testing "s/or"
+    (is (= 1 (st/coerce (s/or :int int? :keyword keyword?) "1" st/string-transformer)))
+    (is (= :1 (st/coerce (s/or :keyword keyword? :int int?) "1" st/string-transformer))))
+  (testing "s/coll-of"
+    (is (= #{1 2 3} (st/coerce (s/coll-of int? :into #{}) ["1" 2 "3"] st/string-transformer)))
+    (is (= #{"1" 2 "3"} (st/coerce (s/coll-of int? :into #{}) ["1" 2 "3"] st/json-transformer)))
+    (is (= [:1 2 :3] (st/coerce (s/coll-of keyword?) ["1" 2 "3"] st/string-transformer)))
+    (is (= ::invalid (st/coerce (s/coll-of keyword?) ::invalid st/string-transformer))))
+  (testing "s/keys"
+    (is (= {:c1 1, ::c2 :kikka} (st/coerce (s/keys :req-un [::c1]) {:c1 "1", ::c2 "kikka"} st/string-transformer)))
+    (is (= {:c1 1, ::c2 :kikka} (st/coerce (s/keys :req-un [(and ::c1 ::c2)]) {:c1 "1", ::c2 "kikka"} st/string-transformer)))
+    (is (= {:c1 "1", ::c2 :kikka} (st/coerce (s/keys :req-un [::c1]) {:c1 "1", ::c2 "kikka"} st/json-transformer)))
+    (is (= ::invalid (st/coerce (s/keys :req-un [::c1]) ::invalid st/json-transformer))))
+  (testing "s/map-of"
+    (is (= {1 :abba, 2 :jabba} (st/coerce (s/map-of int? keyword?) {"1" "abba", "2" "jabba"} st/string-transformer)))
+    (is (= {"1" :abba, "2" :jabba} (st/coerce (s/map-of int? keyword?) {"1" "abba", "2" "jabba"} st/json-transformer)))
+    (is (= ::invalid (st/coerce (s/map-of int? keyword?) ::invalid st/json-transformer))))
+  (testing "s/nillable"
+    (is (= 1 (st/coerce (s/nilable int?) "1" st/string-transformer)))
+    (is (= nil (st/coerce (s/nilable int?) nil st/string-transformer))))
+  (testing "s/every"
+    (is (= [1] (st/coerce (s/every int?) ["1"] st/string-transformer))))
+  (testing "composed"
+    (let [spec (s/nilable
+                 (s/nilable
+                   (s/map-of
+                     keyword?
+                     (s/or :keys (s/keys :req-un [::c1])
+                           :ks (s/coll-of (s/and int?) :into #{})))))
+          value {"keys" {:c1 "1" ::c2 "kikka"}
+                 "keys2" {:c1 true}
+                 "ints" [1 "1" "invalid" "3"]}]
+      (is (= {:keys {:c1 1 ::c2 :kikka}
+              :keys2 {:c1 true}
+              :ints #{1 "invalid" 3}}
+             (st/coerce spec value st/string-transformer)))
+      (is (= {:keys {:c1 "1" ::c2 :kikka}
+              :keys2 {:c1 true}
+              :ints #{1 "1" "invalid" "3"}}
+             (st/coerce spec value st/json-transformer))))))
+```
+
+* `st/decode` first tries to use `st/coerce`, then the old conforming-based approach
+* **BREAKING**: enchanced parsing results from `spec-tools.parse/parse-spec`:
+  * all parse result keys have been qualified:
+    * `:keys` => `::parse/keys`
+    * `:keys/req` => `::parse/keys-req`
+    * `:keys/opt` => `::parse/keys-opt`
+  * new parser keys `::parse/items`, `::parse/item`, `::parse/key` and `::parse/value`
+  * `s/and` and `s/or` are parsed into composite types:
+  
+```clj
+(testing "s/or"
+  (is (= {::parse/items [{:spec int?, :type :long} {:spec keyword?, :type :keyword}]
+          :type [:or [:long :keyword]]}
+         (parse/parse-spec (s/or :int int? :keyword keyword?)))))
+(testing "s/and"
+  (is (= {::parse/items [{:spec int?, :type :long} {:spec keyword?, :type :keyword}]
+          :type [:and [:long :keyword]]}
+         (parse/parse-spec (s/and int? keyword?)))))
+```
+ 
 # 0.7.2 (26.9.2018)
 
 * Update deps:

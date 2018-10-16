@@ -654,4 +654,3 @@
       (testing "has a working describe"
         (is (= (s/describe ::core-map)
                (:spec (second (s/describe ::map)))))))))
-

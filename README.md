@@ -36,14 +36,16 @@ The following Spec keys having a special meaning:
 | `:name`            | Name of the spec. Maps to `title` in JSON Schema.                           |
 | `:description`     | Description of the spec. Maps to `description` in JSON Schema.              |
 | `:gen`             | Generator function for the Spec (set via `s/with-gen`)                      |
-| `:keys`            | Set of all map keys that the spec defines. Extracted from `s/keys` Specs.   |
-| `:keys/req`        | Set of required map keys that the spec defines. Extracted from `s/keys` Specs.|
-| `:keys/opt`        | Set of optional map keys that the spec defines. Extracted from `s/keys` Specs.|
+| `::parse/keys`     | Set of all map keys that the spec defines. Extracted from `s/keys` Specs.   |
+| `::parse/keys-req` | Set of required map keys that the spec defines. Extracted from `s/keys` Specs.|
+| `::parse/keys-opt` | Set of optional map keys that the spec defines. Extracted from `s/keys` Specs.|
 | `:reason`          | Value is added to `s/explain-data` problems under key `:reason`             |
 | `:decode/...`      | 2-arity function to transform a value from an external format.              |
 | `:encode/...`      | 2-arity function to transform a value into external format.                 |
 | `:json-schema/...` | Extra data that is merged with unqualifed keys into json-schema             |
 | `:swagger/...`     | Extra data that is merged with unqualifed keys into swagger-schema          |
+
+There are also some extra read-only keys from spec parsing, these all are namespaced with `::parse` (`spec-tools.parse`).
 
 ### Creating Specs
 
