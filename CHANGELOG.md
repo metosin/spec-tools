@@ -1,7 +1,7 @@
 # UNRELEASED
 
 * Fix [fishy gen* call in your Spec protocol](https://github.com/metosin/spec-tools/issues/136).
-* New `st/coerce` function to coerce a value using form parsing and spec transformers. Can only walk over simple specs (`s/or`, `s/and`, `s/coll-of`, `s/map-of`, `s/tuple`, `s/keys` and `s/nilable`) without any wrapping of specs. Inspired by [spec-coerce](https://github.com/wilkerlucio/spec-coerce).
+* New `st/coerce` function to coerce a value using form parsing and spec transformers. Can only walk over simple specs, and doesn't require any wrapping of specs. Inspired by [spec-coerce](https://github.com/wilkerlucio/spec-coerce).
 
 ```clj
 (deftest coercion-test
