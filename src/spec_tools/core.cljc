@@ -24,8 +24,8 @@
 
 (declare spec?)
 (declare into-spec)
+(declare create-spec)
 (declare coerce)
-(declare anything)
 
 (defn ^:skip-wiki registry
   ([]
@@ -78,7 +78,7 @@
 (def ^:dynamic ^:private *encode?* nil)
 
 (defprotocol Coercion
-  (-coerce [this value transformer]))
+  (-coerce [this value transformer options]))
 
 (defprotocol Transformer
   (-name [this])
@@ -169,8 +169,10 @@
            (throw (ex-info (str "Spec conform error: " data) data))))))))
 
 (defn coerce
-  [spec value transformer]
-  (-coerce (into-spec spec) value transformer))
+  ([spec value transformer]
+   (coerce spec value transformer nil))
+  ([spec value transformer options]
+   (-coerce (into-spec spec) value transformer options)))
 
 (defn decode
   "Transforms and validates a value (using a [[Transformer]]) from external
@@ -180,11 +182,13 @@
   ([spec value transformer]
    (binding [*transformer* transformer, *encode?* false]
      (let [spec (into-spec spec)
-           coerced (coerce spec value transformer)
-           conformed (s/conform spec coerced)]
-       (if (s/invalid? conformed)
-         conformed
-         (s/unform spec conformed))))))
+           coerced (coerce spec value transformer)]
+       (if (s/valid? spec coerced)
+         coerced
+         (let [conformed (s/conform spec value)]
+           (if (s/invalid? conformed)
+             conformed
+             (s/unform spec conformed))))))))
 
 (defn encode
   "Transforms a value (using a [[Transformer]]) from external
@@ -207,59 +211,54 @@
 ;; Walker, from Nekala
 ;;
 
-(defmulti walk (fn [{:keys [type]} _ _] (parse/type-dispatch-value type)) :default ::default)
+(defmulti walk (fn [{:keys [type]} _ _ _] (parse/type-dispatch-value type)) :default ::default)
 
-(defmethod walk ::default [_ value _]
-  value)
+(defmethod walk ::default [spec value accept options]
+  (if (and (spec? spec) (not (:skip? options)))
+    (accept spec value (assoc options :skip? true))
+    value))
 
-(defmethod walk :or [{:keys [::parse/items]} value {:keys [transform transformer]}]
+(defmethod walk :or [{:keys [::parse/items]} value accept options]
   (reduce
     (fn [v item]
-      (let [spec (clojure.core/merge anything item)]
-        (let [transformed (transform spec v transformer)]
-          (if (= transformed v) v (reduced transformed)))))
-    value
-    items))
+      (let [transformed (accept item v options)]
+        (if (= transformed v) v (reduced transformed))))
+    value items))
 
-(defmethod walk :and [{:keys [::parse/items]} value {:keys [transform transformer]}]
+(defmethod walk :and [{:keys [::parse/items]} value accept options]
   (reduce
     (fn [v item]
-      (let [transformed (transform (clojure.core/merge anything item) v transformer)]
+      (let [transformed (accept item v options)]
         transformed))
-    value
-    items))
+    value items))
 
-(defmethod walk :vector [{:keys [::parse/item]} value {:keys [transform transformer]}]
+(defmethod walk :vector [{:keys [::parse/item]} value accept options]
   (if (sequential? value)
-    (->> value
-         (map (fn [v] (transform (clojure.core/merge anything item) v transformer)))
-         (into (empty value)))
+    (->> value (map (fn [v] (accept item v options))) (into (empty value)))
     value))
 
-(defmethod walk :set [{:keys [::parse/item]} value {:keys [transform transformer]}]
-  (if (sequential? value)
-    (->> value
-         (map (fn [v] (transform (clojure.core/merge anything item) v transformer)))
-         (set))
+(defmethod walk :set [{:keys [::parse/item]} value accept options]
+  (if (or (set? value) (sequential? value))
+    (->> value (map (fn [v] (accept item v options))) (set))
     value))
 
-(defmethod walk :map [{:keys [::parse/key->spec]} value {:keys [transform transformer]}]
+(defmethod walk :map [{:keys [::parse/key->spec]} value accept options]
   (if (map? value)
     (reduce-kv
       (fn [acc k v]
-        (let [spec (if (qualified-keyword? k) (s/get-spec k) (get key->spec k))
-              value (if spec (transform (into-spec spec) v transformer) v)]
+        (let [spec (if (qualified-keyword? k) (s/get-spec k) (s/get-spec (get key->spec k)))
+              value (if spec (accept spec v options) v)]
           (assoc acc k value)))
       {}
       value)
     value))
 
-(defmethod walk :map-of [{:keys [::parse/key ::parse/value]} data {:keys [transform transformer]}]
+(defmethod walk :map-of [{:keys [::parse/key ::parse/value]} data accept options]
   (if (map? data)
     (reduce-kv
       (fn [acc k v]
-        (let [k' (transform (clojure.core/merge anything key) k transformer)
-              v' (transform (clojure.core/merge anything value) v transformer)]
+        (let [k' (accept key k options)
+              v' (accept value v options)]
           (assoc acc k' v')))
       (empty data)
       data)
@@ -285,11 +284,16 @@
             (specize* [s _] s)])
 
   Coercion
-  (-coerce [this value transformer]
-    (let [transformed (if-let [transform (if transformer (-decoder transformer this value))]
-                        (transform this value)
-                        value)]
-      (walk this transformed {:transform coerce, :transformer transformer})))
+  (-coerce [this value transformer options]
+    (let [map->spec (fn [x]
+                      (cond
+                        (spec? x) x
+                        (s/spec? x) (create-spec {:spec x})
+                        (map? x) (create-spec (update x :spec (fnil identity any?)))))
+          transformed (if-let [transform (if (and transformer (not (:skip? options)))
+                                           (-decoder transformer this value))]
+                        (transform this value) value)]
+      (walk this transformed #(coerce (map->spec %1) %2 transformer %3) options)))
 
   s/Spec
   (conform* [this x]
@@ -458,9 +462,10 @@
 
 
 (defn into-spec [x]
-  (if (spec? x) x (create-spec {:spec x})))
-
-(def anything (into-spec any?))
+  (cond
+    (spec? x) x
+    (keyword? x) (recur (s/get-spec x))
+    :else (create-spec {:spec x})))
 
 ;;
 ;; merge

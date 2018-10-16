@@ -42,7 +42,7 @@
     ;; default
     :else (parse-form x nil)))
 
-(defmulti parse-form (fn [dispath _] dispath) :default ::default)
+(defmulti parse-form (fn [dispatch _] dispatch) :default ::default)
 
 (defmethod parse-form ::default [_ _] {:type nil})
 
@@ -177,7 +177,7 @@
 ; &
 ; keys*
 
-(defmethod parse-form 'clojure.spec.alpha/tuple [_ [_ & values :as form]]
+(defmethod parse-form 'clojure.spec.alpha/tuple [_ [_ & values]]
   (let [specs (mapv parse-spec values)
         types (mapv :type specs)]
     {:type :vector
@@ -189,9 +189,3 @@
 
 (defmethod parse-form 'spec-tools.core/merge [_ form]
   (apply impl/deep-merge (map parse-spec (rest form))))
-
-;;
-;; publics
-;;
-
-(def anything (parse-spec any?))

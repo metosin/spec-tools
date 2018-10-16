@@ -1,5 +1,5 @@
 (ns spec-tools.parse-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest testing is]]
             [clojure.spec.alpha :as s]
             [spec-tools.parse :as parse]
             [spec-tools.core :as st]))
