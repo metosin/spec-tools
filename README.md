@@ -5,6 +5,7 @@ Clojure/Script tools for [clojure.spec](http://clojure.org/about/spec).
 * [Spec Records](#spec-records)
 * [Spec Driven Transformations](#spec-driven-transformations)
 * [Data Specs](#data-specs)
+* [Spec Walker](#spec-walker)
 * [Spec Visitors](#spec-visitors)
 * [Generating JSON Schemas](#generating-json-schemas)
 * [Generating Swagger2 Schemas](#generating-swagger2-schemas)
@@ -167,7 +168,43 @@ Spec-tools ships with following transformer implementations:
 | `fail-on-extra-keys-transformer` | Decoding fails if `s/keys` specs have extra keys.                                                                      |
 | `nil`                            | No transformations, [EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format). |
 
-Functions `encode`, `decode`, `explain`, `explain-data`, `conform` and `conform!` take the transformer an optional third argument and pass it into Specs via dynamic binding. Spec Records apply either the encoder or decoder in it's conforming stage. Both `encode` & `decode` also unform the data.
+### Coercion
+
+For simple transformations, there is `coerce`. It takes a spec, value and a transformer and uses a [Spec Walker](#spec-walker) to walk over specs. It transforms all values it can, leaving non-coercable parts untouched. Behind the scenes, specs are walked using their `s/form` & spec-tools form parser. It can't walk over all specs, and is thus not complete - waiting for [CLJ-2251](https://dev.clojure.org/jira/browse/CLJ-2251) to make it work with all specs. Inspired by [spec-coerce](https://github.com/wilkerlucio/spec-coerce)
+
+```clj
+(st/coerce int? "1" st/string-transformer)
+; 1
+
+(st/coerce int? "1" st/json-transformer)
+; "1"
+
+(s/def ::c1 int?)
+(s/def ::c2 keyword?)
+
+(st/coerce
+  (s/nilable
+    (s/nilable
+      (s/map-of
+        keyword?
+        (s/or :keys (s/keys :req-un [::c1])
+              :ks (s/coll-of (s/and int?) :into #{})))))
+  {"keys" {:c1 "1" ::c2 "kikka"}
+   "keys2" {:c1 true}
+   "ints" [1 "1" "invalid" "3"]}
+  st/string-transformer)
+;{:keys {:c1 1, ::c2 :kikka}
+; :keys2 {:c1 true}
+; :ints #{1 "invalid" 3}}
+```
+
+### Conforming
+
+Functions `explain`, `explain-data`, `conform` and `conform!` take the transformer an optional third argument and pass it into Specs via dynamic binding. Before [CLJ-2116](https://dev.clojure.org/jira/browse/CLJ-2116) or [CLJ-2251](https://dev.clojure.org/jira/browse/CLJ-2251) are fixed, specs need to be wrapped into Spec Records to make this work.
+
+### Encoding and Decoding
+
+There are also `encode` & `decode` functions that combine the two approaces and concidered the best way to transform the values. `decode` first tries to use `coerce` and if that doesn't make the value valid against the given spec, fallbacks to `conform` & `unform` which can be used for all specs.
 
 ### Spec-driven transformations
 
@@ -524,6 +561,10 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
 ;  :description "Liisa is a valid boss"
 ;  :address nil}
 ```
+
+## Spec Walker
+
+A multimethod `walk` taking a spec, value, accept function and options to walk over both specs and values. Used by `coerce`, which transforms specs values using spec transformers.
 
 ## Spec Visitors
 

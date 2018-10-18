@@ -169,14 +169,18 @@
            (throw (ex-info (str "Spec conform error: " data) data))))))))
 
 (defn coerce
+  "Coerces the value using a [[Transformer]]. Returns original value for
+  those parts of the value that can't be trasformed."
   ([spec value transformer]
    (coerce spec value transformer nil))
   ([spec value transformer options]
    (-coerce (into-spec spec) value transformer options)))
 
 (defn decode
-  "Transforms and validates a value (using a [[Transformer]]) from external
-  format into a value defined by the spec. On error, returns `::s/invalid`."
+  "Decodes a value using a [[Transformer]] from external format to a value
+  defined by the spec. First, calls [[coerce]] and returns the value if it's
+  valid - otherwise, calls [[conform]] & [[unform]]. Returns `::s/invalid`
+  if the value can't be decoded to conform the spec."
   ([spec value]
    (decode spec value nil))
   ([spec value transformer]

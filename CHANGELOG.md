@@ -54,7 +54,7 @@
              (st/coerce spec value st/json-transformer))))))
 ```
 
-* `st/decode` first tries to use `st/coerce`, then the old conforming-based approach
+* `st/decode` first tries to use `st/coerce`, fallbacking to conforming-based approach
 * **BREAKING**: enchanced parsing results from `spec-tools.parse/parse-spec`:
   * all parse result keys have been qualified:
     * `:keys` => `::parse/keys`
