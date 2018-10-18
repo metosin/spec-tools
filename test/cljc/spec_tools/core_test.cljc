@@ -6,6 +6,7 @@
             [spec-tools.spec :as spec]
             [spec-tools.parse :as info]
             [spec-tools.form :as form]
+            [spec-tools.parse :as parse]
             [#?(:clj  clojure.spec.gen.alpha
                 :cljs cljs.spec.gen.alpha) :as gen]
             [spec-tools.transform :as stt]))
@@ -270,8 +271,7 @@
      :encode/string #(-> %2 name str/upper-case)}))
 (s/def ::my-spec-map (s/keys :req [::my-spec]))
 
-(s/def ::my-type
-  (st/spec keyword?))
+(s/def ::my-type (st/spec keyword?))
 (s/def ::my-type-map (s/keys :req [::my-type]))
 
 (deftest encode-decode-test
@@ -327,6 +327,58 @@
     (testing "encode and decode also unform"
       (is (= "1" (st/encode ::regex 1 st/string-transformer)))
       (is (= 1 (st/decode ::regex "1" st/string-transformer))))))
+
+(s/def ::c1 int?)
+(s/def ::c2 keyword?)
+
+(deftest coercion-test
+  (testing "predicates"
+    (is (= 1 (st/coerce int? "1" st/string-transformer)))
+    (is (= "1" (st/coerce int? "1" st/json-transformer)))
+    (is (= :user/kikka (st/coerce keyword? "user/kikka" st/string-transformer))))
+  (testing "s/and"
+    (is (= 1 (st/coerce (s/and int? keyword?) "1" st/string-transformer)))
+    (is (= :1 (st/coerce (s/and keyword? int?) "1" st/string-transformer))))
+  (testing "s/or"
+    (is (= 1 (st/coerce (s/or :int int? :keyword keyword?) "1" st/string-transformer)))
+    (is (= :1 (st/coerce (s/or :keyword keyword? :int int?) "1" st/string-transformer))))
+  (testing "s/coll-of"
+    (is (= #{1 2 3} (st/coerce (s/coll-of int? :into #{}) ["1" 2 "3"] st/string-transformer)))
+    (is (= #{"1" 2 "3"} (st/coerce (s/coll-of int? :into #{}) ["1" 2 "3"] st/json-transformer)))
+    (is (= [:1 2 :3] (st/coerce (s/coll-of keyword?) ["1" 2 "3"] st/string-transformer)))
+    (is (= ::invalid (st/coerce (s/coll-of keyword?) ::invalid st/string-transformer))))
+  (testing "s/keys"
+    (is (= {:c1 1, ::c2 :kikka} (st/coerce (s/keys :req-un [::c1]) {:c1 "1", ::c2 "kikka"} st/string-transformer)))
+    (is (= {:c1 1, ::c2 :kikka} (st/coerce (s/keys :req-un [(and ::c1 ::c2)]) {:c1 "1", ::c2 "kikka"} st/string-transformer)))
+    (is (= {:c1 "1", ::c2 :kikka} (st/coerce (s/keys :req-un [::c1]) {:c1 "1", ::c2 "kikka"} st/json-transformer)))
+    (is (= ::invalid (st/coerce (s/keys :req-un [::c1]) ::invalid st/json-transformer))))
+  (testing "s/map-of"
+    (is (= {1 :abba, 2 :jabba} (st/coerce (s/map-of int? keyword?) {"1" "abba", "2" "jabba"} st/string-transformer)))
+    (is (= {"1" :abba, "2" :jabba} (st/coerce (s/map-of int? keyword?) {"1" "abba", "2" "jabba"} st/json-transformer)))
+    (is (= ::invalid (st/coerce (s/map-of int? keyword?) ::invalid st/json-transformer))))
+  (testing "s/nillable"
+    (is (= 1 (st/coerce (s/nilable int?) "1" st/string-transformer)))
+    (is (= nil (st/coerce (s/nilable int?) nil st/string-transformer))))
+  (testing "s/every"
+    (is (= [1] (st/coerce (s/every int?) ["1"] st/string-transformer))))
+  (testing "composed"
+    (let [spec (s/nilable
+                 (s/nilable
+                   (s/map-of
+                     keyword?
+                     (s/or :keys (s/keys :req-un [::c1])
+                           :ks (s/coll-of (s/and int?) :into #{})))))
+          value {"keys" {:c1 "1" ::c2 "kikka"}
+                 "keys2" {:c1 true}
+                 "ints" [1 "1" "invalid" "3"]}]
+      (is (= {:keys {:c1 1 ::c2 :kikka}
+              :keys2 {:c1 true}
+              :ints #{1 "invalid" 3}}
+             (st/coerce spec value st/string-transformer)))
+      (is (= {:keys {:c1 "1" ::c2 :kikka}
+              :keys2 {:c1 true}
+              :ints #{1 "1" "invalid" "3"}}
+             (st/coerce spec value st/json-transformer))))))
 
 (deftest conform!-test
   (testing "suceess"
@@ -473,9 +525,14 @@
 
   (testing "all keys types are extracted"
     (is (= {:type :map
-            :keys #{::age :lat ::truth :uuid}
-            :keys/req #{::age :lat}
-            :keys/opt #{::truth :uuid}}
+            ::parse/key->spec {:lat ::lat
+                               ::age ::age
+                               ::truth ::truth
+                               :uuid ::uuid}
+
+            ::parse/keys #{::age :lat ::truth :uuid}
+            ::parse/keys-req #{::age :lat}
+            ::parse/keys-opt #{::truth :uuid}}
 
            ;; named spec
            (info/parse-spec
@@ -500,8 +557,12 @@
 
   (testing "ands and ors are flattened"
     (is (= {:type :map
-            :keys #{::age ::lat ::uuid}
-            :keys/req #{::age ::lat ::uuid}}
+            ::parse/key->spec {::age ::age
+                               ::lat ::lat
+                               ::uuid ::uuid}
+
+            ::parse/keys #{::age ::lat ::uuid}
+            ::parse/keys-req #{::age ::lat ::uuid}}
            (info/parse-spec
              (s/keys
                :req [(or ::age (and ::uuid ::lat))]))))))

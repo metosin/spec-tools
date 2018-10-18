@@ -1,5 +1,5 @@
 (ns spec-tools.parse-test
-  (:require [clojure.test :refer [deftest is]]
+  (:require [clojure.test :refer [deftest testing is]]
             [clojure.spec.alpha :as s]
             [spec-tools.parse :as parse]
             [spec-tools.core :as st]))
@@ -26,14 +26,84 @@
 (s/def ::merged (s/merge ::keys ::keys2))
 
 (deftest parse-test
-  (is (= {:type :map
-          :keys #{:a :b :c :d :e ::a ::b ::c ::d ::e}
-          :keys/req #{:a :b :c :d ::a ::b ::c ::d}
-          :keys/opt #{:e ::e}}
-         (parse/parse-spec ::keys)))
+  (testing "predicate"
+    (is (= {:spec double?, :type :double}
+           (parse/parse-spec 'clojure.core/double?)
+           (parse/parse-spec double?))))
+  (testing "s/nilable"
+    (is (= {:spec int?
+            :type :long,
+            ::parse/nilable? true}
+           (parse/parse-spec (s/nilable (s/nilable int?))))))
+  (testing "s/or"
+    (is (= {::parse/items [{:spec int?, :type :long} {:spec keyword?, :type :keyword}]
+            :type [:or [:long :keyword]]}
+           (parse/parse-spec (s/or :int int? :keyword keyword?)))))
+  (testing "s/and"
+    (is (= {::parse/items [{:spec int?, :type :long} {:spec keyword?, :type :keyword}]
+            :type [:and [:long :keyword]]}
+           (parse/parse-spec (s/and int? keyword?)))))
+  (testing "s/keys"
+    (is (= {:type :map
+            ::parse/keys #{:a :b :c :d :e ::a ::b ::c ::d ::e}
+            ::parse/keys-req #{:a :b :c :d ::a ::b ::c ::d}
+            ::parse/keys-opt #{:e ::e}
+            ::parse/key->spec {:a ::a
+                               :b ::b
+                               :c ::c
+                               :d ::d
+                               :e ::e
+                               ::a ::a
+                               ::b ::b
+                               ::c ::c
+                               ::d ::d
+                               ::e ::e}}
+           (parse/parse-spec ::keys)))
 
-  (is (= {:type :map
-          :keys #{:a :b :c :d :e :f :g ::a ::b ::c ::d ::e ::f ::g}
-          :keys/req #{:a :b :c :d :g ::a ::b ::c ::d ::g}
-          :keys/opt #{:e :f ::e ::f}}
-         (parse/parse-spec ::merged))))
+    (is (= {:type :map
+            ::parse/keys #{:a :b :c :d :e :f :g ::a ::b ::c ::d ::e ::f ::g}
+            ::parse/keys-req #{:a :b :c :d :g ::a ::b ::c ::d ::g}
+            ::parse/keys-opt #{:e :f ::e ::f}
+            ::parse/key->spec {:a ::a
+                               :b ::b
+                               :c ::c
+                               :d ::d
+                               :e ::e
+                               :f ::f
+                               :g ::g
+                               ::a ::a
+                               ::b ::b
+                               ::c ::c
+                               ::d ::d
+                               ::e ::e
+                               ::f ::f
+                               ::g ::g}}
+           (parse/parse-spec ::merged))))
+  (testing "s/merge"
+    (is (= {:type :map
+            ::parse/keys #{:a :b}
+            ::parse/keys-req #{:a :b}
+            ::parse/key->spec {:a ::a, :b ::b}}
+           (parse/parse-spec (s/merge (s/keys :req-un [::a]) (s/keys :req-un [::b]))))))
+  (testing "s/every"
+    (is (= {::parse/item {:spec int?, :type :long}
+            :type :vector}
+           (parse/parse-spec (s/every int?)))))
+  (testing "s/coll-of"
+    (is (= {::parse/item {:spec int?, :type :long}
+            :type :vector}
+           (parse/parse-spec (s/coll-of int?))))
+    (is (= {::parse/item {:spec int?, :type :long}
+            :type :set}
+           (parse/parse-spec (s/coll-of int? :into #{}))))
+    (is (= {::parse/item {::parse/items [:long :keyword]
+                          ::parse/size 2
+                          :type :vector}
+            :type :map-of}
+           (parse/parse-spec (s/coll-of (s/tuple int? keyword?) :into {})))))
+  (testing "s/merge"
+    (is (= {:type :map
+            ::parse/keys #{:a :b}
+            ::parse/keys-req #{:a :b}
+            ::parse/key->spec {:a ::a, :b ::b}}
+           (parse/parse-spec (st/merge (s/keys :req-un [::a]) (s/keys :req-un [::b])))))))

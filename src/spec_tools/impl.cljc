@@ -59,12 +59,26 @@
 (defn polish-un [x]
   (some-> x polish name keyword))
 
+(defn un-key [x]
+  (some-> x name keyword))
+
+(defn with-key->spec [{:keys [req req-un opt opt-un] :as data}]
+  (let [key->spec (->> (concat opt req) (map (juxt identity identity)) (into {}))
+        un-key->spec (->> (concat opt-un req-un) (map (juxt un-key identity)) (into {}))]
+    (assoc data :key->spec (merge key->spec un-key->spec))))
+
+(defn with-real-keys [{:keys [req-un opt-un] :as data}]
+  (cond-> data
+          req-un (update :req-un (partial mapv un-key))
+          opt-un (update :opt-un (partial mapv un-key))))
+
 (defn parse-keys [form]
   (let [m (some->> form (rest) (apply hash-map))]
     (cond-> m
             (:req m) (update :req #(->> % flatten (keep polish) (into [])))
-            (:req-un m) (update :req-un #(->> % flatten (keep polish-un) (into [])))
-            (:opt-un m) (update :opt-un #(->> % (keep polish-un) (into []))))))
+            (:req-un m) (update :req-un #(->> % flatten (keep polish) (into [])))
+            (:opt-un m) (update :opt-un #(->> % (keep polish) (into [])))
+            true (-> with-key->spec with-real-keys))))
 
 (defn extract-keys [form]
   (let [{:keys [req opt req-un opt-un]} (some->> form (rest) (apply hash-map))]
@@ -76,10 +90,10 @@
            res (if cljs? (partial cljs-resolve env) clojure.core/resolve)]
        (->> pred
             (walk/postwalk
-             (fn [x]
-               (if (symbol? x)
-                 (or (some->> x res ->sym) x)
-                 x)))
+              (fn [x]
+                (if (symbol? x)
+                  (or (some->> x res ->sym) x)
+                  x)))
             (unfn cljs?)))))
 
 (defn extract-pred-and-info [x]

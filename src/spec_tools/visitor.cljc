@@ -86,7 +86,7 @@
         pred (second form)
         {:keys [type]} (parse/parse-spec form)
         dispatch (case type
-                   :map ::map-of
+                   :map-of ::map-of
                    :set ::set-of
                    :vector ::vector-of)]
     (accept dispatch spec [(visit pred accept options)] options)))

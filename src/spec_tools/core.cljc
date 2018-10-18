@@ -24,6 +24,8 @@
 
 (declare spec?)
 (declare into-spec)
+(declare create-spec)
+(declare coerce)
 
 (defn ^:skip-wiki registry
   ([]
@@ -74,6 +76,9 @@
 
 (def ^:dynamic ^:private *transformer* nil)
 (def ^:dynamic ^:private *encode?* nil)
+
+(defprotocol Coercion
+  (-coerce [this value transformer options]))
 
 (defprotocol Transformer
   (-name [this])
@@ -163,18 +168,31 @@
                      :value value}]
            (throw (ex-info (str "Spec conform error: " data) data))))))))
 
+(defn coerce
+  "Coerces the value using a [[Transformer]]. Returns original value for
+  those parts of the value that can't be trasformed."
+  ([spec value transformer]
+   (coerce spec value transformer nil))
+  ([spec value transformer options]
+   (-coerce (into-spec spec) value transformer options)))
+
 (defn decode
-  "Transforms and validates a value (using a [[Transformer]]) from external
-  format into a value defined by the spec. On error, returns `::s/invalid`."
+  "Decodes a value using a [[Transformer]] from external format to a value
+  defined by the spec. First, calls [[coerce]] and returns the value if it's
+  valid - otherwise, calls [[conform]] & [[unform]]. Returns `::s/invalid`
+  if the value can't be decoded to conform the spec."
   ([spec value]
    (decode spec value nil))
   ([spec value transformer]
    (binding [*transformer* transformer, *encode?* false]
      (let [spec (into-spec spec)
-           conformed (s/conform spec value)]
-       (if (s/invalid? conformed)
-         conformed
-         (s/unform spec conformed))))))
+           coerced (coerce spec value transformer)]
+       (if (s/valid? spec coerced)
+         coerced
+         (let [conformed (s/conform spec value)]
+           (if (s/invalid? conformed)
+             conformed
+             (s/unform spec conformed))))))))
 
 (defn encode
   "Transforms a value (using a [[Transformer]]) from external
@@ -192,6 +210,63 @@
   wrap all child Keys Specs into Spec Records. See CLJ-2116 for details."
   [spec value]
   (decode spec value strip-extra-keys-transformer))
+
+;;
+;; Walker, from Nekala
+;;
+
+(defmulti walk (fn [{:keys [type]} _ _ _] (parse/type-dispatch-value type)) :default ::default)
+
+(defmethod walk ::default [spec value accept options]
+  (if (and (spec? spec) (not (:skip? options)))
+    (accept spec value (assoc options :skip? true))
+    value))
+
+(defmethod walk :or [{:keys [::parse/items]} value accept options]
+  (reduce
+    (fn [v item]
+      (let [transformed (accept item v options)]
+        (if (= transformed v) v (reduced transformed))))
+    value items))
+
+(defmethod walk :and [{:keys [::parse/items]} value accept options]
+  (reduce
+    (fn [v item]
+      (let [transformed (accept item v options)]
+        transformed))
+    value items))
+
+(defmethod walk :vector [{:keys [::parse/item]} value accept options]
+  (if (sequential? value)
+    (->> value (map (fn [v] (accept item v options))) (into (empty value)))
+    value))
+
+(defmethod walk :set [{:keys [::parse/item]} value accept options]
+  (if (or (set? value) (sequential? value))
+    (->> value (map (fn [v] (accept item v options))) (set))
+    value))
+
+(defmethod walk :map [{:keys [::parse/key->spec]} value accept options]
+  (if (map? value)
+    (reduce-kv
+      (fn [acc k v]
+        (let [spec (if (qualified-keyword? k) (s/get-spec k) (s/get-spec (get key->spec k)))
+              value (if spec (accept spec v options) v)]
+          (assoc acc k value)))
+      {}
+      value)
+    value))
+
+(defmethod walk :map-of [{:keys [::parse/key ::parse/value]} data accept options]
+  (if (map? data)
+    (reduce-kv
+      (fn [acc k v]
+        (let [k' (accept key k options)
+              v' (accept value v options)]
+          (assoc acc k' v')))
+      (empty data)
+      data)
+    data))
 
 ;;
 ;; Spec Record
@@ -212,6 +287,18 @@
             (specize* [s] s)
             (specize* [s _] s)])
 
+  Coercion
+  (-coerce [this value transformer options]
+    (let [map->spec (fn [x]
+                      (cond
+                        (spec? x) x
+                        (s/spec? x) (create-spec {:spec x})
+                        (map? x) (create-spec (update x :spec (fnil identity any?)))))
+          transformed (if-let [transform (if (and transformer (not (:skip? options)))
+                                           (-decoder transformer this value))]
+                        (transform this value) value)]
+      (walk this transformed #(coerce (map->spec %1) %2 transformer %3) options)))
+
   s/Spec
   (conform* [this x]
     (let [transformer *transformer*, encode? *encode?*]
@@ -226,8 +313,10 @@
                 ;; it's ok if encode transforms the value into invalid
                 (or (and encode? (s/invalid? conformed) transformed) conformed))))
         (s/conform spec x))))
+
   (unform* [_ x]
     (s/unform spec x))
+
   (explain* [this path via in x]
     (let [problems (if (or (s/spec? spec) (s/regex? spec))
                      ;; transformer might fail deliberately, while the vanilla
@@ -257,6 +346,7 @@
                                 (assoc :reason spec-reason)))]
       (if problems
         (map with-reason problems))))
+
   (gen* [this overrides path rmap]
     (if-let [gen (:gen this)]
       (gen)
@@ -266,9 +356,11 @@
 
   (with-gen* [this gfn]
     (assoc this :gen gfn))
+
   (describe* [this]
     (let [data (clojure.core/merge {:spec form} (extra-spec-map this))]
       `(spec-tools.core/spec ~data)))
+
   IFn
   #?(:clj  (invoke [this x] (if (ifn? spec) (spec x) (fail-on-invoke this)))
      :cljs (-invoke [this x] (if (ifn? spec) (spec x) (fail-on-invoke this)))))
@@ -327,8 +419,10 @@
   (assert spec "missing spec predicate")
   (when (qualified-keyword? spec)
     (assert (get-spec spec) (str " Unable to resolve spec: " (:spec m))))
-  (let [spec (if (qualified-keyword? spec)
-               (get-spec spec) spec)
+  (let [spec (cond
+               (qualified-keyword? spec) (get-spec spec)
+               (symbol? spec) (form/resolve-form spec)
+               :else spec)
         form (or (if (qualified-keyword? form)
                    (s/form form))
                  form
@@ -372,7 +466,10 @@
 
 
 (defn into-spec [x]
-  (if (spec? x) x (create-spec {:spec x})))
+  (cond
+    (spec? x) x
+    (keyword? x) (recur (s/get-spec x))
+    :else (create-spec {:spec x})))
 
 ;;
 ;; merge
@@ -383,7 +480,7 @@
                    (s/form spec))
                  spec)
         info (parse/parse-spec spec)]
-    (select-keys info [:keys :keys/req :keys/opt])))
+    (select-keys info [::parse/keys ::parse/keys-req ::parse/keys-opt])))
 
 (defn merge-impl [forms spec-form merge-spec]
   (let [form-keys (map map-spec-keys forms)
@@ -393,7 +490,7 @@
                  (let [conformed-vals (map #(s/conform % x) forms)]
                    (if (some #{::s/invalid} conformed-vals)
                      ::s/invalid
-                     (apply clojure.core/merge x (map #(select-keys %1 %2) conformed-vals (map :keys form-keys))))))
+                     (apply clojure.core/merge x (map #(select-keys %1 %2) conformed-vals (map ::parse/keys form-keys))))))
                (unform* [_ x]
                  (s/unform* merge-spec x))
                (explain* [_ path via in x]
