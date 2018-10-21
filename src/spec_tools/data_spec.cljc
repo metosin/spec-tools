@@ -4,7 +4,8 @@
   (:require [spec-tools.impl :as impl]
             [spec-tools.core :as st]
             [spec-tools.form :as form]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [spec-tools.parse :as parse]))
 
 ;;
 ;; functional clojure.spec
@@ -151,7 +152,8 @@
           defs (::defs m)
           data (apply hash-map (apply concat (dissoc m ::defs)))]
       (doseq [[k s] defs]
-        (impl/register-spec! k s))
+        (let [synthetic? (and (st/spec? s) (not (parse/collection-type? s)))]
+          (impl/register-spec! k (cond-> s synthetic? (assoc ::st/synthetic? true)))))
       (st/create-spec {:spec (keys-spec data)}))))
 
 (defn- -coll-spec [data {n :name kind :kind}]

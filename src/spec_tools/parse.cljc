@@ -8,6 +8,9 @@
 (defn type-dispatch-value [type]
   ((if (sequential? type) first identity) type))
 
+(defn collection-type? [type]
+  (contains? #{:map :map-of :set :vector} type))
+
 (defn parse-spec
   "Parses info out of a spec. Spec can be passed as a name, Spec or a form.
   Returns either `nil` or a map, with keys `:type` and other extra keys

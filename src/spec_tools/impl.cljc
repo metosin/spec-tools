@@ -120,10 +120,11 @@
   (if (seq? spec) spec (s/form spec)))
 
 (defn qualified-name [key]
-  (if key
+  (if (keyword? key)
     (if-let [nn (namespace key)]
       (str nn "/" (name key))
-      (name key))))
+      (name key))
+    key))
 
 (defn nilable-spec? [spec]
   (let [form (and spec (s/form spec))]
