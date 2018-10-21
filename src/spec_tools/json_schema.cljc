@@ -271,10 +271,10 @@
 
 (defmethod accept-spec ::visitor/spec [_ spec children _]
   (let [[_ data] (impl/extract-form spec)
+        name (st/spec-name spec)
         json-schema-meta (impl/unlift-keys data "json-schema")
-        extra-info (-> data
-                       (select-keys [:name :description])
-                       (set/rename-keys {:name :title}))]
+        extra-info (-> (select-keys data [:description])
+                       (cond-> name (assoc :title (impl/qualified-name name))))]
     (merge (impl/unwrap children) extra-info json-schema-meta)))
 
 (defmethod accept-spec ::default [_ _ _ _]

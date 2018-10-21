@@ -301,9 +301,9 @@
 
   ;; https://dev.clojure.org/jira/browse/CLJS-1297
   #?@(:cljs
-     [IKVReduce
-      (-kv-reduce [coll f init]
-        (reduce-kv f init (into {} coll)))])
+      [IKVReduce
+       (-kv-reduce [coll f init]
+                   (reduce-kv f init (into {} coll)))])
 
   s/Spec
   (conform* [this x]

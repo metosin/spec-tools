@@ -292,7 +292,7 @@
                           :description "",
                           :required true,
                           :schema {:type "object",
-                                   ;; :title "spec-tools.swagger.core-test/address",
+                                   :title "spec-tools.swagger.core-test/address",
                                    :properties {"street" {:type "string"},
                                                 "city" {:enum [:tre :hki],
                                                         :type "string"
