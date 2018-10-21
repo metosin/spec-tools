@@ -402,9 +402,7 @@
 (defn spec-description
   "Returns a spec description."
   [spec]
-  (cond
-    (and (spec? spec) (:description spec)) (:description spec)
-    :else nil))
+  (if (spec? spec) (:description spec)))
 
 (defn create-spec
   "Creates a Spec intance from a map containing the following keys:

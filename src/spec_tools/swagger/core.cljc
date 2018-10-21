@@ -99,7 +99,7 @@
   (let [schema (transform spec {:in :body, :type :parameter})]
     [{:in "body"
       :name (-> spec st/spec-name impl/qualified-name (or ""))
-      :description ""
+      :description (-> spec st/spec-description (or ""))
       :required (not (impl/nilable-spec? spec))
       :schema schema}]))
 
@@ -110,7 +110,7 @@
         (merge
           {:in (name in)
            :name k
-           :description ""
+           :description (-> spec st/spec-description (or ""))
            :type type
            :required (contains? (set required) k)}
           schema))

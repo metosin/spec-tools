@@ -11,6 +11,13 @@
 (s/def ::string string?)
 (s/def ::set #{1 2 3})
 (s/def ::keys (s/keys :req-un [::integer]))
+(s/def ::spec (st/spec
+                {:spec string?
+                 :description "description"
+                 :json-schema/default "123"
+                 :json-schema/example "json-schema-example"
+                 :swagger/example "swagger-example"}))
+(s/def ::keys2 (s/keys :req-un [::integer ::spec]))
 
 (def exceptations
   {int?
@@ -146,12 +153,11 @@
    (s/nilable string?)
    {:type "string", :x-nullable true}
 
-   (st/spec
-     {:spec string?
-      :json-schema/default ""
-      :json-schema/example "json-schema-example"
-      :swagger/example "swagger-example"})
-   {:type "string", :default "", :example "swagger-example"}})
+   ::spec
+   {:type "string"
+    :description "description"
+    :default "123"
+    :example "swagger-example"}})
 
 (deftest test-expectations
   (doseq [[spec swagger-spec] exceptations]
@@ -160,16 +166,20 @@
 (deftest parameter-test
   (testing "nilable body is not required"
     (is
-      [{:in "body",
-        :name "",
-        :description "",
-        :required false,
-        :schema {:type "object",
-                 :title "spec-tools.swagger.schema-test/keys",
-                 :properties {"integer" {:type "integer"}},
-                 :required ["integer"],
-                 :x-nullable true}}]
-      (swagger/extract-parameter :body ::keys))))
+      (= [{:in "body",
+           :name "",
+           :description "",
+           :required false,
+           :schema {:type "object",
+                    :title "spec-tools.swagger.core-test/keys2",
+                    :properties {"integer" {:type "integer"}
+                                 "spec" {:default "123"
+                                         :description "description"
+                                         :example "swagger-example"
+                                         :type "string"}},
+                    :required ["integer" "spec"],
+                    :x-nullable true}}]
+         (swagger/extract-parameter :body (s/nilable ::keys2))))))
 
 #?(:clj
    (deftest test-parameter-validation
