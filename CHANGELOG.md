@@ -4,6 +4,7 @@
 * Support Spec Records with Swagger on cljs by [Miloslav Nenadál](https://github.com/nenadalm)
 * Swagger parameters read Spec `:description`, fixes [#135](https://github.com/metosin/spec-tools/issues/135)
 * JSON Schema objects get `:title` property from qualified Spec registry name
+* All top-level data-specs & nested map data-spec have name devired from `:name`, fixes [#124](https://github.com/metosin/spec-tools/issues/124)
 * New `st/coerce` function to coerce a value using form parsing and spec transformers. Can only walk over simple specs, and doesn't require any wrapping of specs. Inspired by [spec-coerce](https://github.com/wilkerlucio/spec-coerce).
 
 ```clj

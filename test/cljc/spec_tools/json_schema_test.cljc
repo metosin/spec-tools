@@ -157,6 +157,7 @@
 
 (deftest readme-test
   (is (= {:type "object"
+          :title "spec-tools.json-schema-test/person"
           :required ["spec-tools.json-schema-test/id" "age" "name" "likes" "languages"]
           :properties {"spec-tools.json-schema-test/id" {:type "integer"}
                        "age" {:type "integer"}
@@ -183,6 +184,7 @@
 
 (deftest deeply-nested-test
   (is (= {:type "array"
+          :title "spec-tools.json-schema-test/nested"
           :items {:type "array"
                   :items {:type "array"
                           :items {:type "array"

@@ -203,17 +203,20 @@
           :keys-spec function to generate keys-spec (default: [[keys-spec]])
        :keys-default optional function to wrap the plain keyword keys, e.g. setting
                      the value to [[opt]] maes all plain keyword keys optional."
-  ([{data :spec name :name :as opts}]
+  ([{data :spec name :name nested? ::nested? :as opts}]
    (assert spec "missing :spec predicate in data-spec")
-   (let [opts (-> opts (assoc :name name) (dissoc :spec))]
+   (let [opts (-> opts (assoc :name name) (dissoc :spec))
+         named-spec #(assoc % :name name)
+         maybe-named-spec #(cond-> % (not nested?) named-spec)
+         nested-opts (assoc opts ::nested? true)]
      (cond
        (st/spec? data) data
        (s/regex? data) data
        (or? data) (-or-spec name (:v data))
        (maybe? data) (nilable-spec (spec name (:v data)))
-       (map? data) (-map-spec data opts)
-       (set? data) (-coll-spec data (assoc opts :kind #{}))
-       (vector? data) (-coll-spec data (assoc opts :kind []))
+       (map? data) (named-spec (-map-spec data nested-opts))
+       (set? data) (maybe-named-spec (-coll-spec data (assoc nested-opts :kind #{})))
+       (vector? data) (maybe-named-spec (-coll-spec data (assoc nested-opts :kind [])))
        :else (st/create-spec {:spec data}))))
   ([name data]
    (spec {:name name, :spec data})))
