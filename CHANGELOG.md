@@ -1,4 +1,4 @@
-# 0.8.0-SNAPSHOT
+# 0.8.0 (21.10.2018)
 
 * Fix [fishy gen* call in your Spec protocol](https://github.com/metosin/spec-tools/issues/136).
 * Support Spec Records with Swagger on cljs by [Miloslav Nenadál](https://github.com/nenadalm)
