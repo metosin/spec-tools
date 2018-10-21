@@ -4,7 +4,8 @@
   (:require [spec-tools.impl :as impl]
             [spec-tools.core :as st]
             [spec-tools.form :as form]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [spec-tools.parse :as parse]))
 
 ;;
 ;; functional clojure.spec
@@ -151,7 +152,8 @@
           defs (::defs m)
           data (apply hash-map (apply concat (dissoc m ::defs)))]
       (doseq [[k s] defs]
-        (impl/register-spec! k s))
+        (let [synthetic? (and (st/spec? s) (not (parse/collection-type? s)))]
+          (impl/register-spec! k (cond-> s synthetic? (assoc ::st/synthetic? true)))))
       (st/create-spec {:spec (keys-spec data)}))))
 
 (defn- -coll-spec [data {n :name kind :kind}]
@@ -201,17 +203,20 @@
           :keys-spec function to generate keys-spec (default: [[keys-spec]])
        :keys-default optional function to wrap the plain keyword keys, e.g. setting
                      the value to [[opt]] maes all plain keyword keys optional."
-  ([{data :spec name :name :as opts}]
+  ([{data :spec name :name nested? ::nested? :as opts}]
    (assert spec "missing :spec predicate in data-spec")
-   (let [opts (-> opts (assoc :name name) (dissoc :spec))]
+   (let [opts (-> opts (assoc :name name) (dissoc :spec))
+         named-spec #(assoc % :name name)
+         maybe-named-spec #(cond-> % (not nested?) named-spec)
+         nested-opts (assoc opts ::nested? true)]
      (cond
-       (st/spec? data) data
+       (st/spec? data) (maybe-named-spec data)
        (s/regex? data) data
        (or? data) (-or-spec name (:v data))
        (maybe? data) (nilable-spec (spec name (:v data)))
-       (map? data) (-map-spec data opts)
-       (set? data) (-coll-spec data (assoc opts :kind #{}))
-       (vector? data) (-coll-spec data (assoc opts :kind []))
-       :else (st/create-spec {:spec data}))))
+       (map? data) (named-spec (-map-spec data nested-opts))
+       (set? data) (maybe-named-spec (-coll-spec data (assoc nested-opts :kind #{})))
+       (vector? data) (maybe-named-spec (-coll-spec data (assoc nested-opts :kind [])))
+       :else (maybe-named-spec (st/create-spec {:spec data})))))
   ([name data]
    (spec {:name name, :spec data})))

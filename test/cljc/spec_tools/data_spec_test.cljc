@@ -134,8 +134,8 @@
                                :opt-un [:spec-tools.data-spec-test$person/description]))]
 
       (testing "normal keys-spec-spec is generated"
-        (is (= (s/form person-keys-spec)
-               (s/form person-spec))))
+        (is (= (s/form (dissoc person-keys-spec :name))
+               (s/form (dissoc person-spec :name)))))
 
       (testing "nested keys are in the registry"
         (let [generated-keys (->> (st/registry #"spec-tools.data-spec-test\$person.*") (map first) set)]
@@ -289,8 +289,8 @@
                  ::parse/key->spec {::i ::i}
                  ::parse/keys #{::i}
                  ::parse/keys-req #{::i}})
-             (s/form spec1)
-             (s/form spec2)))))
+             (s/form (dissoc spec1 :name))
+             (s/form (dissoc spec2 :name))))))
 
   (testing ":name can be ommitted if no specs are registered"
     (is (ds/spec {:spec {::i int?}})))
@@ -365,4 +365,25 @@
                                 (st/decode spec $ st/string-transformer)
                                 (st/encode spec $ st/string-transformer)))))))
 
+(deftest spec-name-test
 
+  (testing "anonymous"
+    (is (nil? (st/spec-name (ds/spec ::irrelevant (ds/or {:int int?})))))
+    (is (nil? (st/spec-name (ds/spec ::irrelevant (ds/maybe int?)))))
+    (is (nil? (st/spec-name (ds/spec ::irrelevant (s/cat :int int?))))))
+
+  (testing "named"
+    (is (= ::named1 (st/spec-name (ds/spec ::named1 int?))))
+    (is (= ::named1 (st/spec-name (ds/spec ::named1 (st/spec int?)))))
+    (is (= ::named1 (st/spec-name (ds/spec ::named1 [int?]))))
+    (is (= ::named2 (st/spec-name (ds/spec ::named2 #{int?}))))
+    (is (= ::named3 (st/spec-name (ds/spec ::named3 {:ints [int?]
+                                                     :map {:ints [int?]}}))))
+    (testing "nested vectors are anonymous"
+      (let [spec (st/get-spec :spec-tools.data-spec-test$named3/ints)]
+        (is (and spec (nil? (:name spec)))))
+      (let [spec (st/get-spec :spec-tools.data-spec-test$named3$map/ints)]
+        (is (and spec (nil? (:name spec))))))
+    (testing "nested maps have a name"
+      (let [spec (st/get-spec :spec-tools.data-spec-test$named3/map)]
+        (is (and spec (:name spec)))))))

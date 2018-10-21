@@ -272,9 +272,11 @@
 (defmethod accept-spec ::visitor/spec [_ spec children _]
   (let [[_ data] (impl/extract-form spec)
         name (st/spec-name spec)
+        synthetic? (-> spec st/get-spec ::st/synthetic?)
         json-schema-meta (impl/unlift-keys data "json-schema")
         extra-info (-> (select-keys data [:description])
-                       (cond-> name (assoc :title (impl/qualified-name name))))]
+                       (cond-> (and name (not synthetic?))
+                               (assoc :title (impl/qualified-name name))))]
     (merge (impl/unwrap children) extra-info json-schema-meta)))
 
 (defmethod accept-spec ::default [_ _ _ _]

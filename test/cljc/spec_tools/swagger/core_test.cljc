@@ -157,6 +157,7 @@
    {:type "string"
     :description "description"
     :default "123"
+    :title "spec-tools.swagger.core-test/spec"
     :example "swagger-example"}})
 
 (deftest test-expectations
@@ -165,21 +166,21 @@
 
 (deftest parameter-test
   (testing "nilable body is not required"
-    (is
-      (= [{:in "body",
-           :name "",
-           :description "",
-           :required false,
-           :schema {:type "object",
-                    :title "spec-tools.swagger.core-test/keys2",
-                    :properties {"integer" {:type "integer"}
-                                 "spec" {:default "123"
-                                         :description "description"
-                                         :example "swagger-example"
-                                         :type "string"}},
-                    :required ["integer" "spec"],
-                    :x-nullable true}}]
-         (swagger/extract-parameter :body (s/nilable ::keys2))))))
+    (is (= [{:in "body",
+             :name "",
+             :description "",
+             :required false,
+             :schema {:type "object",
+                      :title "spec-tools.swagger.core-test/keys2",
+                      :properties {"integer" {:type "integer"}
+                                   "spec" {:default "123"
+                                           :description "description"
+                                           :example "swagger-example"
+                                           :title "spec-tools.swagger.core-test/spec"
+                                           :type "string"}},
+                      :required ["integer" "spec"],
+                      :x-nullable true}}]
+           (swagger/extract-parameter :body (s/nilable ::keys2))))))
 
 #?(:clj
    (deftest test-parameter-validation
