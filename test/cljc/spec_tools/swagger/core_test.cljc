@@ -249,7 +249,59 @@
               ::swagger/parameters
               {:query (s/keys :opt-un [::name ::street ::city])
                :path (s/keys :req [::id])
-               :body ::address}}))))
+               :body ::address}})))
+    (is (= {:parameters [{:in "query"
+                          :name "name2"
+                          :description "this survives the merge"
+                          :type "string"
+                          :required true}
+                         {:in "query"
+                          :name "name"
+                          :description ""
+                          :type "string"
+                          :required false}
+                         {:in "query"
+                          :name "street"
+                          :description ""
+                          :type "string"
+                          :required false}
+                         {:in "query"
+                          :name "city"
+                          :description ""
+                          :type "string"
+                          :required false
+                          :enum [:tre :hki]
+                          :allowEmptyValue true}
+                         {:in "path"
+                          :name "spec-tools.swagger.core-test/id"
+                          :description ""
+                          :type "string"
+                          :required true}
+                         {:in "body",
+                          :name "spec-tools.swagger.core-test/address",
+                          :description "",
+                          :required true,
+                          :schema {:type "object",
+                                   ;; :title "spec-tools.swagger.core-test/address",
+                                   :properties {"street" {:type "string"},
+                                                "city" {:enum [:tre :hki],
+                                                        :type "string"
+                                                        :x-nullable true}},
+                                   :required ["street" "city"]}}]}
+           (swagger/swagger-spec
+             {:parameters [{:in "query"
+                            :name "name"
+                            :description "this will be overridden"
+                            :required false}
+                           {:in "query"
+                            :name "name2"
+                            :description "this survives the merge"
+                            :type "string"
+                            :required true}]
+              ::swagger/parameters
+              {:query (st/create-spec {:spec (s/keys :opt-un [::name ::street ::city])})
+               :path (st/create-spec {:spec (s/keys :req [::id])})
+               :body (st/create-spec {:spec ::address})}}))))
 
   (testing "::responses"
     (is (= {:responses
