@@ -366,16 +366,24 @@
                                 (st/encode spec $ st/string-transformer)))))))
 
 (deftest spec-name-test
-  (is (= ::named1 (st/spec-name (ds/spec ::named1 [int?]))))
-  (is (= ::named2 (st/spec-name (ds/spec ::named2 #{int?}))))
-  (is (= ::named3 (st/spec-name (ds/spec ::named3 {:ints [int?]
-                                                   :map {:ints [int?]}}))))
-  (testing "nested vectors are anonymous"
-    (let [spec (st/get-spec :spec-tools.data-spec-test$named3/ints)]
-      (is (and spec (nil? (:name spec)))))
-    (let [spec (st/get-spec :spec-tools.data-spec-test$named3$map/ints)]
-      (is (and spec (nil? (:name spec))))))
-  (testing "nested maps have a name"
-    (let [spec (st/get-spec :spec-tools.data-spec-test$named3/map)]
-      (is (and spec (:name spec))))))
 
+  (testing "anonymous"
+    (is (nil? (st/spec-name (ds/spec ::irrelevant (ds/or {:int int?})))))
+    (is (nil? (st/spec-name (ds/spec ::irrelevant (ds/maybe int?)))))
+    (is (nil? (st/spec-name (ds/spec ::irrelevant (s/cat :int int?))))))
+
+  (testing "named"
+    (is (= ::named1 (st/spec-name (ds/spec ::named1 int?))))
+    (is (= ::named1 (st/spec-name (ds/spec ::named1 (st/spec int?)))))
+    (is (= ::named1 (st/spec-name (ds/spec ::named1 [int?]))))
+    (is (= ::named2 (st/spec-name (ds/spec ::named2 #{int?}))))
+    (is (= ::named3 (st/spec-name (ds/spec ::named3 {:ints [int?]
+                                                     :map {:ints [int?]}}))))
+    (testing "nested vectors are anonymous"
+      (let [spec (st/get-spec :spec-tools.data-spec-test$named3/ints)]
+        (is (and spec (nil? (:name spec)))))
+      (let [spec (st/get-spec :spec-tools.data-spec-test$named3$map/ints)]
+        (is (and spec (nil? (:name spec))))))
+    (testing "nested maps have a name"
+      (let [spec (st/get-spec :spec-tools.data-spec-test$named3/map)]
+        (is (and spec (:name spec)))))))

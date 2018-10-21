@@ -210,13 +210,13 @@
          maybe-named-spec #(cond-> % (not nested?) named-spec)
          nested-opts (assoc opts ::nested? true)]
      (cond
-       (st/spec? data) data
+       (st/spec? data) (maybe-named-spec data)
        (s/regex? data) data
        (or? data) (-or-spec name (:v data))
        (maybe? data) (nilable-spec (spec name (:v data)))
        (map? data) (named-spec (-map-spec data nested-opts))
        (set? data) (maybe-named-spec (-coll-spec data (assoc nested-opts :kind #{})))
        (vector? data) (maybe-named-spec (-coll-spec data (assoc nested-opts :kind [])))
-       :else (st/create-spec {:spec data}))))
+       :else (maybe-named-spec (st/create-spec {:spec data})))))
   ([name data]
    (spec {:name name, :spec data})))
