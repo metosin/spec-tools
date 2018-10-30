@@ -452,7 +452,7 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
 **NOTE**: To use enums with data-specs, you need to wrap them: `(s/spec #{:S :M :L})`
 
 ```clj
-(s/def ::age spec/pos-int?)
+(s/def ::age pos-int?)
 
 ;; a data-spec
 (def person
