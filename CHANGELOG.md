@@ -1,3 +1,11 @@
+# 0.8.1 (9.11.2018)
+
+* updated deps:
+
+```clj
+[org.clojure/spec.alpha "1.10.439"] is available but we use "1.10.339"
+```
+
 # 0.8.0 (21.10.2018)
 
 * Fix [fishy gen* call in your Spec protocol](https://github.com/metosin/spec-tools/issues/136).
