@@ -1,3 +1,7 @@
+# 0.8.2 (10.11.2018)
+
+* fixed a [issue coercion issue](https://github.com/metosin/spec-tools/issues/145)
+
 # 0.8.1 (9.11.2018)
 
 * updated deps:
