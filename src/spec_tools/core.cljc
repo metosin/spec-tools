@@ -291,6 +291,7 @@
   (-coerce [this value transformer options]
     (let [map->spec (fn [x]
                       (cond
+                        (keyword? x) (recur (s/get-spec x))
                         (spec? x) x
                         (s/spec? x) (create-spec {:spec x})
                         (map? x) (create-spec (update x :spec (fnil identity any?)))))

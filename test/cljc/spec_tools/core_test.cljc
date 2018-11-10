@@ -654,3 +654,16 @@
       (testing "has a working describe"
         (is (= (s/describe ::core-map)
                (:spec (second (s/describe ::map)))))))))
+
+(s/def :resource.user/id int?)
+(s/def :resource/user (s/keys :req-un [:resource.user/id]))
+
+(s/def :response.user/data :resource/user)
+(s/def :response/user (s/keys :req-un [:response.user/data]))
+
+(deftest issue-145
+  (is (= {:data {:id 41, :type "user", :attributes {:name "string"}}}
+         (st/coerce
+           :response/user
+           {:data {:id "41", :type "user", :attributes {:name "string"}}}
+           st/string-transformer))))
