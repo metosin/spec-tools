@@ -1,3 +1,10 @@
+# 0.8.3-SNAPSHOT
+
+* Identify Leaf Specs
+  * Leaf Spec Records have `{:leaf? true}` data
+  * Non-leaf Spec can encode to `::s/invalid`, fixing both [#146](https://github.com/metosin/spec-tools/issues/146) & [#147](https://github.com/metosin/spec-tools/issues/146)
+  * thanks to [Alex Coyle](https://github.com/alzadude)!
+
 # 0.8.2 (10.11.2018)
 
 * fixed a [issue coercion issue](https://github.com/metosin/spec-tools/issues/145)
