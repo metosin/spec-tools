@@ -4,12 +4,16 @@
             [spec-tools.form :as form]))
 
 (declare parse-form)
+(declare non-leaf-types)
 
 (defn type-dispatch-value [type]
   ((if (sequential? type) first identity) type))
 
 (defn collection-type? [type]
   (contains? #{:map :map-of :set :vector} type))
+
+(defn leaf-type? [type]
+  (not (contains? (non-leaf-types) type)))
 
 (defn parse-spec
   "Parses info out of a spec. Spec can be passed as a name, Spec or a form.
@@ -48,6 +52,9 @@
 (defmulti parse-form (fn [dispatch _] dispatch) :default ::default)
 
 (defmethod parse-form ::default [_ _] {:type nil})
+
+(defn- non-leaf-types []
+  #{:map :map-of :and :or :set :vector})
 
 (defn types []
   #{:long
