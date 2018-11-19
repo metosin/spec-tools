@@ -314,7 +314,7 @@
           (or (and (s/invalid? transformed) transformed)
               ;; recur
               (let [conformed (s/conform spec transformed)]
-                ;; it's ok if encode transforms the value into invalid
+                ;; it's ok if encode transforms leaf values into invalid values
                 (or (and encode? (s/invalid? conformed) (leaf? this) transformed) conformed))))
         (s/conform spec x))))
 
