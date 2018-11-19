@@ -15,7 +15,7 @@
         impl (#'ds/coll-of-spec string? [])]
     (is (= (s/form spec)
            (s/form impl)))
-    (is (= `(s/coll-of (st/spec {:spec string? :type :string}) :into [])
+    (is (= `(s/coll-of (st/spec {:spec string? :type :string :leaf? true}) :into [])
            (s/form (#'ds/coll-of-spec spec/string? []))))
     (is (= nil
            (s/explain-data spec ["1"])
@@ -33,8 +33,8 @@
     (is (= (s/form spec)
            (s/form impl)))
     (is (= `(s/map-of
-              (st/spec {:spec string? :type :string})
-              (st/spec {:spec string? :type :string})
+              (st/spec {:spec string? :type :string :leaf? true})
+              (st/spec {:spec string? :type :string :leaf? true})
               :conform-keys true)
            (s/form (#'ds/map-of-spec spec/string? spec/string?))))
     (is (= nil
@@ -76,7 +76,7 @@
         impl (#'ds/nilable-spec string?)]
     (is (= (s/form spec)
            (s/form impl)))
-    (is (= `(s/nilable (st/spec {:spec string? :type :string}))
+    (is (= `(s/nilable (st/spec {:spec string? :type :string :leaf? true}))
            (s/form (#'ds/nilable-spec spec/string?))))
     (is (= nil
            (s/explain-data spec "1")
@@ -94,8 +94,8 @@
         impl (#'ds/or-spec {:int int?, :string string?})]
     (is (= (s/form spec)
            (s/form impl)))
-    (is (= `(s/or :int (st/spec {:spec int? :type :long})
-                  :string (st/spec {:spec string? :type :string}))
+    (is (= `(s/or :int (st/spec {:spec int? :type :long :leaf? true})
+                  :string (st/spec {:spec string? :type :string :leaf? true}))
            (s/form (#'ds/or-spec {:int spec/int?, :string spec/string?}))))
     (is (= nil
            (s/explain-data spec "1")
@@ -206,6 +206,18 @@
                  (ds/spec ::values {:values [(ds/or {:ints [int?], :strings [string?]})]})
                  {:values [["1" "2"] [3]]}))))))
 
+  (testing "encoding with or spec"
+    (testing "when value matches first form of the or" 
+      (let [spec (ds/spec {:name ::int-or-double :spec (ds/or {:a {:an-int int?} :b {:a-double double?}})})
+            value {:an-int 217322}
+            value-string {:an-int "217322"}]
+        (is (= value-string (st/encode spec value st/string-transformer)))))
+    (testing "when value matches second form of the or"
+      (let [spec (ds/spec {:name ::int-or-double :spec (ds/or {:a {:an-int int?} :b {:a-double double?}})})
+            value {:a-double 217322.123}
+            value-string {:a-double "217322.123"}]
+        (is (= value-string (st/encode spec value st/string-transformer))))))
+
   (testing "top-level vector"
     (is (true?
           (s/valid?
@@ -286,6 +298,7 @@
       (is (= `(spec-tools.core/spec
                 {:spec (clojure.spec.alpha/keys :req [::i])
                  :type :map
+                 :leaf? false
                  ::parse/key->spec {::i ::i}
                  ::parse/keys #{::i}
                  ::parse/keys-req #{::i}})

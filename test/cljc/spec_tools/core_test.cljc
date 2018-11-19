@@ -121,34 +121,41 @@
         (st/spec integer?)
         `(spec-tools.core/spec
            {:spec integer?
-            :type :long})
+            :type :long
+            :leaf? true})
 
         (st/spec #{pos? neg?})
         `(spec-tools.core/spec
            {:spec #{neg? pos?}
-            :type nil})
+            :type nil
+            :leaf? true})
 
         (st/spec ::string)
         `(spec-tools.core/spec
            {:spec string?
-            :type :string})
+            :type :string
+            :leaf? true})
 
         (st/spec ::lat)
         `(spec-tools.core/spec
            {:spec (spec-tools.core/spec
-                    {:spec double?
-                     :type :double})
-            :type :double})
+                   {:spec double?
+                    :type :double
+                    :leaf? true})
+            :type :double
+            :leaf? true})
 
         (st/spec (fn [x] (> x 10)))
         `(spec-tools.core/spec
            {:spec (clojure.core/fn [~'x] (> ~'x 10))
-            :type nil})
+            :type nil
+            :leaf? true})
 
         (st/spec #(> % 10))
         `(spec-tools.core/spec
            {:spec (clojure.core/fn [~'%] (> ~'% 10))
-            :type nil})))
+            :type nil
+            :leaf? true})))
 
     (testing "wrapped predicate work as a predicate"
       (is (true? (my-integer? 1)))
@@ -175,8 +182,9 @@
         (is (= ['spec-tools.core/spec
                 {:spec #?(:clj  'clojure.core/integer?
                           :cljs 'cljs.core/integer?)
-                 :type :long}] (s/form my-integer?)))
-        (is (= ['spec {:spec 'integer? :type :long}] (s/describe my-integer?))))
+                 :type :long
+                 :leaf? true}] (s/form my-integer?)))
+        (is (= ['spec {:spec 'integer? :type :long :leaf? true}] (s/describe my-integer?))))
 
       (testing "type resolution"
         (is (= (st/spec integer?)
@@ -184,7 +192,7 @@
 
       (testing "serialization"
         (let [spec (st/spec {:spec integer? :description "cool", :type ::integer})]
-          (is (= `(st/spec {:spec integer? :description "cool", :type ::integer})
+          (is (= `(st/spec {:spec integer? :description "cool", :type ::integer :leaf? true})
                  (s/form spec)
                  (st/deserialize (st/serialize spec))))))
 

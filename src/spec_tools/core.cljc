@@ -282,6 +282,9 @@
         "Can't invoke spec with a non-function predicate: " spec)
       {:spec spec})))
 
+(defn- leaf? [spec]
+  (:leaf? (into-spec spec)))
+
 (defrecord Spec [spec form type]
   #?@(:clj [s/Specize
             (specize* [s] s)
@@ -312,7 +315,7 @@
               ;; recur
               (let [conformed (s/conform spec transformed)]
                 ;; it's ok if encode transforms the value into invalid
-                (or (and encode? (s/invalid? conformed) transformed) conformed))))
+                (or (and encode? (s/invalid? conformed) (leaf? this) transformed) conformed))))
         (s/conform spec x))))
 
   (unform* [_ x]
@@ -433,7 +436,7 @@
         type (if (contains? m :type) type (:type info))
         name (-> spec meta ::s/name)
         record (map->Spec
-                 (clojure.core/merge m info {:spec spec :form form, :type type}))]
+                 (clojure.core/merge m info {:spec spec :form form :type type :leaf? (parse/leaf-type? type)}))]
     (cond-> record name (with-meta {::s/name name}))))
 
 #?(:clj
