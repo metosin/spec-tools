@@ -11,7 +11,6 @@
                        [clojure.edn]]
                 :cljs [[goog.date.UtcDateTime]
                        [cljs.reader]
-                       [clojure.test.check.generators]
                        [cljs.spec.gen.alpha :as gen]]))
   (:import
     #?@(:clj
