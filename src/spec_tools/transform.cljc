@@ -112,7 +112,7 @@
     x))
 
 ;; TODO: remove this as it couples transformation & validation?
-(defn fail-on-extra-keys [{:keys [keys]} x]
+(defn fail-on-extra-keys [{:keys [::parse/keys]} x]
   (if (and (map? x) (not (set/subset? (-> x (clojure.core/keys) (set)) keys)))
     ::s/invalid
     x))
