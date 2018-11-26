@@ -461,6 +461,9 @@
              (st/select-spec ::person-spec person))))
 
     (testing "failing on extra keys"
+      (is (not (s/invalid? (st/conform ::person
+                                       {:height 200, :weight 80}
+                                       st/fail-on-extra-keys-transformer))))
       (is (s/invalid? (st/conform ::person person st/fail-on-extra-keys-transformer)))
       (is (s/invalid? (st/conform ::person-spec person st/fail-on-extra-keys-transformer))))
 
