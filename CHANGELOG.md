@@ -4,6 +4,8 @@
   * Leaf Spec Records have `{:leaf? true}` data
   * Non-leaf Spec can encode to `::s/invalid`, fixing both [#146](https://github.com/metosin/spec-tools/issues/146) & [#147](https://github.com/metosin/spec-tools/issues/146)
   * thanks to [Alex Coyle](https://github.com/alzadude)!
+* Remove an implicit dependency on test.check. [#150](https://github.com/metosin/spec-tools/pull/150)
+* Make `fail-on-extra-keys-transformer` work again. [#151](https://github.com/metosin/spec-tools/issues/151)
 
 # 0.8.2 (10.11.2018)
 
