@@ -183,16 +183,14 @@ For simple transformations, there is `coerce`. It takes a spec, value and a tran
 (s/def ::c2 keyword?)
 
 (st/coerce
-  (s/nilable
-    (s/nilable
-      (s/map-of
-        keyword?
-        (s/or :keys (s/keys :req-un [::c1])
-              :ks (s/coll-of (s/and int?) :into #{})))))
-  {"keys" {:c1 "1" ::c2 "kikka"}
-   "keys2" {:c1 true}
-   "ints" [1 "1" "invalid" "3"]}
-  st/string-transformer)
+ (s/map-of
+  keyword?
+  (s/or :keys (s/keys :req-un [::c1])
+        :ks (s/coll-of (s/and int?) :into #{})))
+ {"keys" {:c1 "1" ::c2 "kikka"}
+  "keys2" {:c1 true}
+  "ints" [1 "1" "invalid" "3"]}
+ st/string-transformer)
 ;{:keys {:c1 1, ::c2 :kikka}
 ; :keys2 {:c1 true}
 ; :ints #{1 "invalid" 3}}
