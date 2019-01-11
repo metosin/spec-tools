@@ -90,14 +90,14 @@
 
 #?(:clj
    (def +date-time-format+
-     (-> (DateTimeFormatter/ofPattern "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+     (-> (DateTimeFormatter/ofPattern "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
          (.withZone (ZoneId/of "UTC")))))
 
 (defn date->string [_ x]
   (if (inst? x)
     (try
       #?(:clj  (.format +date-time-format+ (Instant/ofEpochMilli (inst-ms x)))
-         :cljs (str/replace (.toISOString x) #"Z$" "+0000"))
+         :cljs (.toISOString x))
       (catch #?(:clj Exception, :cljs js/Error) _ x))
     x))
 

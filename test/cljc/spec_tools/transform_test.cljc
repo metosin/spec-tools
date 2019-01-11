@@ -44,7 +44,7 @@
   (is (= "abba" (stt/string->date _ "abba"))))
 
 (deftest date->string
-  (is (= "2014-02-18T18:25:37.000+0000" (stt/date->string _ #inst "2014-02-18T18:25:37Z")))
+  (is (= "2014-02-18T18:25:37.000Z" (stt/date->string _ #inst "2014-02-18T18:25:37Z")))
   (is (= "abba" (stt/date->string _ "abba"))))
 
 (deftest string->symbol
