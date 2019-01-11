@@ -2,15 +2,16 @@
   #?(:cljs (:refer-clojure :exclude [Inst Keyword UUID]))
   (:require [clojure.spec.alpha :as s]
             #?@(:cljs [[goog.date.UtcDateTime]
-                       [goog.date.Date]])
+                       [goog.date.Date]]
+                :clj  [[clojure.instant :refer [read-instant-date]]])
             [clojure.set :as set]
             [spec-tools.parse :as parse]
             [clojure.string :as str]
             [spec-tools.impl :as impl])
   #?(:clj
      (:import (java.util Date UUID)
-              (com.fasterxml.jackson.databind.util StdDateFormat)
-              (java.time Instant))))
+              (java.time Instant ZoneId)
+              (java.time.format DateTimeFormatter))))
 
 ;;
 ;; Keywords
@@ -82,15 +83,20 @@
 (defn string->date [_ x]
   (if (string? x)
     (try
-      #?(:clj  (.parse (StdDateFormat.) x)
+      #?(:clj  (read-instant-date x)
          :cljs (js/Date. (.getTime (goog.date.UtcDateTime.fromIsoString x))))
       (catch #?(:clj Exception, :cljs js/Error) _ x))
     x))
 
+#?(:clj
+   (def +date-time-format+
+     (-> (DateTimeFormatter/ofPattern "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+         (.withZone (ZoneId/of "UTC")))))
+
 (defn date->string [_ x]
   (if (inst? x)
     (try
-      #?(:clj  (.format (StdDateFormat.) x)
+      #?(:clj  (.format +date-time-format+ (Instant/ofEpochMilli (inst-ms x)))
          :cljs (str/replace (.toISOString x) #"Z$" "+0000"))
       (catch #?(:clj Exception, :cljs js/Error) _ x))
     x))
