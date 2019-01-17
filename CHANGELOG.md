@@ -1,4 +1,4 @@
-# 0.8.3-SNAPSHOT
+# 0.8.3 (17.1.2019)
 
 * Identify Leaf Specs
   * Leaf Spec Records have `{:leaf? true}` data

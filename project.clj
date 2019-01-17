@@ -1,4 +1,4 @@
-(defproject metosin/spec-tools "0.8.3-SNAPSHOT"
+(defproject metosin/spec-tools "0.8.3"
   :description "Clojure(Script) tools for clojure.spec"
   :url "https://github.com/metosin/spec-tools"
   :license {:name "Eclipse Public License"
@@ -14,12 +14,12 @@
   :dependencies [[org.clojure/spec.alpha "0.2.176"]
                  [com.fasterxml.jackson.core/jackson-databind "2.9.8"]]
 
-  :profiles {:dev {:plugins [[jonase/eastwood "0.2.6"]
+  :profiles {:dev {:plugins [[jonase/eastwood "0.3.4"]
                              [lein-tach "1.0.0"]
-                             [lein-doo "0.1.10"]
+                             [lein-doo "0.1.11"]
                              [lein-cljsbuild "1.1.7"]
                              [lein-cloverage "1.0.13"]
-                             [lein-codox "0.10.4"]]
+                             [lein-codox "0.10.5"]]
                    :jvm-opts ^:replace ["-server"]
                    ;:global-vars {*warn-on-reflection* true}
                    :dependencies [[org.clojure/clojure "1.9.0"]
