@@ -240,6 +240,12 @@
     (->> value (map (fn [v] (accept item v options))) (into (empty value)))
     value))
 
+(defmethod walk :tuple [{:keys [::parse/items]} value accept options]
+  (let [pairs (map vector value items)]
+    (map (fn [[v item]]
+           (accept item v options))
+         pairs)))
+
 (defmethod walk :set [{:keys [::parse/item]} value accept options]
   (if (or (set? value) (sequential? value))
     (->> value (map (fn [v] (accept item v options))) (set))

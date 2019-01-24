@@ -96,9 +96,10 @@
     (is (= {::parse/item {:spec int?, :type :long}
             :type :set}
            (parse/parse-spec (s/coll-of int? :into #{}))))
-    (is (= {::parse/item {::parse/items [:long :keyword]
+    (is (= {::parse/item {::parse/items [{:spec int?, :type :long}
+                                         {:spec keyword?,:type :keyword}]
                           ::parse/size 2
-                          :type :vector}
+                          :type [:tuple [:long :keyword]]}
             :type :map-of}
            (parse/parse-spec (s/coll-of (s/tuple int? keyword?) :into {})))))
   (testing "s/merge"
