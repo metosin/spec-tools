@@ -138,15 +138,18 @@
             (or opt opt-un) (assoc ::keys-opt (set (concat opt opt-un))))))
 
 (defmethod parse-form 'clojure.spec.alpha/or [_ form]
-  (let [specs (mapv (comp parse-spec second) (partition 2 (rest form)))]
-    {:type [:or (->> specs (map :type) (distinct) (keep identity) (vec))]
+  (let [specs (->> (mapv (comp parse-spec second) (partition 2 (rest form)))
+                   (filter :type))]
+    {:type [:or (->> specs (map :type) (distinct) (vec))]
      ::items specs}))
 
 (defmethod parse-form 'clojure.spec.alpha/and [_ form]
-  (let [specs (mapv parse-spec (rest form))
-        types (->> specs (map :type) (distinct) (keep identity) (vec))]
-    {:type (if (> (count types) 1) [:and types] (first types))
-     ::items specs}))
+  (let [specs (->> (mapv parse-spec (rest form))
+                   (filter :type))]
+    (if (> (count specs) 1)
+      {:type [:and (->> specs (map :type) (distinct) (vec))]
+       ::items specs}
+      (first specs))))
 
 (defmethod parse-form 'clojure.spec.alpha/merge [_ form]
   (apply impl/deep-merge (map parse-spec (rest form))))
