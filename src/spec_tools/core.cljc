@@ -241,10 +241,14 @@
     value))
 
 (defmethod walk :tuple [{:keys [::parse/items]} value accept options]
-  (let [pairs (map vector value items)]
-    (map (fn [[v item]]
-           (accept item v options))
-         pairs)))
+  (if (and (sequential? value)
+           (= (count value)
+              (count items)))
+    (let [pairs (map vector value items)]
+     (map (fn [[v item]]
+            (accept item v options))
+          pairs))
+    value))
 
 (defmethod walk :set [{:keys [::parse/item]} value accept options]
   (if (or (set? value) (sequential? value))

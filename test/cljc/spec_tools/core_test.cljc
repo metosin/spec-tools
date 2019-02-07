@@ -372,7 +372,9 @@
   (testing "s/tuple"
     (is (= [1] (st/coerce (s/tuple int?) ["1"] st/string-transformer)))
     (is (= [1 :kikka] (st/coerce (s/tuple int? keyword?) ["1" "kikka"] st/string-transformer)))
-    (is (= [:kikka 1] (st/coerce (s/tuple keyword? int?) ["kikka" "1"] st/string-transformer))))
+    (is (= [:kikka 1] (st/coerce (s/tuple keyword? int?) ["kikka" "1"] st/string-transformer)))
+    (is (= "1" (st/coerce (s/tuple keyword? int?) "1" st/string-transformer)))
+    (is (= ["kikka" "1" "2"] (st/coerce (s/tuple keyword? int?) ["kikka" "1" "2"] st/string-transformer))))
   (testing "composed"
     (let [spec (s/nilable
                  (s/nilable
