@@ -452,6 +452,7 @@
 (s/def ::weight integer?)
 (s/def ::person (s/keys :req-un [::height ::weight]))
 (s/def ::person-spec (st/spec (s/keys :req-un [::height ::weight])))
+(s/def ::owner ::person)
 
 (deftest map-specs-test
   (let [person {:height 200, :weight 80, :age 36}]
@@ -465,10 +466,27 @@
 
     (testing "stripping extra keys"
       (is (= {:height 200, :weight 80}
+             ;; via conform
              (st/conform ::person person st/strip-extra-keys-transformer)
              (st/conform ::person-spec person st/strip-extra-keys-transformer)
+             ;; via coerce
+             (st/coerce ::person person st/strip-extra-keys-transformer)
+             (st/coerce ::person-spec person st/strip-extra-keys-transformer)
+             ;; via decode
+             (st/decode ::person person st/strip-extra-keys-transformer)
+             (st/decode ::person-spec person st/strip-extra-keys-transformer)
+             ;; simplified (via coerce)
              (st/select-spec ::person person)
              (st/select-spec ::person-spec person))))
+
+    (testing "deeply nested"
+      (is (= {:owner {:weight 80, :height 200}}
+             (st/select-spec
+               (s/keys :req-un [::owner])
+               {:TOO "MUCH"
+                :owner {:INFOR "MATION"
+                        :height 200
+                        :weight 80}}))))
 
     (testing "failing on extra keys"
       (is (not (s/invalid? (st/conform ::person

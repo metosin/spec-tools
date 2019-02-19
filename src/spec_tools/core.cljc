@@ -205,10 +205,9 @@
         (s/unform spec conformed)))))
 
 (defn select-spec
-  "Drops all extra keys out of a Keys spec value. To use this recursively,
-  wrap all child Keys Specs into Spec Records. See CLJ-2116 for details."
+  "Best effor to drop recursively all extra keys out of a keys spec value."
   [spec value]
-  (decode spec value strip-extra-keys-transformer))
+  (coerce spec value strip-extra-keys-transformer))
 
 ;;
 ;; Walker, from Nekala
