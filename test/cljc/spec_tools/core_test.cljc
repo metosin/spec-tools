@@ -346,7 +346,9 @@
     (is (= :user/kikka (st/coerce keyword? "user/kikka" st/string-transformer))))
   (testing "s/and"
     (is (= 1 (st/coerce (s/and int? keyword?) "1" st/string-transformer)))
-    (is (= :1 (st/coerce (s/and keyword? int?) "1" st/string-transformer))))
+    (is (= :1 (st/coerce (s/and keyword? int?) "1" st/string-transformer)))
+    (is (= [1] (st/coerce (s/and (s/coll-of int?)) ["1"] st/string-transformer)))
+    (is (= [1] (st/coerce (s/and (s/coll-of int?) (comp boolean not-empty)) ["1"] st/string-transformer))))
   (testing "s/or"
     (is (= 1 (st/coerce (s/or :int int? :keyword keyword?) "1" st/string-transformer)))
     (is (= :1 (st/coerce (s/or :keyword keyword? :int int?) "1" st/string-transformer))))
