@@ -452,7 +452,7 @@
 (s/def ::weight integer?)
 (s/def ::person (s/keys :req-un [::height ::weight]))
 (s/def ::person-spec (st/spec (s/keys :req-un [::height ::weight])))
-(s/def ::owner ::person)
+(s/def ::persons (s/coll-of ::person :into []))
 
 (deftest map-specs-test
   (let [person {:height 200, :weight 80, :age 36}]
@@ -480,13 +480,13 @@
              (st/select-spec ::person-spec person))))
 
     (testing "deeply nested"
-      (is (= {:owner {:weight 80, :height 200}}
+      (is (= {:persons [{:weight 80, :height 200}]}
              (st/select-spec
-               (s/keys :req-un [::owner])
+               (s/keys :req-un [::persons])
                {:TOO "MUCH"
-                :owner {:INFOR "MATION"
-                        :height 200
-                        :weight 80}}))))
+                :persons [{:INFOR "MATION"
+                           :height 200
+                           :weight 80}]}))))
 
     (testing "failing on extra keys"
       (is (not (s/invalid? (st/conform ::person
