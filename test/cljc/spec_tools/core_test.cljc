@@ -6,6 +6,7 @@
             [spec-tools.spec :as spec]
             [spec-tools.parse :as info]
             [spec-tools.form :as form]
+            [spec-tools.transform :as transform]
             [spec-tools.parse :as parse]
             [#?(:clj  clojure.spec.gen.alpha
                 :cljs cljs.spec.gen.alpha) :as gen]
@@ -370,6 +371,14 @@
     (is (= nil (st/coerce (s/nilable int?) nil st/string-transformer))))
   (testing "s/every"
     (is (= [1] (st/coerce (s/every int?) ["1"] st/string-transformer))))
+  (testing "referenced specs, #165"
+    (s/def ::pos? (st/spec {:spec (partial pos?), :decode/string transform/string->long}))
+    (is (= 1 (st/coerce (s/and ::pos?) "1" st/string-transformer)))
+    (is (= 1 (st/coerce (s/or :default ::pos?) "1" st/string-transformer)))
+    (is (= [1 2 3 :4] (st/coerce (s/coll-of ::pos?) ["1" "2" "3" :4] st/string-transformer)))
+    (is (= {1 :2, :3 4} (st/coerce (s/map-of ::pos? ::pos?) {"1" :2, :3 "4"} st/string-transformer)))
+    (is (= [1 :2 3 "4"] (st/coerce (s/tuple ::pos? keyword? ::pos?) ["1" "2" "3" "4"] st/string-transformer)))
+    (is (= 1 (st/coerce (s/nilable ::pos?) "1" st/string-transformer))))
   (testing "composed"
     (let [spec (s/nilable
                  (s/nilable
@@ -583,7 +592,8 @@
   (testing "works for core predicates"
     (is (= :long (:type (info/parse-spec `integer?)))))
   (testing "works for conjunctive predicates"
-    (is (= :long (:type (info/parse-spec `(s/and integer? #(> % 42)))))))
+    (is (= [:and [:long]] (:type (info/parse-spec `(s/and integer? #(> % 42))))))
+    (is (= [:and [:long]] (:type (info/parse-spec `(s/and #(> % 42) integer?))))))
   (testing "unknowns return nil"
     (is (= nil (:type (info/parse-spec #(> % 2))))))
   (testing "available types"

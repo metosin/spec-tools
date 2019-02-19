@@ -235,6 +235,19 @@
         transformed))
     value items))
 
+(defmethod walk :nilable [{:keys [::parse/item]} value accept options]
+  (accept item value options))
+
+(defmethod walk :tuple [{:keys [::parse/items]} value accept options]
+  (if (sequential? value)
+    (->> (map-indexed vector value)
+         (map (fn [[i v]]
+                (if-let [spec (if (< i (count items)) (nth items i))]
+                  (accept (nth items i) v options)
+                  v)))
+         (into (empty value)))
+    value))
+
 (defmethod walk :vector [{:keys [::parse/item]} value accept options]
   (if (sequential? value)
     (let [f (if (list? value) reverse identity)]
@@ -296,16 +309,18 @@
 
   Coercion
   (-coerce [this value transformer options]
-    (let [map->spec (fn [x]
-                      (cond
-                        (keyword? x) (recur (s/get-spec x))
-                        (spec? x) x
-                        (s/spec? x) (create-spec {:spec x})
-                        (map? x) (create-spec (update x :spec (fnil identity any?)))))
+    (let [specify (fn [x]
+                    (cond
+                      (keyword? x) (recur (s/get-spec x))
+                      (spec? x) x
+                      (s/spec? x) (create-spec {:spec x})
+                      (map? x) (if (qualified-keyword? (:spec x))
+                                 (recur (s/get-spec (:spec x)))
+                                 (create-spec (update x :spec (fnil identity any?))))))
           transformed (if-let [transform (if (and transformer (not (:skip? options)))
                                            (-decoder transformer this value))]
                         (transform this value) value)]
-      (walk this transformed #(coerce (map->spec %1) %2 transformer %3) options)))
+      (walk this transformed #(coerce (specify %1) %2 transformer %3) options)))
 
   s/Spec
   (conform* [this x]
@@ -503,10 +518,12 @@
                  (s/explain* merge-spec path via in x))
                (gen* [_ overrides path rmap]
                  (s/gen* merge-spec overrides path rmap)))]
-    (create-spec (clojure.core/merge {:spec spec
-                                      :form spec-form
-                                      :type :map}
-                                     (apply merge-with set/union form-keys)))))
+    (create-spec
+      (clojure.core/merge
+        {:spec spec
+         :form spec-form
+         :type :map}
+        (apply merge-with set/union form-keys)))))
 
 #?(:clj
    (defmacro merge [& forms]
