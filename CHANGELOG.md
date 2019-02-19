@@ -2,6 +2,8 @@
 
 * `st/coerce` doesn't reverse list order, fixes [compojure-api#406](https://github.com/metosin/compojure-api/issues/406)
 
+* Less verbose spec form, all `:spec-tools.parse` keys are sripped, fixes [#159](https://github.com/metosin/spec-tools/issues/159)
+
 # 0.8.3 (17.1.2019)
 
 * Identify Leaf Specs

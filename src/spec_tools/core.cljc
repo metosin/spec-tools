@@ -272,8 +272,12 @@
 ;; Spec Record
 ;;
 
-(defn- extra-spec-map [t]
-  (dissoc t :form :spec))
+(defn- extra-spec-map [data]
+  (->> (dissoc data :form :spec)
+       (reduce
+         (fn [acc [k v]]
+           (if (= "spec-tools.parse" (namespace k)) acc (assoc acc k v)))
+         {})))
 
 (defn- fail-on-invoke [spec]
   (throw
