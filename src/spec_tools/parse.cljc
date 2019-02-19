@@ -10,7 +10,7 @@
   ((if (sequential? type) first identity) type))
 
 (defn collection-type? [type]
-  (contains? #{:map :map-of :set :vector} type))
+  (contains? #{:map :map-of :set :vector :tuple} type))
 
 (defn leaf-type? [type]
   (not (contains? (non-leaf-types) type)))
@@ -54,7 +54,7 @@
 (defmethod parse-form ::default [_ _] {:type nil})
 
 (defn- non-leaf-types []
-  #{:map :map-of :and :or :set :vector})
+  #{:map :map-of :and :or :set :tuple :vector})
 
 (defn types []
   #{:long
@@ -73,6 +73,7 @@
     :and
     :or
     :set
+    :tuple
     :vector})
 
 (defn type-symbols []
@@ -192,10 +193,10 @@
 
 (defmethod parse-form 'clojure.spec.alpha/tuple [_ [_ & values]]
   (let [specs (mapv parse-spec values)
-        types (mapv :type specs)]
-    {:type :vector
+        types (->> specs (map :type) (distinct) (keep identity) (vec))]
+    {:type [:tuple types]
      ::size (count values)
-     ::items types}))
+     ::items specs}))
 
 (defmethod parse-form 'clojure.spec.alpha/nilable [_ form]
   (assoc (parse-spec (second form)) ::nilable? true))
