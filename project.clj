@@ -22,7 +22,7 @@
                              [lein-codox "0.10.5"]]
                    :jvm-opts ^:replace ["-server"]
                    ;:global-vars {*warn-on-reflection* true}
-                   :dependencies [[org.clojure/clojure "1.9.0"]
+                   :dependencies [[org.clojure/clojure "1.10.0"]
                                   [org.clojure/clojurescript "1.10.439"]
                                   [criterium "0.4.4"]
                                   [prismatic/schema "1.1.9"]
