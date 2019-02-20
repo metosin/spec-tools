@@ -378,7 +378,7 @@
     (is (= [1 :kikka] (st/coerce (s/tuple int? keyword?) ["1" "kikka"] st/string-transformer)))
     (is (= [:kikka 1] (st/coerce (s/tuple keyword? int?) ["kikka" "1"] st/string-transformer)))
     (is (= "1" (st/coerce (s/tuple keyword? int?) "1" st/string-transformer)))
-    (is (= ["kikka" "1" "2"] (st/coerce (s/tuple keyword? int?) ["kikka" "1" "2"] st/string-transformer))))
+    (is (= [:kikka 1 "2"] (st/coerce (s/tuple keyword? int?) ["kikka" "1" "2"] st/string-transformer))))
   (testing "referenced specs, #165"
     (s/def ::pos? (st/spec {:spec (partial pos?), :decode/string transform/string->long}))
     (is (= 1 (st/coerce (s/and ::pos?) "1" st/string-transformer)))
