@@ -347,7 +347,9 @@
     (is (= :user/kikka (st/coerce keyword? "user/kikka" st/string-transformer))))
   (testing "s/and"
     (is (= 1 (st/coerce (s/and int? keyword?) "1" st/string-transformer)))
-    (is (= :1 (st/coerce (s/and keyword? int?) "1" st/string-transformer))))
+    (is (= :1 (st/coerce (s/and keyword? int?) "1" st/string-transformer)))
+    (is (= [1] (st/coerce (s/and (s/coll-of int?)) ["1"] st/string-transformer)))
+    (is (= [1] (st/coerce (s/and (s/coll-of int?) (comp boolean not-empty)) ["1"] st/string-transformer))))
   (testing "s/or"
     (is (= 1 (st/coerce (s/or :int int? :keyword keyword?) "1" st/string-transformer)))
     (is (= :1 (st/coerce (s/or :keyword keyword? :int int?) "1" st/string-transformer))))
@@ -371,6 +373,12 @@
     (is (= nil (st/coerce (s/nilable int?) nil st/string-transformer))))
   (testing "s/every"
     (is (= [1] (st/coerce (s/every int?) ["1"] st/string-transformer))))
+  (testing "s/tuple"
+    (is (= [1] (st/coerce (s/tuple int?) ["1"] st/string-transformer)))
+    (is (= [1 :kikka] (st/coerce (s/tuple int? keyword?) ["1" "kikka"] st/string-transformer)))
+    (is (= [:kikka 1] (st/coerce (s/tuple keyword? int?) ["kikka" "1"] st/string-transformer)))
+    (is (= "1" (st/coerce (s/tuple keyword? int?) "1" st/string-transformer)))
+    (is (= ["kikka" "1" "2"] (st/coerce (s/tuple keyword? int?) ["kikka" "1" "2"] st/string-transformer))))
   (testing "referenced specs, #165"
     (s/def ::pos? (st/spec {:spec (partial pos?), :decode/string transform/string->long}))
     (is (= 1 (st/coerce (s/and ::pos?) "1" st/string-transformer)))

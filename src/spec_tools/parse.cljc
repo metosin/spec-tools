@@ -10,7 +10,7 @@
   ((if (sequential? type) first identity) type))
 
 (defn collection-type? [type]
-  (contains? #{:map :map-of :set :vector} type))
+  (contains? #{:map :map-of :set :vector :tuple} type))
 
 (defn leaf-type? [type]
   (not (contains? (non-leaf-types) type)))
