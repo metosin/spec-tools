@@ -296,8 +296,8 @@
     (into (empty value)
           (comp (map-indexed vector)
                 (map (fn [[i v]]
-                       (if (if (< i (count items)) (nth items i))
-                         (accept (nth items i) v options)
+                       (if (< i (count items))
+                         (some-> (nth items i) (accept v options))
                          v))))
           value)
     value))
