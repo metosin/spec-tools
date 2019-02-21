@@ -293,12 +293,13 @@
 
 (defmethod walk :tuple [{:keys [::parse/items]} value accept options]
   (if (sequential? value)
-    (->> (map-indexed vector value)
-         (map (fn [[i v]]
-                (if (if (< i (count items)) (nth items i))
-                  (accept (nth items i) v options)
-                  v)))
-         (into (empty value)))
+    (into (empty value)
+          (comp (map-indexed vector)
+                (map (fn [[i v]]
+                       (if (if (< i (count items)) (nth items i))
+                         (accept (nth items i) v options)
+                         v))))
+          value)
     value))
 
 (defmethod walk :set [{:keys [::parse/item]} value accept options]
