@@ -89,13 +89,14 @@
   "Returns a Transformer instance out of options map or Transformer instances.
   Available options:
 
-  | Key               | Description
-  |-------------------|-----------------
-  | `name`            | Name of the transformer
-  | `encoders`        | Map of type `type -> transform`
-  | `decoders`        | Map of type `type -> transform`
-  | `default-encoder` | Default `transform` for encoding
-  | `default-decoder` | Default `transform` for decoding
+  | Key                | Description
+  |--------------------|-----------------
+  | `:name`            | Name of the transformer
+  | `:encoders`        | Map of type `type -> transform`
+  | `:decoders`        | Map of type `type -> transform`
+  | `:default-encoder` | Default `transform` for encoding
+  | `:default-decoder` | Default `transform` for decoding
+
 
   Example of a JSON type-transformer:
 
