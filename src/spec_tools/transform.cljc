@@ -122,7 +122,7 @@
 ;;
 
 (defn strip-extra-values [{:keys [::parse/items]} x]
-  (let [size (and (count items))]
+  (let [size (count items)]
     (if (and (vector? x) (> (count x) size))
       (subvec x 0 size)
       x)))
