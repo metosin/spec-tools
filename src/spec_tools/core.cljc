@@ -249,16 +249,6 @@
 (defmethod walk :nilable [{:keys [::parse/item]} value accept options]
   (accept item value options))
 
-(defmethod walk :tuple [{:keys [::parse/items]} value accept options]
-  (if (sequential? value)
-    (->> (map-indexed vector value)
-         (map (fn [[i v]]
-                (if-let [spec (if (< i (count items)) (nth items i))]
-                  (accept (nth items i) v options)
-                  v)))
-         (into (empty value)))
-    value))
-
 (defmethod walk :vector [{:keys [::parse/item]} value accept options]
   (if (sequential? value)
     (let [f (if (list? value) reverse identity)]
