@@ -6,6 +6,7 @@
             [spec-tools.spec :as spec]
             [spec-tools.parse :as info]
             [spec-tools.form :as form]
+            [spec-tools.transform :as transform]
             [spec-tools.parse :as parse]
             [#?(:clj  clojure.spec.gen.alpha
                 :cljs cljs.spec.gen.alpha) :as gen]
@@ -339,6 +340,24 @@
 (s/def ::c1 int?)
 (s/def ::c2 keyword?)
 
+(deftest composing-type-transformers
+  (is (= (st/-options st/json-transformer)
+         (st/-options (st/type-transformer st/json-transformer))
+         (st/-options (st/type-transformer st/json-transformer st/json-transformer))))
+  (is (= {:c1 1, :c2 :abba}
+         (st/coerce
+           (s/keys :req-un [::c1 ::c2])
+           {:c1 "1", :c2 "abba"}
+           (st/type-transformer st/json-transformer st/string-transformer))
+         (st/coerce
+           (s/keys :req-un [::c1 ::c2])
+           {:c1 "1", :c2 "abba"}
+           (st/type-transformer st/string-transformer st/json-transformer))))
+  (is (= :bumblebee (st/-name (st/type-transformer
+                                st/string-transformer
+                                st/json-transformer
+                                {:name :bumblebee})))))
+
 (deftest coercion-test
   (testing "predicates"
     (is (= 1 (st/coerce int? "1" st/string-transformer)))
@@ -377,7 +396,18 @@
     (is (= [1 :kikka] (st/coerce (s/tuple int? keyword?) ["1" "kikka"] st/string-transformer)))
     (is (= [:kikka 1] (st/coerce (s/tuple keyword? int?) ["kikka" "1"] st/string-transformer)))
     (is (= "1" (st/coerce (s/tuple keyword? int?) "1" st/string-transformer)))
-    (is (= ["kikka" "1" "2"] (st/coerce (s/tuple keyword? int?) ["kikka" "1" "2"] st/string-transformer))))
+    (is (= [:kikka 1 "2"] (st/coerce (s/tuple keyword? int?) ["kikka" "1" "2"] st/string-transformer)))
+    (is (= [:kikka 1] (st/coerce (s/tuple keyword? int?) ["kikka" "1" "2"] (st/type-transformer
+                                                                             st/string-transformer
+                                                                             st/strip-extra-values-transformer)))))
+  (testing "referenced specs, #165"
+    (s/def ::pos? (st/spec {:spec (partial pos?), :decode/string transform/string->long}))
+    (is (= 1 (st/coerce (s/and ::pos?) "1" st/string-transformer)))
+    (is (= 1 (st/coerce (s/or :default ::pos?) "1" st/string-transformer)))
+    (is (= [1 2 3 :4] (st/coerce (s/coll-of ::pos?) ["1" "2" "3" :4] st/string-transformer)))
+    (is (= {1 :2, :3 4} (st/coerce (s/map-of ::pos? ::pos?) {"1" :2, :3 "4"} st/string-transformer)))
+    (is (= [1 :2 3 "4"] (st/coerce (s/tuple ::pos? keyword? ::pos?) ["1" "2" "3" "4"] st/string-transformer)))
+    (is (= 1 (st/coerce (s/nilable ::pos?) "1" st/string-transformer))))
   (testing "composed"
     (let [spec (s/nilable
                  (s/nilable
@@ -451,6 +481,7 @@
 (s/def ::weight integer?)
 (s/def ::person (s/keys :req-un [::height ::weight]))
 (s/def ::person-spec (st/spec (s/keys :req-un [::height ::weight])))
+(s/def ::persons (s/coll-of ::person :into []))
 
 (deftest map-specs-test
   (let [person {:height 200, :weight 80, :age 36}]
@@ -464,10 +495,27 @@
 
     (testing "stripping extra keys"
       (is (= {:height 200, :weight 80}
+             ;; via conform
              (st/conform ::person person st/strip-extra-keys-transformer)
              (st/conform ::person-spec person st/strip-extra-keys-transformer)
+             ;; via coerce
+             (st/coerce ::person person st/strip-extra-keys-transformer)
+             (st/coerce ::person-spec person st/strip-extra-keys-transformer)
+             ;; via decode
+             (st/decode ::person person st/strip-extra-keys-transformer)
+             (st/decode ::person-spec person st/strip-extra-keys-transformer)
+             ;; simplified (via coerce)
              (st/select-spec ::person person)
              (st/select-spec ::person-spec person))))
+
+    (testing "deeply nested"
+      (is (= {:persons [{:weight 80, :height 200}]}
+             (st/select-spec
+               (s/keys :req-un [::persons])
+               {:TOO "MUCH"
+                :persons [{:INFOR "MATION"
+                           :height 200
+                           :weight 80}]}))))
 
     (testing "failing on extra keys"
       (is (not (s/invalid? (st/conform ::person
@@ -591,7 +639,8 @@
   (testing "works for core predicates"
     (is (= :long (:type (info/parse-spec `integer?)))))
   (testing "works for conjunctive predicates"
-    (is (= :long (:type (info/parse-spec `(s/and integer? #(> % 42)))))))
+    (is (= [:and [:long]] (:type (info/parse-spec `(s/and integer? #(> % 42))))))
+    (is (= [:and [:long]] (:type (info/parse-spec `(s/and #(> % 42) integer?))))))
   (testing "unknowns return nil"
     (is (= nil (:type (info/parse-spec #(> % 2))))))
   (testing "available types"

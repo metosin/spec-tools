@@ -118,6 +118,16 @@
     x))
 
 ;;
+;; Tuples
+;;
+
+(defn strip-extra-values [{:keys [::parse/items]} x]
+  (let [size (count items)]
+    (if (and (vector? x) (> (count x) size))
+      (subvec x 0 size)
+      x)))
+
+;;
 ;; type decoders
 ;;
 
@@ -146,6 +156,9 @@
 
 (def fail-on-extra-keys-type-decoders
   {:map fail-on-extra-keys})
+
+(def strip-extra-values-type-decoders
+  {:tuple strip-extra-values})
 
 ;;
 ;; type encoders

@@ -49,12 +49,15 @@
     ;; default
     :else (parse-form x nil)))
 
+(defn parse-spec-with-spec-ref [x]
+  (merge (parse-spec x) (if (qualified-keyword? x) {:spec x})))
+
 (defmulti parse-form (fn [dispatch _] dispatch) :default ::default)
 
 (defmethod parse-form ::default [_ _] {:type nil})
 
 (defn- non-leaf-types []
-  #{:map :map-of :and :or :set :tuple :vector})
+  #{:map :map-of :and :or :nilable :tuple :set :vector})
 
 (defn types []
   #{:long
@@ -74,7 +77,9 @@
     :or
     :set
     :tuple
-    :vector})
+    :nilable
+    :vector
+    :spec})
 
 (defn type-symbols []
   (-> parse-form
@@ -139,18 +144,15 @@
             (or opt opt-un) (assoc ::keys-opt (set (concat opt opt-un))))))
 
 (defmethod parse-form 'clojure.spec.alpha/or [_ form]
-  (let [specs (->> (mapv (comp parse-spec second) (partition 2 (rest form)))
-                   (filter :type))]
-    {:type [:or (->> specs (map :type) (distinct) (vec))]
+  (let [specs (mapv (comp parse-spec-with-spec-ref second) (partition 2 (rest form)))]
+    {:type [:or (->> specs (map :type) (distinct) (keep identity) (vec))]
      ::items specs}))
 
 (defmethod parse-form 'clojure.spec.alpha/and [_ form]
-  (let [specs (->> (mapv parse-spec (rest form))
-                   (filter :type))]
-    (if (> (count specs) 1)
-      {:type [:and (->> specs (map :type) (distinct) (vec))]
-       ::items specs}
-      (first specs))))
+  (let [specs (mapv parse-spec-with-spec-ref (rest form))
+        types (->> specs (map :type) (distinct) (keep identity) (vec))]
+    {:type [:and types]
+     ::items specs}))
 
 (defmethod parse-form 'clojure.spec.alpha/merge [_ form]
   (apply impl/deep-merge (map parse-spec (rest form))))
@@ -168,7 +170,7 @@
 
 (defmethod parse-form 'clojure.spec.alpha/coll-of [_ form]
   (let [{:keys [into]} (apply hash-map (drop 2 form))]
-    {::item (parse-spec (second form))
+    {::item (parse-spec-with-spec-ref (second form))
      :type
      (cond
        (map? into) :map-of
@@ -177,11 +179,12 @@
 
 (defmethod parse-form 'clojure.spec.alpha/map-of [_ [_ k v]]
   {:type :map-of
-   ::key (parse-spec k)
-   ::value (parse-spec v)})
+   ::key (parse-spec-with-spec-ref k)
+   ::value (parse-spec-with-spec-ref v)})
 
 (defmethod parse-form 'spec-tools.core/spec [_ form]
-  (parse-spec (-> form last :spec)))
+  (let [parsed (-> form last :spec parse-spec)]
+    (if (:type parsed) parsed {:type :spec})))
 
 ; *
 ; +
@@ -192,14 +195,15 @@
 ; keys*
 
 (defmethod parse-form 'clojure.spec.alpha/tuple [_ [_ & values]]
-  (let [specs (mapv parse-spec values)
-        types (->> specs (map :type) (distinct) (keep identity) (vec))]
+  (let [specs (mapv parse-spec-with-spec-ref values)
+        types (mapv :type specs)]
     {:type [:tuple types]
-     ::size (count values)
      ::items specs}))
 
 (defmethod parse-form 'clojure.spec.alpha/nilable [_ form]
-  (assoc (parse-spec (second form)) ::nilable? true))
+  (let [spec (-> form second parse-spec-with-spec-ref)]
+    {:type :nilable
+     ::item spec}))
 
 (defmethod parse-form 'spec-tools.core/merge [_ form]
   (apply impl/deep-merge (map parse-spec (rest form))))

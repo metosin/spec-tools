@@ -298,10 +298,7 @@
       (is (= `(spec-tools.core/spec
                 {:spec (clojure.spec.alpha/keys :req [::i])
                  :type :map
-                 :leaf? false
-                 ::parse/key->spec {::i ::i}
-                 ::parse/keys #{::i}
-                 ::parse/keys-req #{::i}})
+                 :leaf? false})
              (s/form (dissoc spec1 :name))
              (s/form (dissoc spec2 :name))))))
 

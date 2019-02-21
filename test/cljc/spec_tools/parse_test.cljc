@@ -31,9 +31,9 @@
            (parse/parse-spec 'clojure.core/double?)
            (parse/parse-spec double?))))
   (testing "s/nilable"
-    (is (= {:spec int?
-            :type :long,
-            ::parse/nilable? true}
+    (is (= {::parse/item {::parse/item {:spec int?, :type :long}
+                          :type :nilable}
+            :type :nilable}
            (parse/parse-spec (s/nilable (s/nilable int?))))))
   (testing "s/or"
     (is (= {::parse/items [{:spec int?, :type :long} {:spec keyword?, :type :keyword}]
@@ -97,8 +97,7 @@
             :type :set}
            (parse/parse-spec (s/coll-of int? :into #{}))))
     (is (= {::parse/item {::parse/items [{:spec int?, :type :long}
-                                         {:spec keyword?,:type :keyword}]
-                          ::parse/size 2
+                                         {:spec keyword?, :type :keyword}]
                           :type [:tuple [:long :keyword]]}
             :type :map-of}
            (parse/parse-spec (s/coll-of (s/tuple int? keyword?) :into {})))))

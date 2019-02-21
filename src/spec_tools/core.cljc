@@ -81,24 +81,64 @@
 
 (defprotocol Transformer
   (-name [this])
+  (-options [this])
   (-encoder [this spec value])
   (-decoder [this spec value]))
 
-(defn type-transformer [{transformer-name :name
-                         :keys [encoders decoders default-encoder default-decoder]}]
-  (let [encode-key (some->> transformer-name name (str "encode/") keyword)
-        decode-key (some->> transformer-name name (str "decode/") keyword)]
-    (reify
-      Transformer
-      (-name [_] transformer-name)
-      (-encoder [_ spec _]
-        (or (get spec encode-key)
-            (get encoders (:type spec))
-            default-encoder))
-      (-decoder [_ spec _]
-        (or (get spec decode-key)
-            (get decoders (:type spec))
-            default-decoder)))))
+(defn type-transformer
+  "Returns a Transformer instance out of options map or Transformer instances.
+  Available options:
+
+  | Key                | Description
+  |--------------------|-----------------
+  | `:name`            | Name of the transformer
+  | `:encoders`        | Map of type `type -> transform`
+  | `:decoders`        | Map of type `type -> transform`
+  | `:default-encoder` | Default `transform` for encoding
+  | `:default-decoder` | Default `transform` for decoding
+
+
+  Example of a JSON type-transformer:
+
+  ```clojure
+  (require '[spec-tools.core :as st])
+  (require '[spec-tools.transform :as stt])
+
+  (def json-transformer
+    (type-transformer
+      {:name :json
+       :decoders stt/json-type-decoders
+       :encoders stt/json-type-encoders
+       :default-encoder stt/any->any}))
+  ```
+
+  Composed Strict JSON Transformer:
+
+  ```clojure
+  (def strict-json-transformer
+    (st/type-transformer
+      st/json-transformer
+      st/strip-extra-keys-transformer
+      st/strip-extra-values-transformer))
+  ```"
+  [& options-or-transformers]
+  (let [->opts #(if (satisfies? Transformer %) (-options %) %)
+        {transformer-name :name :keys [encoders decoders default-encoder default-decoder] :as options}
+        (reduce impl/deep-merge nil (map ->opts options-or-transformers))]
+    (let [encode-key (some->> transformer-name name (str "encode/") keyword)
+          decode-key (some->> transformer-name name (str "decode/") keyword)]
+      (reify
+        Transformer
+        (-name [_] transformer-name)
+        (-options [_] options)
+        (-encoder [_ spec _]
+          (or (get spec encode-key)
+              (get encoders (parse/type-dispatch-value (:type spec)))
+              default-encoder))
+        (-decoder [_ spec _]
+          (or (get spec decode-key)
+              (get decoders (parse/type-dispatch-value (:type spec)))
+              default-decoder))))))
 
 (def json-transformer
   (type-transformer
@@ -119,10 +159,19 @@
     {:name ::strip-extra-keys
      :decoders stt/strip-extra-keys-type-decoders}))
 
+(def strip-extra-values-transformer
+  (type-transformer
+    {:name ::strip-extra-values
+     :decoders stt/strip-extra-values-type-decoders}))
+
 (def fail-on-extra-keys-transformer
   (type-transformer
     {:name ::fail-on-extra-keys
      :decoders stt/fail-on-extra-keys-type-decoders}))
+
+;;
+;; Transforming
+;;
 
 (defn explain
   ([spec value]
@@ -205,10 +254,9 @@
         (s/unform spec conformed)))))
 
 (defn select-spec
-  "Drops all extra keys out of a Keys spec value. To use this recursively,
-  wrap all child Keys Specs into Spec Records. See CLJ-2116 for details."
+  "Best effor to drop recursively all extra keys out of a keys spec value."
   [spec value]
-  (decode spec value strip-extra-keys-transformer))
+  (coerce spec value strip-extra-keys-transformer))
 
 ;;
 ;; Walker, from Nekala
@@ -235,6 +283,9 @@
         transformed))
     value items))
 
+(defmethod walk :nilable [{:keys [::parse/item]} value accept options]
+  (accept item value options))
+
 (defmethod walk :vector [{:keys [::parse/item]} value accept options]
   (if (sequential? value)
     (let [f (if (list? value) reverse identity)]
@@ -242,13 +293,14 @@
     value))
 
 (defmethod walk :tuple [{:keys [::parse/items]} value accept options]
-  (if (and (sequential? value)
-           (= (count value)
-              (count items)))
-    (let [pairs (map vector value items)]
-     (map (fn [[v item]]
-            (accept item v options))
-          pairs))
+  (if (sequential? value)
+    (into (empty value)
+          (comp (map-indexed vector)
+                (map (fn [[i v]]
+                       (if (< i (count items))
+                         (some-> (nth items i) (accept v options))
+                         v))))
+          value)
     value))
 
 (defmethod walk :set [{:keys [::parse/item]} value accept options]
@@ -282,8 +334,12 @@
 ;; Spec Record
 ;;
 
-(defn- extra-spec-map [t]
-  (dissoc t :form :spec))
+(defn- extra-spec-map [data]
+  (->> (dissoc data :form :spec)
+       (reduce
+         (fn [acc [k v]]
+           (if (= "spec-tools.parse" (namespace k)) acc (assoc acc k v)))
+         {})))
 
 (defn- fail-on-invoke [spec]
   (throw
@@ -302,16 +358,18 @@
 
   Coercion
   (-coerce [this value transformer options]
-    (let [map->spec (fn [x]
-                      (cond
-                        (keyword? x) (recur (s/get-spec x))
-                        (spec? x) x
-                        (s/spec? x) (create-spec {:spec x})
-                        (map? x) (create-spec (update x :spec (fnil identity any?)))))
+    (let [specify (fn [x]
+                    (cond
+                      (keyword? x) (recur (s/get-spec x))
+                      (spec? x) x
+                      (s/spec? x) (create-spec {:spec x})
+                      (map? x) (if (qualified-keyword? (:spec x))
+                                 (recur (s/get-spec (:spec x)))
+                                 (create-spec (update x :spec (fnil identity any?))))))
           transformed (if-let [transform (if (and transformer (not (:skip? options)))
                                            (-decoder transformer this value))]
                         (transform this value) value)]
-      (walk this transformed #(coerce (map->spec %1) %2 transformer %3) options)))
+      (walk this transformed #(coerce (specify %1) %2 transformer %3) options)))
 
   s/Spec
   (conform* [this x]
@@ -509,10 +567,12 @@
                  (s/explain* merge-spec path via in x))
                (gen* [_ overrides path rmap]
                  (s/gen* merge-spec overrides path rmap)))]
-    (create-spec (clojure.core/merge {:spec spec
-                                      :form spec-form
-                                      :type :map}
-                                     (apply merge-with set/union form-keys)))))
+    (create-spec
+      (clojure.core/merge
+        {:spec spec
+         :form spec-form
+         :type :map}
+        (apply merge-with set/union form-keys)))))
 
 #?(:clj
    (defmacro merge [& forms]

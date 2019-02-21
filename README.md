@@ -154,19 +154,21 @@ Like [Plumatic Schema](https://github.com/plumatic/schema), Spec-tools different
 ```clj
 (defprotocol Transformer
   (-name [this])
+  (-options [this])
   (-encoder [this spec value])
   (-decoder [this spec value]))
 ```
 
 Spec-tools ships with following transformer implementations:
 
-| Name                             | Description                                                                                                            |
-|----------------------------------|------------------------------------------------------------------------------------------------------------------------|
-| `string-transformer`             | String-formats like properties files, query- & path-parameters.                                                        |
-| `json-transformer`               | [JSON](http://json.org/) format, like string, but numbers and booleans are supported                                   |
-| `strip-extra-keys-transformer`   | Decoding strips out extra keys of `s/keys` specs.                                                                      |
-| `fail-on-extra-keys-transformer` | Decoding fails if `s/keys` specs have extra keys.                                                                      |
-| `nil`                            | No transformations, [EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format). |
+| Name                             | Description
+|----------------------------------|------------
+| `string-transformer`             | String-formats like properties files, query- & path-parameters.
+| `json-transformer`               | [JSON](http://json.org/) format, like string, but numbers and booleans are supported
+| `strip-extra-keys-transformer`   | Decoding strips out extra keys of `s/keys` specs.
+| `strip-extra-values-transformer` | Decoding strips out extra values of `s/tuple` specs.
+| `fail-on-extra-keys-transformer` | Decoding fails if `s/keys` specs have extra keys.
+| `nil`                            | No transformations, e.g. [EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format).
 
 ### Coercion
 
@@ -411,12 +413,22 @@ Type-based transformer encoding & decoding mappings are defined as data, so they
 
 ```clj
 (def strict-json-transformer
-  (type-transformer
+  (st/type-transformer
     {:name :custom
      :decoders (merge
                  stt/json-type-decoders
                  stt/strip-extra-keys-type-decoders)
      :encoders stt/json-type-encoders}))
+```
+
+Or using `type-transformer` directly:
+
+```clj
+(def strict-json-transformer
+  (st/type-transformer
+    st/json-transformer
+    st/strip-extra-keys-transformer
+    st/strip-extra-values-transformer))
 ```
 
 ### Data Macros
