@@ -1,7 +1,7 @@
 # Unreleased
 
 * `st/coerce` doesn't reverse list order, fixes [compojure-api#406](https://github.com/metosin/compojure-api/issues/406)
-* Less verbose `st/Spec` form, all `:spec-tools.parse` keys are sripped, fixes [#159](https://github.com/metosin/spec-tools/issues/159)
+* Less verbose `st/Spec` form, all `:spec-tools.parse` keys are stripped, fixes [#159](https://github.com/metosin/spec-tools/issues/159)
 * More robust walker, named specs can be used with `s/or`, `s/and`, `s/coll-of`, `s/map-of`, `s/tuple` and `s/nilable`, fixes [#165](https://github.com/metosin/spec-tools/issues/165).
 * **BREAKING**: `st/select-spec` now uses `st/coerce` instead of `st/decode`. Stripping out extra keys from specs:
 
