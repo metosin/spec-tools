@@ -86,8 +86,40 @@
   (-decoder [this spec value]))
 
 (defn type-transformer
-  "Returns a Transformer instance out of options or Transformer instances.
-  Merges "
+  "Returns a Transformer instance out of options map or Transformer instances.
+  Available options:
+
+  | Key               | Description
+  |-------------------|-----------------
+  | `name`            | Name of the transformer
+  | `encoders`        | Map of type `type -> transform`
+  | `decoders`        | Map of type `type -> transform`
+  | `default-encoder` | Default `transform` for encoding
+  | `default-decoder` | Default `transform` for decoding
+
+  Example of a JSON type-transformer:
+
+  ```clojure
+  (require '[spec-tools.core :as st])
+  (require '[spec-tools.transform :as stt])
+
+  (def json-transformer
+    (type-transformer
+      {:name :json
+       :decoders stt/json-type-decoders
+       :encoders stt/json-type-encoders
+       :default-encoder stt/any->any}))
+  ```
+
+  Composed Strict JSON Transformer:
+
+  ```clojure
+  (def strict-json-transformer
+    (st/type-transformer
+      st/json-transformer
+      st/strip-extra-keys-transformer
+      st/strip-extra-values-transformer))
+  ```"
   [& options-or-transformers]
   (let [->opts #(if (satisfies? Transformer %) (-options %) %)
         {transformer-name :name :keys [encoders decoders default-encoder default-decoder] :as options}
@@ -135,6 +167,10 @@
   (type-transformer
     {:name ::fail-on-extra-keys
      :decoders stt/fail-on-extra-keys-type-decoders}))
+
+;;
+;; Transforming
+;;
 
 (defn explain
   ([spec value]
