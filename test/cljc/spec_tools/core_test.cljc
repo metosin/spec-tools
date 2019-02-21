@@ -340,6 +340,24 @@
 (s/def ::c1 int?)
 (s/def ::c2 keyword?)
 
+(deftest composing-type-transformers
+  (is (= (st/-options st/json-transformer)
+         (st/-options (st/type-transformer st/json-transformer))
+         (st/-options (st/type-transformer st/json-transformer st/json-transformer))))
+  (is (= {:c1 1, :c2 :abba}
+         (st/coerce
+           (s/keys :req-un [::c1 ::c2])
+           {:c1 "1", :c2 "abba"}
+           (st/type-transformer st/json-transformer st/string-transformer))
+         (st/coerce
+           (s/keys :req-un [::c1 ::c2])
+           {:c1 "1", :c2 "abba"}
+           (st/type-transformer st/string-transformer st/json-transformer))))
+  (is (= :bumblebee (st/-name (st/type-transformer
+                                st/string-transformer
+                                st/json-transformer
+                                {:name :bumblebee})))))
+
 (deftest coercion-test
   (testing "predicates"
     (is (= 1 (st/coerce int? "1" st/string-transformer)))
@@ -378,7 +396,10 @@
     (is (= [1 :kikka] (st/coerce (s/tuple int? keyword?) ["1" "kikka"] st/string-transformer)))
     (is (= [:kikka 1] (st/coerce (s/tuple keyword? int?) ["kikka" "1"] st/string-transformer)))
     (is (= "1" (st/coerce (s/tuple keyword? int?) "1" st/string-transformer)))
-    (is (= [:kikka 1 "2"] (st/coerce (s/tuple keyword? int?) ["kikka" "1" "2"] st/string-transformer))))
+    (is (= [:kikka 1 "2"] (st/coerce (s/tuple keyword? int?) ["kikka" "1" "2"] st/string-transformer)))
+    (is (= [:kikka 1] (st/coerce (s/tuple keyword? int?) ["kikka" "1" "2"] (st/type-transformer
+                                                                             st/string-transformer
+                                                                             st/strip-extra-values-transformer)))))
   (testing "referenced specs, #165"
     (s/def ::pos? (st/spec {:spec (partial pos?), :decode/string transform/string->long}))
     (is (= 1 (st/coerce (s/and ::pos?) "1" st/string-transformer)))

@@ -81,24 +81,31 @@
 
 (defprotocol Transformer
   (-name [this])
+  (-options [this])
   (-encoder [this spec value])
   (-decoder [this spec value]))
 
-(defn type-transformer [{transformer-name :name
-                         :keys [encoders decoders default-encoder default-decoder]}]
-  (let [encode-key (some->> transformer-name name (str "encode/") keyword)
-        decode-key (some->> transformer-name name (str "decode/") keyword)]
-    (reify
-      Transformer
-      (-name [_] transformer-name)
-      (-encoder [_ spec _]
-        (or (get spec encode-key)
-            (get encoders (:type spec))
-            default-encoder))
-      (-decoder [_ spec _]
-        (or (get spec decode-key)
-            (get decoders (:type spec))
-            default-decoder)))))
+(defn type-transformer
+  "Returns a Transformer instance out of options or Transformer instances.
+  Merges "
+  [& options-or-transformers]
+  (let [->opts #(if (satisfies? Transformer %) (-options %) %)
+        {transformer-name :name :keys [encoders decoders default-encoder default-decoder] :as options}
+        (reduce impl/deep-merge nil (map ->opts options-or-transformers))]
+    (let [encode-key (some->> transformer-name name (str "encode/") keyword)
+          decode-key (some->> transformer-name name (str "decode/") keyword)]
+      (reify
+        Transformer
+        (-name [_] transformer-name)
+        (-options [_] options)
+        (-encoder [_ spec _]
+          (or (get spec encode-key)
+              (get encoders (parse/type-dispatch-value (:type spec)))
+              default-encoder))
+        (-decoder [_ spec _]
+          (or (get spec decode-key)
+              (get decoders (parse/type-dispatch-value (:type spec)))
+              default-decoder))))))
 
 (def json-transformer
   (type-transformer
@@ -118,6 +125,11 @@
   (type-transformer
     {:name ::strip-extra-keys
      :decoders stt/strip-extra-keys-type-decoders}))
+
+(def strip-extra-values-transformer
+  (type-transformer
+    {:name ::strip-extra-values
+     :decoders stt/strip-extra-values-type-decoders}))
 
 (def fail-on-extra-keys-transformer
   (type-transformer
