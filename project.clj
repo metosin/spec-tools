@@ -11,6 +11,9 @@
           :source-uri "https://github.com/metosin/spec-tools/{version}/{filepath}#L{line}"
           :metadata {:doc/format :markdown}}
 
+  :scm {:name "git"
+        :url "https://github.com/metosin/spec-tools"}
+
   :dependencies [[org.clojure/spec.alpha "0.2.176"]
                  [com.fasterxml.jackson.core/jackson-databind "2.9.8"]]
 
