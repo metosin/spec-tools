@@ -293,3 +293,10 @@ Transformations can be included in the spec annotations. Below is a example of a
   st/string-transformer)
 ; :olipa.kerran/avaruus
 ```
+
+### Web-libs using spec-tools
+
+You can plug-in spec-based coercion easily into any Clojure web app. To get more batteries, you can pick any of the pre-integrated solution from the list below. They provide tools for transparent parameter & response validation based on content-negotiation, extraxt JSON Schema / Swagger documentation out of specs and more:
+
+* [Reitit](https://github.com/metosin/reitit), fast data driven routing for Clojure/Script. Supports single-page-apps, Ring and Pedestal/Interceptors. The reference implementation for spec-tools based coercion.
+* [compojure-api](https://github.com/metosin/compojure-api) sweet routing macros for the JVM.
