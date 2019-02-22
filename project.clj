@@ -30,6 +30,7 @@
                                   [org.clojure/tools.namespace "0.2.11"]
                                   [com.gfredericks/test.chuck "0.2.9"]
                                   [metosin/ring-swagger "0.26.1"]
+                                  [metosin/muuntaja "0.6.3"]
                                   [metosin/scjsv "0.5.0"]]}
              :perf {:jvm-opts ^:replace ["-server"]}}
   :aliases {"all" ["with-profile" "dev"]
