@@ -1,4 +1,4 @@
-## Spec Coercion
+# Spec Coercion
 
 Like [Plumatic Schema](https://github.com/plumatic/schema), Spec-tools differentiates specs (what) and transformers (how). This enables spec values to be transformed between different formats like JSON and EDN. Transformers are implemented using the `spec-tools.core/Transformer` protocol.
 
@@ -21,7 +21,7 @@ Spec-tools ships with following transformers:
 | `fail-on-extra-keys-transformer` | Decoding fails if `s/keys` specs have extra keys.
 | `nil`                            | No transformations, e.g. [EDN](https://github.com/edn-format/edn) & [Transit](https://github.com/cognitect/transit-format).
 
-### Coercion
+## Coercion
 
 ```clj
 (require '[spec-tools.core :as st])
@@ -31,7 +31,7 @@ For simple transformations, there is `st/coerce`. It takes a spec, a value and a
 
 **NOTE**: with the current spec1 design, form-based coercion is just best effort. There is [CLJ-2251](https://dev.clojure.org/jira/browse/CLJ-2251) which would solve this. 
 
-#### Simple example
+### Simple example
 
 ```clj
 (st/coerce int? "1" st/string-transformer) 
@@ -41,7 +41,7 @@ For simple transformations, there is `st/coerce`. It takes a spec, a value and a
 ; "1"
 ```
 
-#### Real life example
+### Real life example
 
 We have the following specs defined:
 
@@ -104,7 +104,7 @@ json-order
 
 The roundtripped data is not correct anymore: the `::delivery` is now just a [ISO 8601](https://fi.wikipedia.org/wiki/ISO_8601) Date string, `::tags` are reduced to strings and the item `::id`s are keywords. Bummer.
 
-We could transform all the invalid values manually, but it would add a lot of boilerplate and a fragile solution as the transformations need to be in sync with the potentially evolving data models. This is really a bad idea and doesn't scale.
+We could transform all the invalid values manually, but it would add a lot of boilerplate and would be fragile as the transformations need to be in sync with the potentially evolving data models.
 
 As the specs already contain all the required type information, we can derive the transformations for free. Coercion using the `st/json-transformer`:
 
@@ -128,17 +128,11 @@ Data is now valid:
 ; true
 ```
 
-#### Strict coercion
+### Strict coercion
 
-At system boundaries, like in web apis with external clients and in from of schemaless data stores, it important to check data no extra data is carried in. In `clojure.spec`, maps are open by design. We can add extra constrains to `s/keys` with `s/and` not to contain extra keys, but there are no utilities for it in Spec1 and it would be a static constraint on spec, effecting all call sites. Spec should be open within the boundaries.
+At system boundaries, like in web apis with external clients and in front of data stores, it is important to check data no extra data is carried in. In `clojure.spec`, maps are open by design. We could add extra constrains to `s/keys` with `s/and` not to contain extra keys, but there are no utilities for it in Spec1 and it would be a static constraint on spec, effecting all call sites. Spec should be open within the boundaries.
 
 We can use coercion for this.
-
-Let's define an internal spec, to be used inside our business domain:
-
-```clj
-(s/def ::discount (s/int-in 0 100))
-```
 
 Client sends `::order` with some extra data:
 
@@ -156,18 +150,17 @@ evil-json-order
 ;{:id 123
 ; :owner "ikitommi"
 ; :LONGSTRING "................................."
-; :items {1 {:description "vadelmalimsa"
-;            :tags #{:red :good}
-;            :discount 80
-;            :amount 10}
-;         2 {:description "korvapuusti"
-;            :tags #{:raisin :sugar}
-;            ::discount 80
-;            :amount 20}}
+; :items {:1 {:description "vadelmalimsa"
+;             :tags ["good" "red"]
+;             :discount 80
+;             :amount 10},
+;         :2 {:description "korvapuusti"
+;             :tags ["raisin" "sugar"]
+;             ::discount 80
+;             :amount 20}}
 ; :delivery "2007-11-20T22:19:17+02:00"
 ; :location [61.499374 23.7408149]}
 ```
-
 Let's coerce the data in:
 
 ```clj
@@ -190,7 +183,7 @@ Let's coerce the data in:
 ; :location [61.499374 23.7408149]}
 ```
 
-All the invalid data is read in. And it's still valid!!!:
+Also, the invalid data is still there. And according to `clojure.spec`, it's still valid:
 
 ```clj
 (s/valid?
@@ -230,7 +223,7 @@ Let's coerce again:
 ; :location [61.499374 23.7408149]}
 ```
 
-Much better. And still valid:
+Extra data is gone. And the value is still valid:
 
 ```clj
 (s/valid?
@@ -242,11 +235,11 @@ Much better. And still valid:
 ; true
 ```
 
-### Custom coercion
+## Custom coercion
 
 By default, coercion uses the spec parser `:type` information to apply the coercion. Type-information is exctracted automatically from all/most `clojure.core` predicates. If you want to support custom predicates, there are multiple options
 
-#### Composite specs
+### Composite specs
 
 Simplest way is to create composite spec with `s/and`. Coercion reads the types from left to right and applies all found coercions.
 
@@ -257,7 +250,7 @@ Simplest way is to create composite spec with `s/and`. Coercion reads the types 
 ; 20
 ```
 
-#### Manually typed
+### Manually typed
 
 We can use `st/spec` to annotate specs and add a `:type` hint manually:
 
@@ -271,7 +264,7 @@ We can use `st/spec` to annotate specs and add a `:type` hint manually:
 ; 20
 ```
 
-#### Spec-based transformations
+### Spec-based transformations
 
 Transformations can be included in the spec annotations. Below is a example of an simple keyword, with custom encode and decode transformer attached, together with other documentation:
 
@@ -294,7 +287,7 @@ Transformations can be included in the spec annotations. Below is a example of a
 ; :olipa.kerran/avaruus
 ```
 
-### Web-libs using spec-tools
+## Web-libs using spec-tools
 
 You can plug-in spec-based coercion easily into any Clojure web app. To get more batteries, you can pick any of the pre-integrated solution from the list below. They provide tools for transparent parameter & response validation based on content-negotiation, extraxt JSON Schema / Swagger documentation out of specs and more:
 
