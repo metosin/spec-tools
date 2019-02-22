@@ -97,7 +97,6 @@
   | `:default-encoder` | Default `transform` for encoding
   | `:default-decoder` | Default `transform` for decoding
 
-
   Example of a JSON type-transformer:
 
   ```clojure
