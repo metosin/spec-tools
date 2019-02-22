@@ -1,4 +1,4 @@
-# Unreleased
+# 0.9.0-SNAPSHOT
 
 * `st/coerce` doesn't reverse list order, fixes [compojure-api#406](https://github.com/metosin/compojure-api/issues/406)
 * Less verbose `st/Spec` form, all `:spec-tools.parse` keys are stripped, fixes [#159](https://github.com/metosin/spec-tools/issues/159)
