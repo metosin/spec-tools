@@ -1,4 +1,4 @@
-# spec-tools [![Build Status](https://travis-ci.org/metosin/spec-tools.svg?branch=master)](https://travis-ci.org/metosin/spec-tools)
+# spec-tools [![Build Status](https://travis-ci.org/metosin/spec-tools.svg?branch=master)](https://travis-ci.org/metosin/spec-tools) [![cljdoc badge](https://cljdoc.xyz/badge/metosin/spec-tools)](https://cljdoc.xyz/jump/release/metosin/spec-tools)
 
 Clojure/Script tools for [clojure.spec](http://clojure.org/about/spec).
 
