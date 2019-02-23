@@ -154,7 +154,7 @@
      :long (keyword-> string->long)
      :double (keyword-> string->double)
      :boolean (keyword-> string->boolean)
-     :string nil}
+     :string keyword->string}
     #?(:clj
        {:uri nil
         :bigdec nil

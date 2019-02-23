@@ -439,6 +439,7 @@
         (s/map-of int? int?) :1 1
         (s/map-of double? double?) :1.0 1.0
         (s/map-of boolean? boolean?) :true true
+        (s/map-of string? string?) :kikka "kikka"
 
         (s/map-of uuid? uuid?)
         (keyword "90b1f607-be38-46f4-ba6b-afd663914c22")
