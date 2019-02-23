@@ -863,6 +863,6 @@ Can be added to a Spec via the key `:reason`
 
 ## License
 
-Copyright © 2016-2018 [Metosin Oy](http://www.metosin.fi)
+Copyright © 2016-2019 [Metosin Oy](http://www.metosin.fi)
 
 Distributed under the Eclipse Public License, the same as Clojure.
