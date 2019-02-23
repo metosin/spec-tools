@@ -287,6 +287,11 @@ Transformations can be included in the spec annotations. Below is a example of a
 ; :olipa.kerran/avaruus
 ```
 
+## Roadmap
+
+* Support for [spec-alpha2](https://github.com/metosin/spec-tools/issues/169)
+* [Compile coercers](https://github.com/metosin/spec-tools/issues/167) for better perf
+
 ## Web-libs using spec-tools
 
 You can plug-in spec-based coercion easily into any Clojure web app. To get more batteries, you can pick any of the pre-integrated solution from the list below. They provide tools for transparent parameter & response validation based on content-negotiation, extraxt JSON Schema / Swagger documentation out of specs and more:
