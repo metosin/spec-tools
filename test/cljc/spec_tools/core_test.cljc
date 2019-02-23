@@ -339,19 +339,20 @@
 
 (s/def ::c1 int?)
 (s/def ::c2 keyword?)
+(s/def ::c3 symbol?)
 
 (deftest composing-type-transformers
   (is (= (st/-options st/json-transformer)
          (st/-options (st/type-transformer st/json-transformer))
          (st/-options (st/type-transformer st/json-transformer st/json-transformer))))
-  (is (= {:c1 1, :c2 :abba}
+  (is (= {:c3 'kikka, :c2 :abba}
          (st/coerce
-           (s/keys :req-un [::c1 ::c2])
-           {:c1 "1", :c2 "abba"}
+           (s/keys :req-un [::c3 ::c2])
+           {:c3 "kikka", :c2 "abba"}
            (st/type-transformer st/json-transformer st/string-transformer))
          (st/coerce
-           (s/keys :req-un [::c1 ::c2])
-           {:c1 "1", :c2 "abba"}
+           (s/keys :req-un [::c3 ::c2])
+           {:c3 "kikka", :c2 "abba"}
            (st/type-transformer st/string-transformer st/json-transformer))))
   (is (= :bumblebee (st/-name (st/type-transformer
                                 st/string-transformer
@@ -364,8 +365,10 @@
     (is (= "1" (st/coerce int? "1" st/json-transformer)))
     (is (= :user/kikka (st/coerce keyword? "user/kikka" st/string-transformer))))
   (testing "s/and"
+    (is (= 1 (st/coerce (s/and int?) "1" st/string-transformer)))
+    (is (= :1 (st/coerce (s/and keyword?) "1" st/string-transformer)))
     (is (= 1 (st/coerce (s/and int? keyword?) "1" st/string-transformer)))
-    (is (= :1 (st/coerce (s/and keyword? int?) "1" st/string-transformer)))
+    (is (= 1 (st/coerce (s/and keyword? int?) "1" st/string-transformer)))
     (is (= [1] (st/coerce (s/and (s/coll-of int?)) ["1"] st/string-transformer)))
     (is (= [1] (st/coerce (s/and (s/coll-of int?) (comp boolean not-empty)) ["1"] st/string-transformer))))
   (testing "s/or"
@@ -425,7 +428,26 @@
       (is (= {:keys {:c1 "1" ::c2 :kikka}
               :keys2 {:c1 true}
               :ints #{1 "1" "invalid" "3"}}
-             (st/coerce spec value st/json-transformer))))))
+             (st/coerce spec value st/json-transformer)))))
+  (testing "from keywords"
+    (doseq [transformer [st/string-transformer st/json-transformer]]
+      (are [spec value coerced]
+        (is (= {coerced coerced} (st/coerce spec {value value} transformer)))
+
+        (s/map-of keyword? keyword?) :kikka :kikka
+        (s/map-of symbol? symbol?)  :kikka 'kikka
+        (s/map-of int? int?) :1 1
+        (s/map-of double? double?) :1.0 1.0
+        (s/map-of boolean? boolean?) :true true
+        (s/map-of string? string?) :kikka "kikka"
+
+        (s/map-of uuid? uuid?)
+        (keyword "90b1f607-be38-46f4-ba6b-afd663914c22")
+        #uuid "90b1f607-be38-46f4-ba6b-afd663914c22"
+
+        (s/map-of inst? inst?)
+        (keyword "2019-02-23T08:13:21.400-00:00")
+        #inst "2019-02-23T08:13:21.400-00:00"))))
 
 (deftest conform!-test
   (testing "suceess"

@@ -1,16 +1,38 @@
 (ns spec-tools.transform
   #?(:cljs (:refer-clojure :exclude [Inst Keyword UUID]))
   (:require [clojure.spec.alpha :as s]
-    #?@(:cljs [[goog.date.UtcDateTime]
-               [goog.date.Date]])
+            #?@(:cljs [[goog.date.UtcDateTime]
+                       [goog.date.Date]])
             [clojure.set :as set]
             [spec-tools.parse :as parse]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [spec-tools.impl :as impl])
   #?(:clj
      (:import (java.util Date UUID)
               (com.fasterxml.jackson.databind.util StdDateFormat)
               (java.time Instant))))
 
+;;
+;; Keywords
+;;
+
+(defn keyword->string [_ x]
+  (if (keyword? x)
+    (impl/qualified-name x)
+    x))
+
+(defn keyword-or-string-> [f]
+  (fn [spec x]
+    (cond
+      (keyword? x) (f spec (keyword->string spec x))
+      (string? x) (f spec x)
+      :else x)))
+
+(defn keyword-> [f]
+  (fn [spec x]
+    (cond
+      (keyword? x) (f spec (keyword->string spec x))
+      :else x)))
 ;;
 ;; Strings
 ;;
@@ -38,13 +60,6 @@
     (keyword x)
     x))
 
-(defn keyword->string [_ x]
-  (if (keyword? x)
-    (let [name (name x)]
-      (if-let [ns (namespace x)]
-        (str ns "/" name) name))
-    x))
-
 (defn string->boolean [_ x]
   (if (string? x)
     (cond
@@ -60,7 +75,6 @@
          ;; http://stackoverflow.com/questions/7905929/how-to-test-valid-uuid-guid
          :cljs (if (re-find #"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" x)
                  (uuid x)
-                 ;; TODO: what should this return?
                  x))
       (catch #?(:clj Exception, :cljs js/Error) _ x))
     x))
@@ -134,9 +148,13 @@
 (def json-type-decoders
   (merge
     {:keyword string->keyword
-     :uuid string->uuid
-     :date string->date
-     :symbol string->symbol}
+     :uuid (keyword-or-string-> string->uuid)
+     :date (keyword-or-string-> string->date)
+     :symbol (keyword-or-string-> string->symbol)
+     :long (keyword-> string->long)
+     :double (keyword-> string->double)
+     :boolean (keyword-> string->boolean)
+     :string keyword->string}
     #?(:clj
        {:uri nil
         :bigdec nil
@@ -145,11 +163,9 @@
 (def string-type-decoders
   (merge
     json-type-decoders
-    {:long string->long
-     :double string->double
-     :boolean string->boolean
-     :nil string->nil
-     :string nil}))
+    {:long (keyword-or-string-> string->long)
+     :double (keyword-or-string-> string->double)
+     :boolean (keyword-or-string-> string->boolean)}))
 
 (def strip-extra-keys-type-decoders
   {:map strip-extra-keys})
