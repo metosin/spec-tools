@@ -67,8 +67,6 @@
   #?(:clj  (clojure.edn/read-string s)
      :cljs (cljs.reader/read-string s)))
 
-(def +problems+ #?(:clj :clojure.spec.alpha/problems, :cljs :cljs.spec.alpha/problems))
-
 ;;
 ;; Transformers
 ;;
@@ -140,6 +138,7 @@
               default-decoder))))))
 
 (def json-transformer
+  "Transformer that transforms data between JSON and EDN."
   (type-transformer
     {:name :json
      :decoders stt/json-type-decoders
@@ -147,6 +146,7 @@
      :default-encoder stt/any->any}))
 
 (def string-transformer
+  "Transformer that transforms data between Strings and EDN."
   (type-transformer
     {:name :string
      :decoders stt/string-type-decoders
@@ -154,16 +154,19 @@
      :default-encoder stt/any->any}))
 
 (def strip-extra-keys-transformer
+  "Transformer that drop extra keys from `s/keys` specs."
   (type-transformer
     {:name ::strip-extra-keys
      :decoders stt/strip-extra-keys-type-decoders}))
 
 (def strip-extra-values-transformer
+  "Transformer that drop extra values from `s/tuple` specs."
   (type-transformer
     {:name ::strip-extra-values
      :decoders stt/strip-extra-values-type-decoders}))
 
 (def fail-on-extra-keys-transformer
+  "Transformer that fails on extra keys in `s/keys` specs."
   (type-transformer
     {:name ::fail-on-extra-keys
      :decoders stt/fail-on-extra-keys-type-decoders}))
@@ -173,6 +176,7 @@
 ;;
 
 (defn explain
+  "Like `clojure.core.alpha/explain` but supports transformers"
   ([spec value]
    (explain spec value nil))
   ([spec value transformer]
@@ -180,6 +184,7 @@
      (s/explain (into-spec spec) value))))
 
 (defn explain-data
+  "Like `clojure.core.alpha/explain-data` but supports transformers"
   ([spec value]
    (explain-data spec value nil))
   ([spec value transformer]
@@ -210,7 +215,8 @@
          conformed
          (let [problems (s/explain-data spec' value)
                data {:type ::conform
-                     :problems (+problems+ problems)
+                     :problems (#?(:clj  :clojure.spec.alpha/problems
+                                   :cljs :cljs.spec.alpha/problems) problems)
                      :spec spec
                      :value value}]
            (throw (ex-info (str "Spec conform error: " data) data))))))))
@@ -534,7 +540,7 @@
               :spec ~pred}))))))
 
 
-(defn into-spec [x]
+(defn- into-spec [x]
   (cond
     (spec? x) x
     (keyword? x) (recur (s/get-spec x))
@@ -551,7 +557,7 @@
         info (parse/parse-spec spec)]
     (select-keys info [::parse/keys ::parse/keys-req ::parse/keys-opt])))
 
-(defn merge-impl [forms spec-form merge-spec]
+(defn ^:skip-wiki merge-impl [forms spec-form merge-spec]
   (let [form-keys (map map-spec-keys forms)
         spec (reify
                s/Spec
