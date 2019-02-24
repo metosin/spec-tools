@@ -8,6 +8,74 @@
             [spec-tools.parse :as parse]))
 
 ;;
+;; Helpers
+;;
+
+(defrecord OptionalKey [k])
+(defrecord RequiredKey [k])
+(defrecord Maybe [v])
+(defrecord Or [v])
+
+(defn opt
+  "Makes a key optional:
+
+  ```clojure
+  {:name string?
+   (ds/opt :age) int?}
+  ```"
+  [k]
+  (->OptionalKey k))
+
+(defn opt?
+  "Test if the key is optional"
+  [x]
+  (instance? OptionalKey x))
+
+(defn req
+  "Makes a key required:
+
+  ```clojure
+  {:name string?
+   (ds/req :age) int?}
+  ```"
+  [k]
+  (->RequiredKey k))
+
+(defn req?
+  "Test if the key is required"
+  [x]
+  (not (opt? x)))
+
+(defn maybe
+  "Makes a value nillable:
+
+  ```clojure
+  {:name string?
+   :age (ds/maybe int?)}
+  ```"
+  [v]
+  (->Maybe v))
+
+(defn maybe?
+  "Test if the value is [[maybe]]"
+  [x]
+  (instance? Maybe x))
+
+(defn or [v] (->Or v))
+
+(defn or? [x] (instance? Or x))
+
+(defn wrapped-key?
+  "Test if the key is wrapped into [[opt]] or [[req]]"
+  [x]
+  (clojure.core/or (opt? x) (instance? RequiredKey x)))
+
+(defn unwrap-key
+  "Unwrap the [[opt]] or [[req]] key."
+  [x]
+  (if (wrapped-key? x) (:k x) x))
+
+;;
 ;; functional clojure.spec
 ;;
 
@@ -79,44 +147,16 @@
     (s/or-spec-impl ks forms preds nil)))
 
 ;;
-;; Data Specs
+;; Implementation
 ;;
 
-(defrecord OptionalKey [k])
-(defrecord RequiredKey [k])
-(defrecord Maybe [v])
-(defrecord Or [v])
+(declare spec)
 
-(defn opt [k] (->OptionalKey k))
-(defn req [k] (->RequiredKey k))
-(defn maybe [v] (->Maybe v))
-(defn or [v] (->Or v))
-
-(defn opt? [x]
-  (instance? OptionalKey x))
-
-(defn req? [x]
-  (not (opt? x)))
-
-(defn wrapped-key? [x]
-  (clojure.core/or (opt? x) (instance? RequiredKey x)))
-
-(defn unwrap-key [x]
-  (if (wrapped-key? x) (:k x) x))
-
-(defn maybe? [x]
-  (instance? Maybe x))
-
-(defn or? [x]
-  (instance? Or x))
-
-(defn nested-key [n k]
+(defn- -nested-key [n k]
   (assert (qualified-keyword? n) "spec must have a qualified name")
   (keyword (str (namespace n) "$" (name n)
                 (if-let [kns (namespace k)]
                   (str "$" kns)) "/" (name k))))
-
-(declare spec)
 
 (defn- -map-spec [data {n :name :keys [keys-spec keys-default] :or {keys-spec keys-spec} :as opts}]
   ;; predicate keys
@@ -141,7 +181,7 @@
                                  [v identity])
                       [k' n'] (if (qualified-keyword? kv)
                                 [kv (if (not= kv v) kv)]
-                                (let [k' (nested-key n (unwrap-key kv))]
+                                (let [k' (-nested-key n (unwrap-key kv))]
                                   [k' k']))
                       v' (if n' (wrap (spec (-> opts (assoc :name n') (assoc :spec v)))))]
                   (-> acc
@@ -180,29 +220,34 @@
         {:name n
          :value v})))
   (or-spec (-> (for [[k v] v]
-                 [k (spec (nested-key n k) v)])
+                 [k (spec (-nested-key n k) v)])
                (into {}))))
 
+;;
+;; Api
+;;
+
 (defn spec
-  "Creates a clojure.spec.alpha/Spec out of a data-spec. Supports 2 arities:
+  "Creates a [[clojure.spec.alpha/Spec]] out of a data-spec. Supports 2 arities:
 
-     ;; arity1
-     (ds/spec
-       {:spec {:i int?}
-        :name ::map})
+  ```clojure
+  ;; arity1
+  (ds/spec
+    {:spec {:i int?}
+     :name ::map})
 
-     ;; arity2 (legacy)
-     (ds/spec ::map {:i int?})
+  ;; arity2 (legacy)
+  (ds/spec ::map {:i int?})
+  ```
 
   The following options are valid for the 1 arity case:
 
-               :spec the data-spec form (required)
-               :name fully qualified keyword name for the spec, used in keys-spec
-                     key spec registration, required if there are non-qualified
-                     keyword keys in maps.
-          :keys-spec function to generate keys-spec (default: [[keys-spec]])
-       :keys-default optional function to wrap the plain keyword keys, e.g. setting
-                     the value to [[opt]] maes all plain keyword keys optional."
+  | Key              | Description
+  | -----------------|----------------
+  | `:spec`          | The wrapped data-spec.
+  | `:name`          | Qualified root spec name - used to generate unique names for sub-specs.
+  | `:keys-spec`     | Function to wrap not-wrapped keys, e.g. [[opt]] to make keys optional by default.
+  | `:keys-default`  | Function to generate the keys-specs, default [[keys-specs]]."
   ([{data :spec name :name nested? ::nested? :as opts}]
    (assert spec "missing :spec predicate in data-spec")
    (let [opts (-> opts (assoc :name name) (dissoc :spec))
