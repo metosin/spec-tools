@@ -27,7 +27,7 @@
   (->OptionalKey k))
 
 (defn opt?
-  "Test if the key is optional"
+  "Test if the key is wrapped with [[opt]]"
   [x]
   (instance? OptionalKey x))
 
@@ -42,7 +42,7 @@
   (->RequiredKey k))
 
 (defn req?
-  "Test if the key is required"
+  "Test if the key is wrapped with [[req]]"
   [x]
   (not (opt? x)))
 
@@ -57,7 +57,7 @@
   (->Maybe v))
 
 (defn maybe?
-  "Test if the value is [[maybe]]"
+  "Test if the value is wrapped with [[maybe]]"
   [x]
   (instance? Maybe x))
 
@@ -66,7 +66,7 @@
 (defn or? [x] (instance? Or x))
 
 (defn wrapped-key?
-  "Test if the key is wrapped into [[opt]] or [[req]]"
+  "Test if the key is wrapped with [[opt]] or [[req]]"
   [x]
   (clojure.core/or (opt? x) (instance? RequiredKey x)))
 
@@ -228,7 +228,7 @@
 ;;
 
 (defn spec
-  "Creates a [[clojure.spec.alpha/Spec]] out of a data-spec. Supports 2 arities:
+  "Creates a `clojure.spec.alpha/Spec` out of a data-spec. Supports 2 arities:
 
   ```clojure
   ;; arity1

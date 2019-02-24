@@ -282,7 +282,7 @@ Transformations can be included in the spec annotations. Below is a example of a
 
 (st/coerce
   ::my-keyword
-  "Olipa.Kerran/Avaruus"
+  "OLIPA.KERRAN/AVARUUS"
   st/string-transformer)
 ; :olipa.kerran/avaruus
 ```
