@@ -478,7 +478,7 @@
 (defn create-spec
   "Creates a Spec intance from a map containing the following keys:
 
-           :spec  the wrapped spec predicate (mandatory)
+           :spec  the wrapped spec predicate (default to `any?`)
            :form  source code of the spec predicate, if :spec is a spec,
                   :form is read with `s/form` out of it. For non-spec
                   preds, spec-tools.form/resolve-form is called, if still
@@ -491,10 +491,10 @@
     :description  description of the spec (optional)
           :xx/yy  any qualified keys can be added (optional)"
   [{:keys [spec type form] :as m}]
-  (assert spec "missing spec predicate")
   (when (qualified-keyword? spec)
-    (assert (get-spec spec) (str " Unable to resolve spec: " (:spec m))))
-  (let [spec (cond
+    (assert (get-spec spec) (str " Unable to resolve spec: " spec)))
+  (let [spec (or spec any?)
+        spec (cond
                (qualified-keyword? spec) (get-spec spec)
                (symbol? spec) (form/resolve-form spec)
                :else spec)

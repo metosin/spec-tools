@@ -368,14 +368,17 @@
     (is (= 1 (st/coerce (s/and int?) "1" st/string-transformer)))
     (is (= :1 (st/coerce (s/and keyword?) "1" st/string-transformer)))
     (is (= 1 (st/coerce (s/and int? keyword?) "1" st/string-transformer)))
+    (is (= 1 (st/coerce (s/and int? #{1 2}) "1" st/string-transformer)))
     (is (= 1 (st/coerce (s/and keyword? int?) "1" st/string-transformer)))
     (is (= [1] (st/coerce (s/and (s/coll-of int?)) ["1"] st/string-transformer)))
     (is (= [1] (st/coerce (s/and (s/coll-of int?) (comp boolean not-empty)) ["1"] st/string-transformer))))
   (testing "s/or"
     (is (= 1 (st/coerce (s/or :int int? :keyword keyword?) "1" st/string-transformer)))
+    (is (= 1 (st/coerce (s/and :int int? :enum #{1 2}) "1" st/string-transformer)))
     (is (= :1 (st/coerce (s/or :keyword keyword? :int int?) "1" st/string-transformer))))
   (testing "s/coll-of"
     (is (= #{1 2 3} (st/coerce (s/coll-of int? :into #{}) ["1" 2 "3"] st/string-transformer)))
+    (is (= #{"1" 2 "3"} (st/coerce (s/coll-of #{1 2} :into #{}) ["1" 2 "3"] st/string-transformer)))
     (is (= #{"1" 2 "3"} (st/coerce (s/coll-of int? :into #{}) ["1" 2 "3"] st/json-transformer)))
     (is (= [:1 2 :3] (st/coerce (s/coll-of keyword?) ["1" 2 "3"] st/string-transformer)))
     (is (= '(:1 2 :3) (st/coerce (s/coll-of keyword?) '("1" 2 "3") st/string-transformer)))
