@@ -4,7 +4,7 @@
 (require '[spec-tools.json-schema :as json-schema])
 ```
 
-Utility to transform Specs into JSON Schemas.
+Utility to transform Specs into JSON Schemas. The generated schema conforms to [JSON Schema draft-04](https://json-schema.org/specification-links.html#draft-4).
 
 ```clj
 (require '[spec-tools.json-schema :as json-schema])

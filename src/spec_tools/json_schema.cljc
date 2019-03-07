@@ -1,5 +1,6 @@
 (ns spec-tools.json-schema
-  "Tools for converting specs into JSON Schemata."
+  "Tools for converting specs into JSON Schemata. The version of JSON-Schema
+  generated is [draft-04](https://json-schema.org/specification-links.html#draft-4)."
   (:require [spec-tools.visitor :as visitor]
             [spec-tools.parse :as parse]
             [spec-tools.impl :as impl]
