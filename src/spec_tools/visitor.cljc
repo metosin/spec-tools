@@ -67,9 +67,15 @@
   (let [[_ & inner-specs] (impl/extract-form spec)]
     (accept 'clojure.spec.alpha/and spec (mapv #(visit % accept options) inner-specs) options)))
 
-(defmethod visit-spec 'clojure.spec.alpha/merge [spec accept options]
+(defn- visit-merge [spec accept options]
   (let [[_ & inner-specs] (impl/extract-form spec)]
     (accept 'clojure.spec.alpha/merge spec (mapv #(visit % accept options) inner-specs) options)))
+
+(defmethod visit-spec 'clojure.spec.alpha/merge [spec accept options]
+  (visit-merge spec accept options))
+
+(defmethod visit-spec 'spec-tools.core/merge [spec accept options]
+  (visit-merge spec accept options))
 
 (defmethod visit-spec 'clojure.spec.alpha/every [spec accept options]
   (let [[_ inner-spec] (impl/extract-form spec)]
