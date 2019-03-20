@@ -93,6 +93,13 @@
                  "string" {:type "string"}},
     :required ["integer" "string"]}
 
+   (st/merge (s/keys :req-un [::integer])
+               (s/keys :req-un [::string]))
+   {:type "object",
+    :properties {"integer" {:type "integer"},
+                 "string" {:type "string"}},
+    :required ["integer" "string"]}
+
    (s/merge (s/keys :req-un [::integer])
             (s/or :foo (s/keys :req-un [::string])
                   :bar (s/keys :req-un [::set])))
