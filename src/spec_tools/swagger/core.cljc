@@ -28,7 +28,7 @@
     (first children)
     :x-allOf children))
 
-(defmethod accept-spec 'clojure.spec.alpha/merge [_ _ children _]
+(defn- accept-merge [children]
   ;; Use x-anyOf and x-allOf instead of normal versions
   {:type "object"
    :properties (->> (concat children
@@ -42,6 +42,11 @@
                   (map :required)
                   (reduce into (sorted-set))
                   (into []))})
+(defmethod accept-spec 'clojure.spec.alpha/merge [_ _ children _]
+  (accept-merge children))
+
+(defmethod accept-spec 'spec-tools.core/merge [_ _ children _]
+  (accept-merge children))
 
 ;; anyOf is not supported
 (defmethod accept-spec 'clojure.spec.alpha/alt [_ _ children _]
