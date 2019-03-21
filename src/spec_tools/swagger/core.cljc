@@ -42,6 +42,7 @@
                   (map :required)
                   (reduce into (sorted-set))
                   (into []))})
+
 (defmethod accept-spec 'clojure.spec.alpha/merge [_ _ children _]
   (accept-merge children))
 

@@ -1,3 +1,7 @@
+# UNRELEASED
+
+* `spec-tools.core/merge` is now visitable by [Erik Assum](https://github.com/slipset).
+
 # 0.9.0 (26.2.2019)
 
 * `st/coerce` doesn't reverse list order, fixes [compojure-api#406](https://github.com/metosin/compojure-api/issues/406)

@@ -4,7 +4,6 @@
   (:require [spec-tools.visitor :as visitor]
             [spec-tools.parse :as parse]
             [spec-tools.impl :as impl]
-            [clojure.set :as set]
             [spec-tools.core :as st]))
 
 (defn- only-entry? [key a-map] (= [key] (keys a-map)))
@@ -205,7 +204,7 @@
 (defmethod accept-spec 'clojure.spec.alpha/and [_ _ children _]
   (simplify-all-of {:allOf children}))
 
-(defmethod accept-spec 'clojure.spec.alpha/merge [_ _ children _]
+(defn- accept-merge [children]
   {:type "object"
    :properties (->> (concat children
                             (mapcat :anyOf children)
@@ -217,6 +216,12 @@
                   (map :required)
                   (reduce into (sorted-set))
                   (into []))})
+
+(defmethod accept-spec 'clojure.spec.alpha/merge [_ _ children _]
+  (accept-merge children))
+
+(defmethod accept-spec 'spec-tools.core/merge [_ _ children _]
+  (accept-merge children))
 
 (defmethod accept-spec 'clojure.spec.alpha/every [_ spec children _]
   (let [form (impl/extract-form spec)
