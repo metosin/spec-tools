@@ -1,4 +1,4 @@
-(defproject metosin/spec-tools "0.9.0"
+(defproject metosin/spec-tools "0.9.1"
   :description "Clojure(Script) tools for clojure.spec"
   :url "https://github.com/metosin/spec-tools"
   :license {:name "Eclipse Public License"
@@ -21,7 +21,7 @@
                              [lein-tach "1.0.0"]
                              [lein-doo "0.1.11"]
                              [lein-cljsbuild "1.1.7"]
-                             [lein-cloverage "1.0.13"]
+                             [lein-cloverage "1.1.1"]
                              [lein-codox "0.10.6"]]
                    :jvm-opts ^:replace ["-server"]
                    ;:global-vars {*warn-on-reflection* true}

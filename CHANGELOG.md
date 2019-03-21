@@ -1,4 +1,4 @@
-# UNRELEASED
+# 0.9.1 (21.3.2019)
 
 * `spec-tools.core/merge` is now visitable by [Erik Assum](https://github.com/slipset).
 
