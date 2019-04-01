@@ -287,6 +287,8 @@ Transformations can be included in the spec annotations. Below is a example of a
 ; :olipa.kerran/avaruus
 ```
 
+By adding keys with namespace of `:decode` or `:encode` and the name of the transformer (e.g. `json`, `string`) you can override the default type-based transformation. The values should be functions of `spec value -> value`.
+
 ## Roadmap
 
 * Support for [spec-alpha2](https://github.com/metosin/spec-tools/issues/169)
