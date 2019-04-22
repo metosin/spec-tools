@@ -259,7 +259,7 @@
         (s/unform spec conformed)))))
 
 (defn select-spec
-  "Best effor to drop recursively all extra keys out of a keys spec value."
+  "Best effort to drop recursively all extra keys out of a keys spec value."
   [spec value]
   (coerce spec value strip-extra-keys-transformer))
 
