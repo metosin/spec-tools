@@ -4,6 +4,7 @@
   (:require
     #?(:cljs [cljs.analyzer.api])
     [clojure.spec.alpha :as s]
+    [spec-tools.form :as form]
     [clojure.walk :as walk])
   (:import
     #?@(:clj
@@ -168,3 +169,74 @@
 (defn register-spec! [k s]
   (s/def-impl k (s/form s) s))
 
+;;
+;; functional clojure.spec
+;;
+
+(defn coll-of-spec [pred type]
+  (let [form (form/resolve-form pred)]
+    (clojure.spec.alpha/every-impl
+      form
+      pred
+      {:into type
+       ::s/conform-all true
+       ::s/describe `(s/coll-of ~form :into ~type),
+       ::s/cpred coll?,
+       ::s/kind-form (quote nil)}
+      nil)))
+
+(defn map-of-spec [kpred vpred]
+  (let [forms (map form/resolve-form [kpred vpred])
+        tuple (s/tuple-impl forms [kpred vpred])]
+    (clojure.spec.alpha/every-impl
+      `(s/tuple ~@forms)
+      tuple
+      {:into {}
+       :conform-keys true
+       ::s/kfn (fn [_ v] (nth v 0))
+       ::s/conform-all true
+       ::s/describe `(s/map-of ~@forms :conform-keys true),
+       ::s/cpred coll?,
+       ::s/kind-form (quote nil)}
+      nil)))
+
+(defn keys-spec [{:keys [req opt req-un opt-un]}]
+  (let [req-specs (flatten (map polish (concat req req-un)))
+        opt-specs (flatten (map polish (concat opt opt-un)))
+        req-keys (flatten (concat (map polish req) (map polish-un req-un)))
+        opt-keys (flatten (concat (map polish opt) (map polish-un opt-un)))
+        pred-exprs (concat
+                     [#(map? %)]
+                     (map (fn [x] #(contains? % x)) req-keys))
+        pred-forms (concat
+                     [`(fn [~'%] (map? ~'%))]
+                     (map (fn [k] `(fn [~'%] (contains? ~'% ~k))) req-keys))
+        keys-pred (fn [x]
+                    (reduce
+                      (fn [_ p]
+                        (clojure.core/or (p x) (reduced false)))
+                      true
+                      pred-exprs))]
+
+    (s/map-spec-impl
+      {:req-un req-un
+       :opt-un opt-un
+       :pred-exprs pred-exprs
+       :keys-pred keys-pred
+       :opt-keys opt-keys
+       :req-specs req-specs
+       :req req
+       :req-keys req-keys
+       :opt-specs opt-specs
+       :pred-forms pred-forms
+       :opt opt})))
+
+(defn nilable-spec [pred]
+  (let [form (form/resolve-form pred)]
+    (s/nilable-impl form pred nil)))
+
+(defn or-spec [v]
+  (let [ks (mapv first v)
+        preds (mapv second v)
+        forms (mapv form/resolve-form preds)]
+    (s/or-spec-impl ks forms preds nil)))

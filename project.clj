@@ -32,6 +32,8 @@
                                   [org.clojure/test.check "0.9.0"]
                                   [org.clojure/tools.namespace "0.2.11"]
                                   [com.gfredericks/test.chuck "0.2.9"]
+                                  [com.bhauman/spell-spec "0.1.1"]
+                                  [expound "0.7.2"]
                                   [metosin/ring-swagger "0.26.1"]
                                   [metosin/muuntaja "0.6.3"]
                                   [metosin/scjsv "0.5.0"]]}

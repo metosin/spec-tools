@@ -171,6 +171,13 @@
     {:name ::fail-on-extra-keys
      :decoders stt/fail-on-extra-keys-type-decoders}))
 
+(defn strict-keys-transformer
+  "Transformer that fails on extra keys in `s/keys` specs."
+  []
+  (type-transformer
+    {:name ::stict-keys
+     :decoders stt/fail-on-extra-keys-type-decoders}))
+
 ;;
 ;; Transforming
 ;;
@@ -320,7 +327,7 @@
         (let [spec (if (qualified-keyword? k) (s/get-spec k) (s/get-spec (get key->spec k)))
               value (if spec (accept spec v options) v)]
           (assoc acc k value)))
-      {}
+      value
       value)
     value))
 

@@ -3,8 +3,8 @@
             [clojure.spec.alpha :as s]
             [spec-tools.data-spec :as ds]
             [spec-tools.core :as st]
-            [spec-tools.parse :as parse]
-            [spec-tools.spec :as spec])
+            [spec-tools.spec :as spec]
+            [spec-tools.impl :as impl])
   #?(:clj
      (:import clojure.lang.ExceptionInfo)))
 
@@ -12,11 +12,11 @@
 
 (deftest coll-of-spec-tests
   (let [spec (s/coll-of string? :into [])
-        impl (#'ds/coll-of-spec string? [])]
+        impl (impl/coll-of-spec string? [])]
     (is (= (s/form spec)
            (s/form impl)))
     (is (= `(s/coll-of (st/spec {:spec string? :type :string :leaf? true}) :into [])
-           (s/form (#'ds/coll-of-spec spec/string? []))))
+           (s/form (impl/coll-of-spec spec/string? []))))
     (is (= nil
            (s/explain-data spec ["1"])
            (s/explain-data impl ["1"])))
@@ -29,14 +29,14 @@
 
 (deftest map-of-spec-tests
   (let [spec (s/map-of string? string? :conform-keys true)
-        impl (#'ds/map-of-spec string? string?)]
+        impl (impl/map-of-spec string? string?)]
     (is (= (s/form spec)
            (s/form impl)))
     (is (= `(s/map-of
               (st/spec {:spec string? :type :string :leaf? true})
               (st/spec {:spec string? :type :string :leaf? true})
               :conform-keys true)
-           (s/form (#'ds/map-of-spec spec/string? spec/string?))))
+           (s/form (impl/map-of-spec spec/string? spec/string?))))
     (is (= nil
            (s/explain-data spec {"key" "value"})
            (s/explain-data impl {"key" "value"})))
@@ -55,7 +55,7 @@
                      :opt [::str]
                      :req-un [::bool]
                      :opt-un [::int])
-        impl (#'ds/keys-spec {:req [::int]
+        impl (impl/keys-spec {:req [::int]
                               :opt [::str]
                               :req-un [::bool]
                               :opt-un [::int]})]
@@ -73,11 +73,11 @@
 
 (deftest nilable-spec-tst
   (let [spec (s/nilable string?)
-        impl (#'ds/nilable-spec string?)]
+        impl (impl/nilable-spec string?)]
     (is (= (s/form spec)
            (s/form impl)))
     (is (= `(s/nilable (st/spec {:spec string? :type :string :leaf? true}))
-           (s/form (#'ds/nilable-spec spec/string?))))
+           (s/form (impl/nilable-spec spec/string?))))
     (is (= nil
            (s/explain-data spec "1")
            (s/explain-data spec nil)
@@ -91,12 +91,12 @@
 
 (deftest or-spec-tst
   (let [spec (s/or :int int?, :string string?)
-        impl (#'ds/or-spec {:int int?, :string string?})]
+        impl (impl/or-spec {:int int?, :string string?})]
     (is (= (s/form spec)
            (s/form impl)))
     (is (= `(s/or :int (st/spec {:spec int? :type :long :leaf? true})
                   :string (st/spec {:spec string? :type :string :leaf? true}))
-           (s/form (#'ds/or-spec {:int spec/int?, :string spec/string?}))))
+           (s/form (impl/or-spec {:int spec/int?, :string spec/string?}))))
     (is (= nil
            (s/explain-data spec "1")
            (s/explain-data spec 1)
