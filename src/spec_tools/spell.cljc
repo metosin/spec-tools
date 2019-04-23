@@ -1,5 +1,6 @@
 (ns spec-tools.spell
   (:require [spell-spec.alpha :as ssa]
+            [spell-spec.expound]
             [spec-tools.parse :as parse]
             [clojure.spec.alpha :as s]
             [spec-tools.core :as st]
