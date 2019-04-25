@@ -293,7 +293,7 @@
 
 (defmethod walk :vector [{:keys [::parse/item]} value accept options]
   (if (sequential? value)
-    (let [f (if (list? value) reverse identity)]
+    (let [f (if (seq? value) reverse identity)]
       (->> value (map (fn [v] (accept item v options))) (into (empty value)) f))
     value))
 

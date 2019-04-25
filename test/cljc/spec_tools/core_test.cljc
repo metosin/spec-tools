@@ -382,6 +382,8 @@
     (is (= #{"1" 2 "3"} (st/coerce (s/coll-of int? :into #{}) ["1" 2 "3"] st/json-transformer)))
     (is (= [:1 2 :3] (st/coerce (s/coll-of keyword?) ["1" 2 "3"] st/string-transformer)))
     (is (= '(:1 2 :3) (st/coerce (s/coll-of keyword?) '("1" 2 "3") st/string-transformer)))
+    (is (= '(:1 2 :3) (st/coerce (s/coll-of keyword?) (seq '("1" 2 "3")) st/string-transformer)))
+    (is (= '(:1 2 :3) (st/coerce (s/coll-of keyword?) (lazy-seq '("1" 2 "3")) st/string-transformer)))
     (is (= ::invalid (st/coerce (s/coll-of keyword?) ::invalid st/string-transformer))))
   (testing "s/keys"
     (is (= {:c1 1, ::c2 :kikka} (st/coerce (s/keys :req-un [::c1]) {:c1 "1", ::c2 "kikka"} st/string-transformer)))
