@@ -9,7 +9,7 @@
 * **BREAKING**: `nil` specs are allowed, resolved as `any?`
 * More robust walker, named specs can be used with `s/or`, `s/and`, `s/coll-of`, `s/map-of`, `s/tuple` and `s/nilable`, fixes [#165](https://github.com/metosin/spec-tools/issues/165).
   * Thanks to [Andrew Rudenko](https://github.com/prepor) and [Nicholas Hurden](https://github.com/nhurden) for contributing!
-* Both `st/json-tranformer` and `st/string-transformer` also transform values from keywords:
+* Both `st/json-transformer` and `st/string-transformer` also transform values from keywords:
 
 ```clj
 (require '[spec-tools.core :as st])
@@ -66,7 +66,7 @@
 * Support Spec Records with Swagger on cljs by [Miloslav Nenadál](https://github.com/nenadalm)
 * Swagger parameters read Spec `:description`, fixes [#135](https://github.com/metosin/spec-tools/issues/135)
 * JSON Schema objects get `:title` property from qualified Spec registry name
-* All top-level data-specs & nested map data-spec have name devired from `:name`, fixes [#124](https://github.com/metosin/spec-tools/issues/124)
+* All top-level data-specs & nested map data-spec have name derived from `:name`, fixes [#124](https://github.com/metosin/spec-tools/issues/124)
 * New `st/coerce` function to coerce a value using form parsing and spec transformers. Can only walk over simple specs, and doesn't require any wrapping of specs. Inspired by [spec-coerce](https://github.com/wilkerlucio/spec-coerce).
 
 ```clj
@@ -120,8 +120,8 @@
              (st/coerce spec value st/json-transformer))))))
 ```
 
-* `st/decode` first tries to use `st/coerce`, fallbacking to conforming-based approach
-* **BREAKING**: enchanced parsing results from `spec-tools.parse/parse-spec`:
+* `st/decode` first tries to use `st/coerce`, falling back to conforming-based approach
+* **BREAKING**: enhanced parsing results from `spec-tools.parse/parse-spec`:
   * all parse result keys have been qualified:
     * `:keys` => `::parse/keys`
     * `:keys/req` => `::parse/keys-req`

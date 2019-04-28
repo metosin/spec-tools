@@ -237,7 +237,7 @@ Extra data is gone. And the value is still valid:
 
 ## Custom coercion
 
-By default, coercion uses the spec parser `:type` information to apply the coercion. Type-information is exctracted automatically from all/most `clojure.core` predicates. If you want to support custom predicates, there are multiple options
+By default, coercion uses the spec parser `:type` information to apply the coercion. Type-information is extracted automatically from all/most `clojure.core` predicates. If you want to support custom predicates, there are multiple options
 
 ### Composite specs
 
@@ -296,7 +296,7 @@ By adding keys with namespace of `:decode` or `:encode` and the name of the tran
 
 ## Web-libs using spec-tools
 
-You can plug-in spec-based coercion easily into any Clojure web app. To get more batteries, you can pick any of the pre-integrated solution from the list below. They provide tools for transparent parameter & response validation based on content-negotiation, extraxt JSON Schema / Swagger documentation out of specs and more:
+You can plug-in spec-based coercion easily into any Clojure web app. To get more batteries, you can pick any of the pre-integrated solution from the list below. They provide tools for transparent parameter & response validation based on content-negotiation, extract JSON Schema / Swagger documentation out of specs and more:
 
 * [Reitit](https://github.com/metosin/reitit), fast data driven routing for Clojure/Script. Supports single-page-apps, Ring and Pedestal/Interceptors. The reference implementation for spec-tools based coercion.
 * [compojure-api](https://github.com/metosin/compojure-api) sweet routing macros for the JVM.
