@@ -1,3 +1,7 @@
+# 0.9.2-SNAPSHOT
+
+* Experimental `spec-tools.spell` ns for closing map specs using [spell-spec](https://github.com/bhauman/spell-spec). Api subject to change.
+
 # 0.9.1 (21.3.2019)
 
 * `spec-tools.core/merge` is now visitable by [Erik Assum](https://github.com/slipset).

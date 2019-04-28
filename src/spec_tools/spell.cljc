@@ -21,7 +21,7 @@
            (or (set? m) (sequential? m))
            (map-indexed (fn [k v] (flatten-helper (conj keyseq k) v)) m)
            :else [[keyseq m]])))
-      [] m)))
+     [] m)))
 
 (defn- via [spec path]
   (if-let [spec (and (qualified-keyword? spec) spec)]
@@ -42,18 +42,44 @@
    ::s/spec spec
    ::s/value x})
 
+(defn- pre-check [& specs]
+  (let [pre (butlast specs)
+        spec (last specs)]
+    (reify
+      s/Specize
+      (specize* [s] s)
+      (specize* [s _] s)
+      s/Spec
+      (conform* [_ x]
+        (if (every? #(s/valid? % x) pre)
+          (s/conform* spec x)
+          ::s/invalid))
+      (unform* [_ x] (s/unform* spec x))
+      (explain* [_ path via in x]
+        (if-let [problems (some #(s/explain* % path via in x) pre)]
+          problems
+          (s/explain* spec path via in x)))
+      (gen* [_ a b c]
+        (s/gen* spec a b c))
+      (with-gen* [_ gfn]
+        (s/with-gen* spec gfn))
+      (describe* [_] (s/describe* spec)))))
+
 (defn- spell-spec [mode spec]
-  (let [keys (->> spec spec-tools.parse/parse-spec :spec-tools.parse/keys)
-        data (case mode
-               :closed {:spec keys, :form keys}
-               :misspelled {:spec (ssa/not-misspelled keys)
-                            :form `(ssa/not-misspelled ~keys)})]
-    (ssa/pre-check
-      (impl/map-of-spec (ssa/map-explain ssa/enhance-problem (st/create-spec data)) any?)
-      spec)))
+  (if-let [keys (->> spec spec-tools.parse/parse-spec :spec-tools.parse/keys)]
+    (let [data (case mode
+                 :closed {:spec keys, :form keys}
+                 :misspelled {:spec (ssa/not-misspelled keys)
+                              :form `(ssa/not-misspelled ~keys)})]
+      (pre-check
+        (ssa/warning-spec
+          (impl/map-of-spec
+            (ssa/map-explain ssa/enhance-problem (st/create-spec data)) any?))
+        spec))
+    (throw (ex-info (str "Can't close non-keys specs: " spec) {:spec spec, :mode mode}))))
 
 ;;
-;; Public API
+;; Via Coercion
 ;;
 
 (defn strict-keys-decoder [{:keys [::parse/keys]} x]
@@ -75,16 +101,20 @@
     {:name ::strict-keys
      :decoders {:map strict-keys-decoder}}))
 
-(defn explain-data [spec x]
+(defn explain-strict-data [spec x]
   (->> (st/coerce spec x strict-keys-transformer)
        (flatten-problems)
        (problems spec x)))
 
-(defn closed-keys [spec] (spell-spec :closed spec))
-(defn misspelled-keys [spec] (spell-spec :misspelled spec))
+;;
+;; Public API
+;;
 
-(defn strict-keys [args]
-  (eval `(ssa/strict-keys ~@(apply concat args))))
+(defn closed [spec] (spell-spec :closed spec))
+(defn misspelled [spec] (spell-spec :misspelled spec))
+
+(defn closed-keys [data]
+  (closed (impl/keys-spec data)))
 
 (defn explain-str [spec data]
   (if-let [explain-data (s/explain-data spec data)]
@@ -97,21 +127,5 @@
             ::s/value data)
           nil)))))
 
-(comment
-  (ns user
-    (:require [clojure.spec.alpha :as s]
-              [spec-tools.spell]
-              [spec-tools.core :as st]))
-
-  (s/def ::name string?)
-  (s/def ::use-history boolean?)
-  (s/def ::config (st/spec (s/keys :opt-un [::name ::use-history])))
-  (s/def ::options (s/keys :opt-un [::config]))
-
-  (def data {:config {:name "John" :use-hisory false :countr 1}})
-
-  (spec-tools.spell/explain-data ::options data)
-
-  (s/explain-data (spec-tools.spell/closed-keys ::options) data)
-
-  (s/valid? (spec-tools.spell/closed-keys ::options) data))
+(defn explain [spec data]
+  (some-> (explain-str spec data) (println)))
