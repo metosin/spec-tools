@@ -171,13 +171,6 @@
     {:name ::fail-on-extra-keys
      :decoders stt/fail-on-extra-keys-type-decoders}))
 
-(defn strict-keys-transformer
-  "Transformer that fails on extra keys in `s/keys` specs."
-  []
-  (type-transformer
-    {:name ::stict-keys
-     :decoders stt/fail-on-extra-keys-type-decoders}))
-
 ;;
 ;; Transforming
 ;;
