@@ -20,7 +20,7 @@ Data Specs offers an alternative, Schema-like data-driven syntax to define simpl
     * can be functions, specs, qualified spec names or nested collections.
 * wrapping value into `ds/maybe` makes it `s/nilable`
 
-**NOTE**: to avoid macros, current implementation uses the undocumented functional core of `clojure.spec.alpha`: `every-impl`, `tuple-impl`, `map-spec-impl`, `nilable-impl` and `or-spec-impl`. Support for [spec-alpha2](https://github.com/metosin/spec-tools/issues/169) shluld help to remove these.
+**NOTE**: to avoid macros, current implementation uses the undocumented functional core of `clojure.spec.alpha`: `every-impl`, `tuple-impl`, `map-spec-impl`, `nilable-impl` and `or-spec-impl`. Support for [spec-alpha2](https://github.com/metosin/spec-tools/issues/169) should help to remove these.
 
 **NOTE**: To use enums with data-specs, you need to wrap them: `(s/spec #{:S :M :L})`
 

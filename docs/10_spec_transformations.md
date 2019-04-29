@@ -29,7 +29,7 @@ Functions `explain`, `explain-data`, `conform` and `conform!` take the transform
 
 ### Encoding and Decoding
 
-There are also `encode` & `decode` functions that combine the two approaces and concidered the best way to transform the values. `decode` first tries to use `coerce` and if that doesn't make the value valid against the given spec, fallbacks to `conform` & `unform` which can be used for all specs.
+There are also `encode` & `decode` functions that combine the two approaches and considered the best way to transform the values. `decode` first tries to use `coerce` and if that doesn't make the value valid against the given spec, falls back to `conform` & `unform` which can be used for all specs.
 
 ### Spec-driven transformations
 
@@ -65,7 +65,7 @@ There are also `encode` & `decode` functions that combine the two approaces and 
 
 ### Spec [Bijections](https://en.wikipedia.org/wiki/Bijection)?
 
-no, as there can be multiple valid representations for a encoded value. But it can be quaranteed that a decoded values X is always encoded into Y, which can be decoded back into X: `y -> X -> Y -> X`
+no, as there can be multiple valid representations for a encoded value. But it can be guaranteed that a decoded values X is always encoded into Y, which can be decoded back into X: `y -> X -> Y -> X`
 
 ```clj
 (as-> "KikKa" $
