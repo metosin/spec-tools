@@ -83,7 +83,10 @@
                    (st/conform person-spec bloated st/strip-extra-keys-transformer))))))))
 
   (testing "heterogenous lists"
-    (is (thrown-with-msg? Exception #"should be homogeneous" (ds/spec {:spec [int? int?]}))))
+    (is (thrown-with-msg?
+          #?(:clj Exception, :cljs js/Error)
+          #"should be homogeneous"
+          (ds/spec {:spec [int? int?]}))))
 
   (testing "or spec"
     (let [strings-or-keywords (ds/or {::ui-target {:id string?}
