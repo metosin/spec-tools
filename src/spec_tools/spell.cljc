@@ -11,7 +11,7 @@
 
 (defrecord Problems [values])
 
-(defn- flatten-problems [m]
+#_(defn- flatten-problems [m]
   (if m
     ((fn flatten-helper [keyseq m]
        (when m
@@ -23,7 +23,7 @@
            :else [[keyseq m]])))
      [] m)))
 
-(defn- via [spec path]
+#_(defn- via [spec path]
   (if-let [spec (and (qualified-keyword? spec) spec)]
     (loop [via [spec], [p & ps] path]
       (if p
@@ -32,7 +32,7 @@
             (recur (conj via spec) ps)))
         via))))
 
-(defn- problems [spec x paths]
+#_(defn- problems [spec x paths]
   {::s/problems (for [[path {:keys [values]}] paths
                       problem values]
                   (assoc problem
@@ -82,7 +82,7 @@
 ;; Via Coercion
 ;;
 
-(defn strict-keys-decoder [{:keys [::parse/keys]} x]
+#_(defn strict-keys-decoder [{:keys [::parse/keys]} x]
   (if-let [problems (and (map? x)
                          (reduce-kv
                            (fn [problems k _]
@@ -96,12 +96,12 @@
     (->Problems problems)
     x))
 
-(def strict-keys-transformer
+#_(def strict-keys-transformer
   (st/type-transformer
     {:name ::strict-keys
      :decoders {:map strict-keys-decoder}}))
 
-(defn explain-strict-data [spec x]
+#_(defn explain-strict-data [spec x]
   (->> (st/coerce spec x strict-keys-transformer)
        (flatten-problems)
        (problems spec x)))
