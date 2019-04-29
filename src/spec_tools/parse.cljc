@@ -52,6 +52,10 @@
 (defn parse-spec-with-spec-ref [x]
   (merge (parse-spec x) (if (qualified-keyword? x) {:spec x})))
 
+(defn get-keys [parse-data]
+  (or (::keys parse-data)
+      (->> parse-data ::items (keep get-keys) (apply concat) (seq) (set))))
+
 (defmulti parse-form (fn [dispatch _] dispatch) :default ::default)
 
 (defmethod parse-form ::default [_ _] {:type nil})

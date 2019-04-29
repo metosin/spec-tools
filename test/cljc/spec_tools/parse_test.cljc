@@ -107,3 +107,18 @@
             ::parse/keys-req #{:a :b}
             ::parse/key->spec {:a ::a, :b ::b}}
            (parse/parse-spec (st/merge (s/keys :req-un [::a]) (s/keys :req-un [::b])))))))
+
+(deftest get-keys-test
+  (testing "get-keys"
+    (is (= #{:a :b :c :d :e :f :g ::h ::i}
+           (parse/get-keys
+             (parse/parse-spec
+               (s/or
+                 :1 (s/or :1 (s/keys :opt-un [::a])
+                          :2 (s/and
+                               (s/keys :opt-un [::b])
+                               (s/keys :opt-un [::c])
+                               (s/merge
+                                 (s/keys :opt-un [::d])
+                                 (s/keys :opt-un [::e]))))
+                 :2 (s/keys :opt-un [::f] :req-un [::g] :req [::h] :opt [::i]))))))))
