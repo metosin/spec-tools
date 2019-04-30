@@ -54,7 +54,7 @@
 
 (defn get-keys [parse-data]
   (or (::keys parse-data)
-      (->> parse-data ::items (keep get-keys) (apply concat) (seq) (set))))
+      (some->> parse-data ::items (keep get-keys) (apply concat) (seq) (set))))
 
 (defmulti parse-form (fn [dispatch _] dispatch) :default ::default)
 

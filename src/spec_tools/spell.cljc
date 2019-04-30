@@ -66,7 +66,7 @@
       (describe* [_] (s/describe* spec)))))
 
 (defn- spell-spec [mode spec]
-  (if-let [keys (->> spec spec-tools.parse/parse-spec :spec-tools.parse/keys)]
+  (if-let [keys (->> spec spec-tools.parse/parse-spec parse/get-keys)]
     (let [data (case mode
                  :closed {:spec keys, :form keys}
                  :misspelled {:spec (ssa/not-misspelled keys)
@@ -76,7 +76,7 @@
           (impl/map-of-spec
             (ssa/map-explain ssa/enhance-problem (st/create-spec data)) any?))
         spec))
-    (throw (ex-info (str "Can't close non-keys specs: " spec) {:spec spec, :mode mode}))))
+    (throw (ex-info (str "Can't read keys from spec: " spec) {:spec spec, :mode mode}))))
 
 ;;
 ;; Via Coercion

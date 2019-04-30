@@ -55,6 +55,11 @@
                 (spell/closed (s/keys :opt-un [::config]))
                 invalid-options))
             "Misspelled map key")))
+    (testing "errors"
+      (is (thrown-with-msg?
+            #?(:clj Exception, :cljs js/Error)
+            #"Can't read keys from spec"
+            (spell/closed int?))))
     (testing "parsing"
       (is (= {:type :map,
               :spec-tools.parse/key->spec {:config ::config},
@@ -78,4 +83,3 @@
         (is (s/explain-data spec invalid-options))
         (is (s/explain-data spec invalid-config))
         (is (not (s/explain-data spec valid)))))))
-
