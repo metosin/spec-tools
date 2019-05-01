@@ -1,8 +1,10 @@
-# 0.9.2-SNAPSHOT
+# 0.9.2-alpha1
 
 * Coercion doesn't reverse lazy sequences, fixes [#176](https://github.com/metosin/spec-tools/issues/176), by [salokristian](https://github.com/salokristian).
 * `spec-tools.core/merge` can be visited, fixes [#173](https://github.com/metosin/spec-tools/issues/173) by [Erik Assum](https://github.com/slipset)
-* Experimental `spec-tools.spell` ns for closing map specs **functionally** using [spell-spec](https://github.com/bhauman/spell-spec). **Api subject to change**.
+* Experimental `spec-tools.spell` ns for closing map specs **functionally** using [spell-spec](https://github.com/bhauman/spell-spec).
+   * `spec-tools.spell/closed` to close a spec (non recursive)
+   * `spec-tools.spell/closed-key` to functionally create a closed `s/keys` spec
 
 ```clj
 (require '[clojure.spec.alpha :as s])

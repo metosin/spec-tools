@@ -83,3 +83,25 @@
         (is (s/explain-data spec invalid-options))
         (is (s/explain-data spec invalid-config))
         (is (not (s/explain-data spec valid)))))))
+
+(ns user)
+
+(require '[clojure.spec.alpha :as s])
+(require '[spec-tools.data-spec :as ds])
+(require '[spec-tools.spell :as spell])
+
+(def config-spec
+  (ds/spec
+    {:name ::config
+     :keys-default ds/opt ;; keys are optional by default
+     :keys-spec spell/closed-keys ;; maps are closed
+     :spec {:config {:name string?
+                     :use-history boolean?}}}))
+
+(def invalid {:config {:use-hisory false :countr 1}})
+
+(s/explain config-spec invalid)
+
+(spell/explain config-spec invalid)
+
+
