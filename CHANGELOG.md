@@ -1,3 +1,60 @@
+# 0.9.2-alpha1
+
+* Coercion doesn't reverse lazy sequences, fixes [#176](https://github.com/metosin/spec-tools/issues/176), by [salokristian](https://github.com/salokristian).
+* `spec-tools.core/merge` can be visited, fixes [#173](https://github.com/metosin/spec-tools/issues/173) by [Erik Assum](https://github.com/slipset)
+* Experimental `spec-tools.spell` ns for closing map specs **functionally** using [spell-spec](https://github.com/bhauman/spell-spec).
+   * `spec-tools.spell/closed` to close a spec (non recursive)
+   * `spec-tools.spell/closed-key` to functionally create a closed `s/keys` spec
+
+```clj
+(require '[clojure.spec.alpha :as s])
+(require '[spec-tools.spell :as spell])
+
+(s/def ::name string?)
+(s/def ::use-history boolean?)
+(s/def ::config (spell/closed (s/keys :opt-un [::name ::use-history])))
+(s/def ::options (spell/closed (s/keys :opt-un [::config])))
+
+(def invalid {:config {:name "John" :use-hisory false :countr 1}})
+
+(s/explain-data ::options invalid)
+;#:clojure.spec.alpha{:problems ({:path [:config 0],
+;                                 :pred #{:use-history},
+;                                 :val :use-hisory,
+;                                 :via [:user/options :user/config],
+;                                 :in [:config :use-hisory 0],
+;                                 :expound.spec.problem/type :spell-spec.alpha/misspelled-key,
+;                                 :spell-spec.alpha/misspelled-key :use-hisory,
+;                                 :spell-spec.alpha/likely-misspelling-of (:use-history)}
+;                                {:path [:config 0],
+;                                 :pred #{:name :use-history},
+;                                 :val :countr,
+;                                 :via [:user/options :user/config],
+;                                 :in [:config :countr 0],
+;                                 :expound.spec.problem/type :spell-spec.alpha/unknown-key,
+;                                 :spell-spec.alpha/unknown-key :countr}),
+;                     :spec :user/options,
+;                     :value {:config {:name "John", :use-hisory false, :countr 1}}}
+
+(println (spell/explain-str ::options invalid))
+; -- Misspelled map key -------------
+; 
+;     {:config {:name ..., :countr ..., :use-hisory ...}}
+;                                       ^^^^^^^^^^^
+; 
+; should probably be: :use-history
+; 
+; -- Unknown map key ----------------
+; 
+;     {:config {:name ..., :use-hisory ..., :countr ...}}
+;                                           ^^^^^^^
+; 
+; should be one of: :name, :use-history
+; 
+; -------------------------
+; Detected 2 errors
+```
+
 # 0.9.1 (21.3.2019)
 
 * `spec-tools.core/merge` is now visitable by [Erik Assum](https://github.com/slipset).

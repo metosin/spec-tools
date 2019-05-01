@@ -3,110 +3,9 @@
             [clojure.spec.alpha :as s]
             [spec-tools.data-spec :as ds]
             [spec-tools.core :as st]
-            [spec-tools.parse :as parse]
             [spec-tools.spec :as spec])
   #?(:clj
      (:import clojure.lang.ExceptionInfo)))
-
-(def ignoring-spec #(dissoc % ::s/spec))
-
-(deftest coll-of-spec-tests
-  (let [spec (s/coll-of string? :into [])
-        impl (#'ds/coll-of-spec string? [])]
-    (is (= (s/form spec)
-           (s/form impl)))
-    (is (= `(s/coll-of (st/spec {:spec string? :type :string :leaf? true}) :into [])
-           (s/form (#'ds/coll-of-spec spec/string? []))))
-    (is (= nil
-           (s/explain-data spec ["1"])
-           (s/explain-data impl ["1"])))
-    (comment "CLJ-CLJ-2168"
-             (is (= (ignoring-spec (s/explain-data spec [1]))
-                    (ignoring-spec (s/explain-data impl [1])))))
-    (is (= ["1"]
-           (s/conform spec ["1"])
-           (s/conform impl ["1"])))))
-
-(deftest map-of-spec-tests
-  (let [spec (s/map-of string? string? :conform-keys true)
-        impl (#'ds/map-of-spec string? string?)]
-    (is (= (s/form spec)
-           (s/form impl)))
-    (is (= `(s/map-of
-              (st/spec {:spec string? :type :string :leaf? true})
-              (st/spec {:spec string? :type :string :leaf? true})
-              :conform-keys true)
-           (s/form (#'ds/map-of-spec spec/string? spec/string?))))
-    (is (= nil
-           (s/explain-data spec {"key" "value"})
-           (s/explain-data impl {"key" "value"})))
-    (is (= (s/explain-data spec {"key" "value"})
-           (s/explain-data impl {"key" "value"})))
-    (is (= {"key" "value"}
-           (s/conform spec {"key" "value"})
-           (s/conform impl {"key" "value"})))))
-
-(s/def ::int int?)
-(s/def ::str string?)
-(s/def ::bool boolean?)
-
-(deftest keys-spec-tests
-  (let [spec (s/keys :req [::int]
-                     :opt [::str]
-                     :req-un [::bool]
-                     :opt-un [::int])
-        impl (#'ds/keys-spec {:req [::int]
-                              :opt [::str]
-                              :req-un [::bool]
-                              :opt-un [::int]})]
-
-    (is (= (s/form spec)
-           (s/form impl)))
-    (is (= nil
-           (s/explain-data spec {::int 1, :bool true})
-           (s/explain-data impl {::int 1, :bool true})))
-    (is (= (ignoring-spec (s/explain-data spec {::int "1"}))
-           (ignoring-spec (s/explain-data impl {::int "1"}))))
-    (is (= {::int 1, :bool true, :kikka "kakka"}
-           (s/conform spec {::int 1, :bool true, :kikka "kakka"})
-           (s/conform impl {::int 1, :bool true, :kikka "kakka"})))))
-
-(deftest nilable-spec-tst
-  (let [spec (s/nilable string?)
-        impl (#'ds/nilable-spec string?)]
-    (is (= (s/form spec)
-           (s/form impl)))
-    (is (= `(s/nilable (st/spec {:spec string? :type :string :leaf? true}))
-           (s/form (#'ds/nilable-spec spec/string?))))
-    (is (= nil
-           (s/explain-data spec "1")
-           (s/explain-data spec nil)
-           (s/explain-data impl "1")
-           (s/explain-data impl nil)))
-    (is (= (ignoring-spec (s/explain-data spec [1]))
-           (ignoring-spec (s/explain-data impl [1]))))
-    (is (= "1"
-           (s/conform spec "1")
-           (s/conform impl "1")))))
-
-(deftest or-spec-tst
-  (let [spec (s/or :int int?, :string string?)
-        impl (#'ds/or-spec {:int int?, :string string?})]
-    (is (= (s/form spec)
-           (s/form impl)))
-    (is (= `(s/or :int (st/spec {:spec int? :type :long :leaf? true})
-                  :string (st/spec {:spec string? :type :string :leaf? true}))
-           (s/form (#'ds/or-spec {:int spec/int?, :string spec/string?}))))
-    (is (= nil
-           (s/explain-data spec "1")
-           (s/explain-data spec 1)
-           (s/explain-data impl "1")
-           (s/explain-data impl 1)))
-    (is (= (ignoring-spec (s/explain-data spec [1]))
-           (ignoring-spec (s/explain-data impl [1]))))
-    (is (= [:string "1"]
-           (s/conform spec "1")
-           (s/conform impl "1")))))
 
 (s/def ::age (s/and spec/integer? #(> % 10)))
 
@@ -183,6 +82,12 @@
             (is (= value
                    (st/conform person-spec bloated st/strip-extra-keys-transformer))))))))
 
+  (testing "heterogenous lists"
+    (is (thrown-with-msg?
+          #?(:clj Exception, :cljs js/Error)
+          #"should be homogeneous"
+          (ds/spec {:spec [int? int?]}))))
+
   (testing "or spec"
     (let [strings-or-keywords (ds/or {::ui-target {:id string?}
                                       ::data-target [keyword?]})]
@@ -207,7 +112,7 @@
                  {:values [["1" "2"] [3]]}))))))
 
   (testing "encoding with or spec"
-    (testing "when value matches first form of the or" 
+    (testing "when value matches first form of the or"
       (let [spec (ds/spec {:name ::int-or-double :spec (ds/or {:a {:an-int int?} :b {:a-double double?}})})
             value {:an-int 217322}
             value-string {:an-int "217322"}]

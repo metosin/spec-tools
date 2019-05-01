@@ -320,7 +320,7 @@
         (let [spec (if (qualified-keyword? k) (s/get-spec k) (s/get-spec (get key->spec k)))
               value (if spec (accept spec v options) v)]
           (assoc acc k value)))
-      {}
+      value
       value)
     value))
 
