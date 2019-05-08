@@ -440,7 +440,7 @@
         (is (= {coerced coerced} (st/coerce spec {value value} transformer)))
 
         (s/map-of keyword? keyword?) :kikka :kikka
-        (s/map-of symbol? symbol?)  :kikka 'kikka
+        (s/map-of symbol? symbol?) :kikka 'kikka
         (s/map-of int? int?) :1 1
         (s/map-of double? double?) :1.0 1.0
         (s/map-of boolean? boolean?) :true true
@@ -763,3 +763,11 @@
            :response/user
            {:data {:id "41", :type "user", :attributes {:name "string"}}}
            st/string-transformer))))
+
+(deftest issue-123
+  (testing "s/conform can transform composite types"
+    (let [spec (s/double-in :min 0 :NaN? false :infinite? false)]
+      (is (= 114.0
+             (st/decode spec "114.0" st/string-transformer)
+             (st/conform spec "114.0" st/string-transformer)
+             (st/coerce spec "114.0" st/string-transformer))))))

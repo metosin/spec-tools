@@ -356,6 +356,12 @@
 (defn- leaf? [spec]
   (:leaf? (into-spec spec)))
 
+(defn- decompose-spec-type [spec]
+  (let [type (:type spec)]
+    (if (sequential? type)
+      (update spec :type (comp first second))
+      spec)))
+
 (defrecord Spec [spec form type]
   #?@(:clj [s/Specize
             (specize* [s] s)
@@ -380,7 +386,7 @@
   (conform* [this x]
     (let [transformer *transformer*, encode? *encode?*]
       ;; if there is a transformer present
-      (if-let [transform (if transformer ((if encode? -encoder -decoder) transformer this x))]
+      (if-let [transform (if transformer ((if encode? -encoder -decoder) transformer (decompose-spec-type this) x))]
         ;; let's transform it
         (let [transformed (transform this x)]
           ;; short-circuit on ::s/invalid
