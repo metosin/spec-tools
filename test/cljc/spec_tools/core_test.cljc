@@ -337,6 +337,14 @@
       (is (= "1" (st/encode ::regex 1 st/string-transformer)))
       (is (= 1 (st/decode ::regex "1" st/string-transformer))))))
 
+(deftest late-bind-transformers-on-decode
+  (let [times (atom 0)
+        spec (st/spec
+               {:spec int?
+                :decode/string (fn [_ value] (swap! times inc) value)})]
+    (st/decode spec 1 st/string-transformer)
+    (is (= 1 @times))))
+
 (s/def ::c1 int?)
 (s/def ::c2 keyword?)
 (s/def ::c3 symbol?)
