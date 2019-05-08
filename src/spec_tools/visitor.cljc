@@ -4,7 +4,8 @@
             [spec-tools.core :as st]
             [spec-tools.parse :as parse]
             [spec-tools.impl :as impl]
-            [spec-tools.form :as form]))
+            [spec-tools.form :as form]
+            [spec-tools.data-spec :as ds]))
 
 (defn- spec-dispatch
   [spec accept options]
@@ -141,6 +142,11 @@
 (defmethod visit-spec 'spec-tools.core/spec [spec accept options]
   (let [[_ {inner-spec :spec}] (impl/extract-form spec)]
     (accept ::spec spec [(visit inner-spec accept options)] options)))
+
+(defmethod visit-spec 'spec-tools.data-spec/spec [spec accept options]
+  (let [[_ data] (impl/extract-form spec)
+        inner-spec (ds/spec (eval data))] ;; data -> code
+    (visit inner-spec accept options)))
 
 (defmethod visit-spec ::default [spec accept options]
   (accept (spec-dispatch spec accept options) spec nil options))

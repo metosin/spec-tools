@@ -73,3 +73,13 @@
                    (map s/get-spec)
                    (remove keyword?)
                    (every? st/spec?))))))))
+
+(deftest merged-data-specs-test
+  (is (= #{:required/str :optional/str}
+         (->> (visitor/visit
+                (st/merge
+                  (ds/spec {:spec {:required/str string?}})
+                  (ds/spec {:spec {:optional/str string?}}))
+                (visitor/spec-collector))
+              (keys)
+              (set)))))
