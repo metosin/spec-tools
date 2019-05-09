@@ -1,3 +1,7 @@
+# 0.9.2-alpha2
+
+* Fix dynamic conforming with composite specs, fixes [#184](https://github.com/metosin/spec-tools/issues/184)
+
 # 0.9.2-alpha1
 
 * Coercion doesn't reverse lazy sequences, fixes [#176](https://github.com/metosin/spec-tools/issues/176), by [salokristian](https://github.com/salokristian).

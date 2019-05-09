@@ -1,4 +1,4 @@
-(defproject metosin/spec-tools "0.9.2-alpha1"
+(defproject metosin/spec-tools "0.9.2-alpha2"
   :description "Clojure(Script) tools for clojure.spec"
   :url "https://github.com/metosin/spec-tools"
   :license {:name "Eclipse Public License"
@@ -27,15 +27,15 @@
                    ;:global-vars {*warn-on-reflection* true}
                    :dependencies [[org.clojure/clojure "1.10.0"]
                                   [org.clojure/clojurescript "1.10.520"]
-                                  [criterium "0.4.4"]
+                                  [criterium "0.4.5"]
                                   [prismatic/schema "1.1.10"]
                                   [org.clojure/test.check "0.9.0"]
                                   [org.clojure/tools.namespace "0.2.11"]
                                   [com.gfredericks/test.chuck "0.2.9"]
                                   [com.bhauman/spell-spec "0.1.1"]
                                   [expound "0.7.2"]
-                                  [metosin/ring-swagger "0.26.1"]
-                                  [metosin/muuntaja "0.6.3"]
+                                  [metosin/ring-swagger "0.26.2"]
+                                  [metosin/muuntaja "0.6.4"]
                                   [metosin/scjsv "0.5.0"]]}
              :perf {:jvm-opts ^:replace ["-server"]}}
   :aliases {"all" ["with-profile" "dev"]
