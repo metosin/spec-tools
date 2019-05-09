@@ -237,11 +237,11 @@
   ([spec value]
    (decode spec value nil))
   ([spec value transformer]
-   (binding [*transformer* transformer, *encode?* false]
-     (let [spec (into-spec spec)
-           coerced (coerce spec value transformer)]
-       (if (s/valid? spec coerced)
-         coerced
+   (let [spec (into-spec spec)
+         coerced (coerce spec value transformer)]
+     (if (s/valid? spec coerced)
+       coerced
+       (binding [*transformer* transformer, *encode?* false]
          (let [conformed (s/conform spec value)]
            (if (s/invalid? conformed)
              conformed
