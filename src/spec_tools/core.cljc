@@ -356,7 +356,13 @@
 (defn- leaf? [spec]
   (:leaf? (into-spec spec)))
 
-(defn- decompose-spec-type [spec]
+(defn- decompose-spec-type 
+  "Dynamic conforming can't walk over composite specs like s/and & s/or.
+  So, we'll use the first type. Examples:
+
+     `[:and [:int :string]]` -> `:int`
+     `[:or [:string :keyword]]` -> `:string`"
+  [spec]
   (let [type (:type spec)]
     (if (sequential? type)
       (update spec :type (comp first second))
