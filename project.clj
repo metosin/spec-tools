@@ -1,4 +1,4 @@
-(defproject metosin/spec-tools "0.9.2-alpha2"
+(defproject metosin/spec-tools "0.9.2"
   :description "Clojure(Script) tools for clojure.spec"
   :url "https://github.com/metosin/spec-tools"
   :license {:name "Eclipse Public License"
