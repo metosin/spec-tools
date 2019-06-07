@@ -1,3 +1,7 @@
+# 0.9.3 (7.5.2019)
+
+* Updated dependency on jackson-databind to fix a vulnerability. [#189](https://github.com/metosin/spec-tools/pull/189) 
+
 # 0.9.2 (10.5.2019)
 
 ## 0.9.2-alpha2
