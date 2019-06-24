@@ -2,8 +2,7 @@
   #?(:cljs (:refer-clojure :exclude [Inst Keyword UUID]))
   (:require [clojure.spec.alpha :as s]
             #?@(:cljs [[goog.date.UtcDateTime]
-                       [goog.date.Date]]
-                :clj  [[clojure.instant :refer [read-instant-date]]])
+                       [goog.date.Date]])
             [clojure.set :as set]
             [spec-tools.parse :as parse]
             [clojure.string :as str]
@@ -11,7 +10,8 @@
   #?(:clj
      (:import (java.util Date UUID)
               (java.time Instant ZoneId)
-              (java.time.format DateTimeFormatter))))
+              (java.time.format DateTimeFormatter DateTimeFormatterBuilder)
+              (java.time.temporal ChronoField))))
 
 ;;
 ;; Keywords
@@ -80,23 +80,31 @@
       (catch #?(:clj Exception, :cljs js/Error) _ x))
     x))
 
+#?(:clj
+   (def ^DateTimeFormatter +string->date-format+
+     (-> (DateTimeFormatterBuilder.)
+         (.appendPattern "yyyy-MM-dd['T'HH:mm:ss[.SSS][XXXX][XXXXX]]")
+         (.parseDefaulting ChronoField/HOUR_OF_DAY 0)
+         (.parseDefaulting ChronoField/OFFSET_SECONDS 0)
+         (.toFormatter))))
+
 (defn string->date [_ x]
   (if (string? x)
     (try
-      #?(:clj  (read-instant-date x)
+      #?(:clj  (Date/from (Instant/from (.parse +string->date-format+ x)))
          :cljs (js/Date. (.getTime (goog.date.UtcDateTime.fromIsoString x))))
       (catch #?(:clj Exception, :cljs js/Error) _ x))
     x))
 
 #?(:clj
-   (def +date-time-format+
+   (def ^DateTimeFormatter +date->string-format+
      (-> (DateTimeFormatter/ofPattern "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
          (.withZone (ZoneId/of "UTC")))))
 
 (defn date->string [_ x]
   (if (inst? x)
     (try
-      #?(:clj  (.format +date-time-format+ (Instant/ofEpochMilli (inst-ms x)))
+      #?(:clj  (.format +date->string-format+ (Instant/ofEpochMilli (inst-ms x)))
          :cljs (.toISOString x))
       (catch #?(:clj Exception, :cljs js/Error) _ x))
     x))
