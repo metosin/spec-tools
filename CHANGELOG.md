@@ -1,3 +1,18 @@
+# 0.10.0 (26.6.2019)
+
+* Removed the jackson-databind dependency. [#158](https://github.com/metosin/spec-tools/pull/158)
+  * **BREAKING** (minor): When encoding dates to strings, the timezone is now encoded as `Z` instead of `+0000`. This makes the output [RFC3339-compatible](https://www.ietf.org/rfc/rfc3339.txt) and keeps it ISO-8601-compatible.
+
+```clojure
+;; the new behavior - version 0.10.0 and later
+user=> (st/encode inst? (java.util.Date.) st/json-transformer)
+"2019-06-26T06:49:15.538Z"
+
+;; the old behavior - version 0.9.3 and earlier
+user=> (st/encode inst? (java.util.Date.) st/json-transformer)
+"2019-06-26T06:50:02.233+0000"
+```
+
 # 0.9.3 (7.5.2019)
 
 * Updated dependency on jackson-databind to fix a vulnerability. [#189](https://github.com/metosin/spec-tools/pull/189) 
