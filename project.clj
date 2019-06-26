@@ -14,8 +14,7 @@
   :scm {:name "git"
         :url "https://github.com/metosin/spec-tools"}
 
-  :dependencies [[org.clojure/spec.alpha "0.2.176"]
-                 [com.fasterxml.jackson.core/jackson-databind "2.9.9"]]
+  :dependencies [[org.clojure/spec.alpha "0.2.176"]]
 
   :profiles {:dev {:plugins [[jonase/eastwood "0.3.5"]
                              [lein-tach "1.0.0"]

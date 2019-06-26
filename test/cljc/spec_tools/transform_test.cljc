@@ -35,16 +35,18 @@
   (is (= "abba" (stt/string->uuid _ "abba"))))
 
 (deftest string->date
-  (is (= #inst "2014-02-18T18:25:37Z" (stt/string->date _ "2014-02-18T18:25:37Z")))
+  (is (= #inst "2018-04-27T18:25:37Z" (stt/string->date _ "2018-04-27T18:25:37Z")))
   (is (= #inst "2018-04-27T00:00:00Z" (stt/string->date _ "2018-04-27")))
   (is (= #inst "2018-04-27T05:00:00Z" (stt/string->date _ "2018-04-27T08:00:00+03:00")))
+  (is (= #inst "2018-04-27T18:25:37Z" (stt/string->date _ "2018-04-27T18:25:37.000Z")))
+  (is (= #inst "2018-04-27T18:25:37Z" (stt/string->date _ "2018-04-27T18:25:37.000+0000")))
   (is (= #inst "2014-02-18T18:25:37Z" (stt/string->date _ #inst "2014-02-18T18:25:37Z")))
   (is (= #inst "2018-04-27T00:00:00Z" (stt/string->date _ #inst "2018-04-27")))
   (is (= #inst "2018-04-27T05:00:00Z" (stt/string->date _ #inst "2018-04-27T08:00:00+03:00")))
   (is (= "abba" (stt/string->date _ "abba"))))
 
 (deftest date->string
-  (is (= "2014-02-18T18:25:37.000+0000" (stt/date->string _ #inst "2014-02-18T18:25:37Z")))
+  (is (= "2014-02-18T18:25:37.000Z" (stt/date->string _ #inst "2014-02-18T18:25:37Z")))
   (is (= "abba" (stt/date->string _ "abba"))))
 
 (deftest string->symbol

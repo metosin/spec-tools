@@ -9,8 +9,9 @@
             [spec-tools.impl :as impl])
   #?(:clj
      (:import (java.util Date UUID)
-              (com.fasterxml.jackson.databind.util StdDateFormat)
-              (java.time Instant))))
+              (java.time Instant ZoneId)
+              (java.time.format DateTimeFormatter DateTimeFormatterBuilder)
+              (java.time.temporal ChronoField))))
 
 ;;
 ;; Keywords
@@ -79,19 +80,32 @@
       (catch #?(:clj Exception, :cljs js/Error) _ x))
     x))
 
+#?(:clj
+   (def ^DateTimeFormatter +string->date-format+
+     (-> (DateTimeFormatterBuilder.)
+         (.appendPattern "yyyy-MM-dd['T'HH:mm:ss[.SSS][XXXX][XXXXX]]")
+         (.parseDefaulting ChronoField/HOUR_OF_DAY 0)
+         (.parseDefaulting ChronoField/OFFSET_SECONDS 0)
+         (.toFormatter))))
+
 (defn string->date [_ x]
   (if (string? x)
     (try
-      #?(:clj  (.parse (StdDateFormat.) x)
+      #?(:clj  (Date/from (Instant/from (.parse +string->date-format+ x)))
          :cljs (js/Date. (.getTime (goog.date.UtcDateTime.fromIsoString x))))
       (catch #?(:clj Exception, :cljs js/Error) _ x))
     x))
 
+#?(:clj
+   (def ^DateTimeFormatter +date->string-format+
+     (-> (DateTimeFormatter/ofPattern "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+         (.withZone (ZoneId/of "UTC")))))
+
 (defn date->string [_ x]
   (if (inst? x)
     (try
-      #?(:clj  (.format (StdDateFormat.) x)
-         :cljs (str/replace (.toISOString x) #"Z$" "+0000"))
+      #?(:clj  (.format +date->string-format+ (Instant/ofEpochMilli (inst-ms x)))
+         :cljs (.toISOString x))
       (catch #?(:clj Exception, :cljs js/Error) _ x))
     x))
 

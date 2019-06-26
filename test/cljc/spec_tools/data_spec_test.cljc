@@ -268,7 +268,7 @@
                       :symbol "metosin"
                       :price "9.99"
                       :uuid "655b4976-9b2e-4c4a-b9b5-fa6efa909de6"
-                      :shipping "2014-02-18T18:25:37.000+0000"
+                      :shipping "2014-02-18T18:25:37.000Z"
                       :secret "assavrut-no-suusialas"}]
 
     (testing "encode"
