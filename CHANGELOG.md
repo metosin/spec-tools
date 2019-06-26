@@ -1,4 +1,4 @@
-# 0.10.0 (26.6.2019)
+# 0.10.0 (2019-06-26)
 
 * Removed the jackson-databind dependency. [#158](https://github.com/metosin/spec-tools/pull/158)
   * **BREAKING** (minor): When encoding dates to strings, the timezone is now encoded as `Z` instead of `+0000`. This makes the output [RFC3339-compatible](https://www.ietf.org/rfc/rfc3339.txt) and keeps it ISO-8601-compatible.
@@ -13,11 +13,11 @@ user=> (st/encode inst? (java.util.Date.) st/json-transformer)
 "2019-06-26T06:50:02.233+0000"
 ```
 
-# 0.9.3 (7.5.2019)
+# 0.9.3 (2019-06-07)
 
 * Updated dependency on jackson-databind to fix a vulnerability. [#189](https://github.com/metosin/spec-tools/pull/189) 
 
-# 0.9.2 (10.5.2019)
+# 0.9.2 (2019-05-10)
 
 ## 0.9.2-alpha2
 
@@ -80,11 +80,11 @@ user=> (st/encode inst? (java.util.Date.) st/json-transformer)
 ; Detected 2 errors
 ```
 
-# 0.9.1 (21.3.2019)
+# 0.9.1 (2019-03-21)
 
 * `spec-tools.core/merge` is now visitable by [Erik Assum](https://github.com/slipset).
 
-# 0.9.0 (26.2.2019)
+# 0.9.0 (2019-02-26)
 
 * `st/coerce` doesn't reverse list order, fixes [compojure-api#406](https://github.com/metosin/compojure-api/issues/406)
 * Less verbose `st/Spec` form, all `:spec-tools.parse` keys are stripped, fixes [#159](https://github.com/metosin/spec-tools/issues/159)
@@ -121,7 +121,7 @@ user=> (st/encode inst? (java.util.Date.) st/json-transformer)
 ; => {:persons [{:weight 80, :height 200}]}
 ```
 
-# 0.8.3 (17.1.2019)
+# 0.8.3 (2019-01-17)
 
 * Identify Leaf Specs
   * Leaf Spec Records have `{:leaf? true}` data
@@ -130,11 +130,11 @@ user=> (st/encode inst? (java.util.Date.) st/json-transformer)
 * Remove an implicit dependency on test.check. [#150](https://github.com/metosin/spec-tools/pull/150)
 * Make `fail-on-extra-keys-transformer` work again. [#151](https://github.com/metosin/spec-tools/issues/151)
 
-# 0.8.2 (10.11.2018)
+# 0.8.2 (2018-11-10)
 
 * fixed a [issue coercion issue](https://github.com/metosin/spec-tools/issues/145)
 
-# 0.8.1 (9.11.2018)
+# 0.8.1 (2018-11-09)
 
 * updated deps:
 
@@ -142,7 +142,7 @@ user=> (st/encode inst? (java.util.Date.) st/json-transformer)
 [org.clojure/spec.alpha "1.10.439"] is available but we use "1.10.339"
 ```
 
-# 0.8.0 (21.10.2018)
+# 0.8.0 (2018-10-21)
 
 * Fix [fishy gen* call in your Spec protocol](https://github.com/metosin/spec-tools/issues/136).
 * Support Spec Records with Swagger on cljs by [Miloslav Nenadál](https://github.com/nenadalm)
@@ -222,7 +222,7 @@ user=> (st/encode inst? (java.util.Date.) st/json-transformer)
          (parse/parse-spec (s/and int? keyword?)))))
 ```
  
-# 0.7.2 (26.9.2018)
+# 0.7.2 (2018-09-26)
 
 * Update deps:
 
@@ -232,7 +232,7 @@ user=> (st/encode inst? (java.util.Date.) st/json-transformer)
 [com.fasterxml.jackson.core/jackson-databind "2.9.7"] is available but we use "2.9.6"
 ```
 
-# 0.7.1 (25.6.2018)
+# 0.7.1 (2018-06-25)
 
 * Not setting a Swagger response model doesn't emit empty schema `{}`.
 * Spec keys with `swagger` namespace are merged into Swagger schemas, overriding values from `json-schema` namespaced keys:
@@ -258,7 +258,7 @@ user=> (st/encode inst? (java.util.Date.) st/json-transformer)
 [com.fasterxml.jackson.core/jackson-databind "2.9.6"] is available but we use "2.9.5"
 ```
 
-# 0.7.0 (14.5.2018)
+# 0.7.0 (2018-05-14)
 
 * Fix `rational?` mapping for JSON Schema, fixes [#113](https://github.com/metosin/spec-tools/issues/113)
 * Remove `::swagger/extension` expansion in Swagger2 generation.
@@ -372,11 +372,11 @@ no, as there can be multiple valid representations for a encoded value. But it's
 ;; :kikka
 ```
 
-## 0.6.1 (19.2.2018)
+# 0.6.1 (2018-02-19)
 
 * 0.6.0 deployed correctly
 
-## 0.6.0 (19.2.2018)
+# 0.6.0 (2018-02-19)
 
 * **BREAKING**: the transforming functions in `spec-tools.conform` just transform, dont' validate. Fixes [#92](https://github.com/metosin/spec-tools/issues/92). Thanks to [Benjamin Albrecht](https://github.com/benalbrecht)
 * Fixed `s/gen` triggers `IllegalArgumentException` for nested aliased specs [#94](https://github.com/metosin/spec-tools/issues/94) by [@johanwiren](https://github.com/johanwiren).
@@ -446,7 +446,7 @@ no, as there can be multiple valid representations for a encoded value. But it's
 [org.clojure/clojure "1.9.0"] is available but we use "1.9.0-beta4"
 ```
 
-## 0.5.1 (31.10.2017)
+# 0.5.1 (2017-10-31)
 
 * remove `bigdec?` in favor of `decimal?` (1.9.0-beta4 changes)
 * updated deps:
@@ -456,7 +456,7 @@ no, as there can be multiple valid representations for a encoded value. But it's
 [org.clojure/spec.alpha "0.1.143"] is available but we use "0.1.134"
 ```
 
-## 0.5.0 (19.10.2017)
+# 0.5.0 (2017-10-19)
 
 * don't publish empty `:required` fields for JSON Schemas, by [acron0](https://github.com/acron0)
 * added parsers for `s/merge` & `st/spec`.
@@ -470,7 +470,7 @@ no, as there can be multiple valid representations for a encoded value. But it's
 [org.clojure/clojurescript "1.9.946"] is available but we use "1.9.908"
 ```
 
-## 0.4.0 (11.10.2017)
+# 0.4.0 (2017-10-11)
 
 * `or` and `and` keys are parsed correctly for JSON Schema & Swagger, Fixes [#79](https://github.com/metosin/spec-tools/issues/79)
 * **BREAKING**: `spec-tools.type` is now `spec-tools.parse` with public api of:
@@ -484,7 +484,7 @@ no, as there can be multiple valid representations for a encoded value. But it's
 [org.clojure/spec.alpha "0.1.134"] is available but we use "0.1.123"
 ```
 
-## 0.3.3 (1.9.2017)
+# 0.3.3 (2017-09-01)
 
 * `spec-tools.core/create-spec` fails with qualified keyword if they don't link to a spec, thanks to [Camilo Roca](https://github.com/carocad)
 
@@ -495,16 +495,16 @@ no, as there can be multiple valid representations for a encoded value. But it's
 [org.clojure/clojurescript "1.9.908"] is available but we use "1.9.660"
 ```
 
-## 0.3.2 (29.7.2017)
+# 0.3.2 (2017-07-29)
 
 * map `spec-tools.spec` predicate symbols into `clojure.core` counterparts for JSON Schema / Swagger mappings.
 
-## 0.3.1 (27.7.2017)
+# 0.3.1 (2017-07-27)
 
 * resolve `:type` from first predicate of `s/and`, thanks to [Andy Chambers](https://github.com/cddr)
 * better error messages when trying to create non-homogeneous data-specs for Vectors & Sets
 
-## 0.3.0 (30.6.2017)
+# 0.3.0 (2017-06-30)
 
 * Swagger2 integration (moved from [spec-swagger](https://github.com/metosin/spec-swagger))
   * `spec-tools.swagger.core/transform` to transform Specs into Swagger [Parameter Objects](http://swagger.io/specification/#parameterObject) and [Schema Objects](http://swagger.io/specification/#schemaObject)
@@ -535,7 +535,7 @@ no, as there can be multiple valid representations for a encoded value. But it's
 
 * moved many helper functions to `spec-tools.impl`
 
-## 0.2.2 (2017-06-12)
+# 0.2.2 (2017-06-12)
 
 * Spec Record `describe*` uses the map syntax, e.g. `(st/spec clojure.core/string? {}` => `(st/spec {:spec clojure.core/string?})`
 
@@ -543,7 +543,7 @@ no, as there can be multiple valid representations for a encoded value. But it's
 
 **[compare](https://github.com/metosin/spec-tools/compare/0.2.1...0.2.2)**
 
-## 0.2.1 (2017-06-09)
+# 0.2.1 (2017-06-09)
 
 * fixed `explain*` for Spec Records
 
@@ -557,7 +557,7 @@ no, as there can be multiple valid representations for a encoded value. But it's
 
 **[compare](https://github.com/metosin/spec-tools/compare/0.2.0...0.2.1)**
 
-## 0.2.0 (2017-05-16)
+# 0.2.0 (2017-05-16)
 
 * **BREAKING**: update spec to `alpha16`:
   * `clojure.spec` => `clojure.spec.alpha`, `cljs.spec` => `cljs.spec.alpha` etc.
@@ -572,12 +572,12 @@ no, as there can be multiple valid representations for a encoded value. But it's
 
 **[compare](https://github.com/metosin/spec-tools/compare/0.1.1...0.2.0)**
 
-## 0.1.1 (2017-05-10)
+# 0.1.1 (2017-05-10)
 
 * Remove hard dependency on ClojureScript, thanks to [Kenny Williams](https://github.com/kennyjwilli). [#52](https://github.com/metosin/spec-tools/pull/52)
 
 **[compare](https://github.com/metosin/spec-tools/compare/0.1.0...0.1.1)**
 
-## 0.1.0 (2017-05-04)
+# 0.1.0 (2017-05-04)
 
 * Initial release.
