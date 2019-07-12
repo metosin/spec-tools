@@ -34,7 +34,7 @@
     (symbol? x)
     (parse-form (impl/normalize-symbol x) nil)
 
-    ;; a from
+    ;; a form
     (seq? x)
     (parse-form (impl/normalize-symbol (first x)) x)
 
