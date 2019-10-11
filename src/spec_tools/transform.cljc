@@ -2,7 +2,8 @@
   #?(:cljs (:refer-clojure :exclude [Inst Keyword UUID]))
   (:require [clojure.spec.alpha :as s]
             #?@(:cljs [[goog.date.UtcDateTime]
-                       [goog.date.Date]])
+                       [goog.date.Date]
+                       [goog.Uri]])
             [clojure.set :as set]
             [spec-tools.parse :as parse]
             [clojure.string :as str]
@@ -10,6 +11,7 @@
   #?(:clj
      (:import (java.util Date UUID)
               (java.time Instant ZoneId)
+              (java.net URI)
               (java.time.format DateTimeFormatter DateTimeFormatterBuilder)
               (java.time.temporal ChronoField))))
 
@@ -67,6 +69,15 @@
       (= "true" x) true
       (= "false" x) false
       :else x)
+    x))
+
+(defn string->uri [_ x]
+  (if (string? x)
+    (try
+      #?(:clj  (URI/create x)
+         ;; https://stackoverflow.com/questions/11528249/uri-validation-in-javascript
+         :cljs (goog.Uri.parse x))
+      (catch #?(:clj Exception, :cljs js/Error) _ x))
     x))
 
 (defn string->uuid [_ x]
@@ -170,7 +181,7 @@
      :boolean (keyword-> string->boolean)
      :string keyword->string}
     #?(:clj
-       {:uri nil
+       {:uri string->uri
         :bigdec nil
         :ratio nil})))
 
