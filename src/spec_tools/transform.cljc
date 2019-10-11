@@ -10,6 +10,7 @@
   #?(:clj
      (:import (java.util Date UUID)
               (java.time Instant ZoneId)
+              (java.net URI)
               (java.time.format DateTimeFormatter DateTimeFormatterBuilder)
               (java.time.temporal ChronoField))))
 
@@ -67,6 +68,15 @@
       (= "true" x) true
       (= "false" x) false
       :else x)
+    x))
+
+(defn string->uri [_ x]
+  (if (string? x)
+    (try
+      #?(:clj  (URI/create x)
+         ;; https://stackoverflow.com/questions/11528249/uri-validation-in-javascript
+         :cljs x)
+      (catch #?(:clj Exception, :cljs js/Error) _ x))
     x))
 
 (defn string->uuid [_ x]
@@ -170,7 +180,7 @@
      :boolean (keyword-> string->boolean)
      :string keyword->string}
     #?(:clj
-       {:uri nil
+       {:uri string->uri
         :bigdec nil
         :ratio nil})))
 

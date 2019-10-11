@@ -1,6 +1,8 @@
 (ns spec-tools.transform-test
   (:require [clojure.test :refer [deftest testing is]]
             [spec-tools.transform :as stt]))
+#?(:clj
+   (:import java.net.URI))
 
 (def _ ::irrelevant)
 
@@ -36,6 +38,20 @@
   (is (= #uuid"5f60751d-9bf7-4344-97ee-48643c9949ce" (stt/string->uuid _ #uuid"5f60751d-9bf7-4344-97ee-48643c9949ce")))
   (is (= "abba" (stt/string->uuid _ "abba"))))
 
+(deftest string->uri
+  #?(:clj (is (= (java.net.URI/create "https://github.com/metosin/spec-tools.git")
+                 (stt/string->uri _ "https://github.com/metosin/spec-tools.git"))))
+  #?(:clj (is (uri? (stt/string->uri _ "https://github.com/metosin/spec-tools.git"))))
+  #?(:clj (is (uri? (stt/string->uri _ "git://github.com/metosin/spec-tools.git"))))
+  #?(:clj (is (uri? (stt/string->uri _ "image:lisp.gif"))))
+  #?(:clj (is (not (uri? (stt/string->uri _ "f://[2001:db8::7:::::::::::]")))))
+  #?(:clj (is (uri? (stt/string->uri _ "ldap://[2001:db8::7]/c=GB?objectClass?one"))))
+  #?(:clj (is (uri? (stt/string->uri _ "mailto:John.Doe@example.com"))))
+  #?(:clj (is (uri? (stt/string->uri _ "tel:+1-816-555-1212"))))
+  #?(:clj (is (uri? (stt/string->uri _ "urn:oasis:names:specification:docbook:dtd:xml:4.1.2"))))
+  #?(:cljs (is (= "https://github.com/metosin/spec-tools.git")
+               (stt/string->uri _ "https://github.com/metosin/spec-tools.git"))))
+
 (deftest string->date
   (is (= #inst "2018-04-27T18:25:37Z" (stt/string->date _ "2018-04-27T18:25:37Z")))
   (is (= #inst "2018-04-27T00:00:00Z" (stt/string->date _ "2018-04-27")))
@@ -66,6 +82,8 @@
 
 (deftest any->string
   #?(:clj (is (= "1/2" (stt/any->string _ 1/2))))
+  #?(:clj (is (= "https://github.com/metosin/spec-tools.git"
+                 (stt/any->string _ (java.net.URI/create "https://github.com/metosin/spec-tools.git")))))
   (is (= "0.5" (stt/any->string _ 0.5)))
   (is (= nil (stt/any->string _ nil))))
 
