@@ -58,7 +58,8 @@
   (is (uri? (stt/string->uri _ "ldap://[2001:db8::7]/c=GB?objectClass?one")))
   (is (uri? (stt/string->uri _ "mailto:John.Doe@example.com")))
   (is (uri? (stt/string->uri _ "tel:+1-816-555-1212")))
-  (is (uri? (stt/string->uri _ "urn:oasis:names:specification:docbook:dtd:xml:4.1.2"))))
+  (is (uri? (stt/string->uri _ "urn:oasis:names:specification:docbook:dtd:xml:4.1.2")))
+  (is (not (uri? (stt/string->uri _ nil)))))
 
 (deftest string->date
   (is (= #inst "2018-04-27T18:25:37Z" (stt/string->date _ "2018-04-27T18:25:37Z")))
