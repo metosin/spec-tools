@@ -27,7 +27,9 @@
 (deftest string->boolean
   (is (= true (stt/string->boolean _ "true")))
   (is (= false (stt/string->boolean _ "false")))
-  (is (= "abba" (stt/string->boolean _ "abba"))))
+  (is (= "abba" (stt/string->boolean _ "abba")))
+  (is (= nil (stt/string->boolean _ nil)))
+  (is (= 42 (stt/string->boolean _ 42))))
 
 (deftest string->uuid
   (is (= #uuid"5f60751d-9bf7-4344-97ee-48643c9949ce" (stt/string->uuid _ "5f60751d-9bf7-4344-97ee-48643c9949ce")))
