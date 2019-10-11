@@ -2,7 +2,8 @@
   #?(:cljs (:refer-clojure :exclude [Inst Keyword UUID]))
   (:require [clojure.spec.alpha :as s]
             #?@(:cljs [[goog.date.UtcDateTime]
-                       [goog.date.Date]])
+                       [goog.date.Date]
+                       [goog.Uri]])
             [clojure.set :as set]
             [spec-tools.parse :as parse]
             [clojure.string :as str]
@@ -75,7 +76,7 @@
     (try
       #?(:clj  (URI/create x)
          ;; https://stackoverflow.com/questions/11528249/uri-validation-in-javascript
-         :cljs x)
+         :cljs (goog.Uri.parse x))
       (catch #?(:clj Exception, :cljs js/Error) _ x))
     x))
 

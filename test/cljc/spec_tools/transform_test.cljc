@@ -1,6 +1,7 @@
 (ns spec-tools.transform-test
   (:require [clojure.test :refer [deftest testing is]]
-            [spec-tools.transform :as stt]))
+            [spec-tools.transform :as stt]
+            #?@(:cljs [[goog.Uri]])))
 #?(:clj
    (:import java.net.URI))
 
@@ -38,19 +39,26 @@
   (is (= #uuid"5f60751d-9bf7-4344-97ee-48643c9949ce" (stt/string->uuid _ #uuid"5f60751d-9bf7-4344-97ee-48643c9949ce")))
   (is (= "abba" (stt/string->uuid _ "abba"))))
 
+(defn uri [x]
+  #?(:clj  (java.net.URI/create x)
+     :cljs (goog.Uri.parse x)))
+
+(defn equal-uris? [a b]
+  #?(:clj  (= a b)
+     :cljs (= (.toString a) (.toString b))))
+
 (deftest string->uri
-  #?(:clj (is (= (java.net.URI/create "https://github.com/metosin/spec-tools.git")
-                 (stt/string->uri _ "https://github.com/metosin/spec-tools.git"))))
-  #?(:clj (is (uri? (stt/string->uri _ "https://github.com/metosin/spec-tools.git"))))
-  #?(:clj (is (uri? (stt/string->uri _ "git://github.com/metosin/spec-tools.git"))))
-  #?(:clj (is (uri? (stt/string->uri _ "image:lisp.gif"))))
+  (is (equal-uris? (uri "https://github.com/metosin/spec-tools.git")
+                   (stt/string->uri _ "https://github.com/metosin/spec-tools.git")))
+  (is (uri? (stt/string->uri _ "https://github.com/metosin/spec-tools.git")))
+  (is (uri? (stt/string->uri _ "git://github.com/metosin/spec-tools.git")))
+  (is (uri? (stt/string->uri _ "image:lisp.gif")))
+  ; goog.Uri validation is pretty liberal, this does not fail in cljs
   #?(:clj (is (not (uri? (stt/string->uri _ "f://[2001:db8::7:::::::::::]")))))
-  #?(:clj (is (uri? (stt/string->uri _ "ldap://[2001:db8::7]/c=GB?objectClass?one"))))
-  #?(:clj (is (uri? (stt/string->uri _ "mailto:John.Doe@example.com"))))
-  #?(:clj (is (uri? (stt/string->uri _ "tel:+1-816-555-1212"))))
-  #?(:clj (is (uri? (stt/string->uri _ "urn:oasis:names:specification:docbook:dtd:xml:4.1.2"))))
-  #?(:cljs (is (= "https://github.com/metosin/spec-tools.git")
-               (stt/string->uri _ "https://github.com/metosin/spec-tools.git"))))
+  (is (uri? (stt/string->uri _ "ldap://[2001:db8::7]/c=GB?objectClass?one")))
+  (is (uri? (stt/string->uri _ "mailto:John.Doe@example.com")))
+  (is (uri? (stt/string->uri _ "tel:+1-816-555-1212")))
+  (is (uri? (stt/string->uri _ "urn:oasis:names:specification:docbook:dtd:xml:4.1.2"))))
 
 (deftest string->date
   (is (= #inst "2018-04-27T18:25:37Z" (stt/string->date _ "2018-04-27T18:25:37Z")))
