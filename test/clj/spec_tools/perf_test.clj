@@ -153,10 +153,13 @@
 
 (s/def ::order-id spec/integer?)
 (s/def ::product-id spec/integer?)
+(s/def ::company-id spec/integer?)
+(s/def ::client-id spec/integer?)
 (s/def ::product-name spec/string?)
 (s/def ::price spec/double?)
 (s/def ::quantity spec/integer?)
 (s/def ::name spec/string?)
+(s/def ::preferred-name ::name)
 (s/def ::zip spec/integer?)
 (s/def ::street string?)
 (s/def ::country (s/and spec/keyword? #{:fi :po}))
@@ -165,26 +168,18 @@
 (s/def ::orderline (s/keys :req-un [::product-id ::price]
                            :req.un [::product-name]))
 (s/def ::orderlines (s/coll-of ::orderline))
-(s/def ::order (s/keys :req-un [::order-id ::orderlines ::receiver]))
+(s/def ::customer-type (s/and spec/keyword? #{:client :corporate}))
+(defmulti requester-type :customer-type)
+(defmethod requester-type :client
+  [_]
+  (s/keys :req-un [::client-id ::preferred-name ::customer-type]))
+(defmethod requester-type :corporate
+  [_]
+  (s/keys :req-un [::company-id ::customer-type]))
+(s/def ::requester (s/multi-spec requester-type ::customer-type))
+(s/def ::order (s/keys :req-un [::order-id ::orderlines ::receiver]
+                       :opt-un [::requester]))
 (s/def ::order-with-line (s/and ::order #(> (::orderlines 1))))
-
-(s/form
-  (s/cat ::first keyword?
-         :integer-lists (s/+
-                          (s/coll-of
-                            (s/keys :req-un [::order-id
-                                             ::orderlines
-                                             ::receiver])))))
-
-(schema/defschema Order
-  {:order-id Long
-   :orderlines [{:product-id Long
-                 :price Double
-                 (schema/optional-key :product-name) String}]
-   :receiver {:name String
-              :street String
-              :zip Long
-              (schema/optional-key :country) (schema/enum :fi :po)}})
 
 (def sample-order-valid
   {:order-id 12
@@ -209,6 +204,45 @@
               :street "Kotikatu 2"
               :zip "33310"
               :country "fi"}})
+
+(def sample-multi-order-corporate
+  (assoc sample-order-valid
+    :requester {:customer-type "corporate"
+                :company-id    "12345"}))
+
+(defn multi-spec-coercer-test []
+
+  (suite "transformer set of multi-specs")
+
+  ;233.668605 µs
+  (title "Multi coercer")
+  (let [coercer #(st/coerce ::order % st/string-transformer)
+        call    #(coercer sample-multi-order-corporate)
+        expected (assoc sample-order-valid
+                   :requester {:customer-type :corporate
+                               :company-id 12345})]
+   (assert (= (call) expected))
+   (cc/quick-bench
+     (call))))
+
+(s/form
+  (s/cat ::first keyword?
+         :integer-lists (s/+
+                          (s/coll-of
+                            (s/keys :req-un [::order-id
+                                             ::orderlines
+                                             ::receiver])))))
+
+(schema/defschema Order
+  {:order-id Long
+   :orderlines [{:product-id Long
+                 :price Double
+                 (schema/optional-key :product-name) String}]
+   :receiver {:name String
+              :street String
+              :zip Long
+              (schema/optional-key :country) (schema/enum :fi :po)}})
+
 
 (defn conform-test3 []
 
@@ -250,4 +284,5 @@
   (valid-test)
   (conform-test)
   (conform-test2)
-  (conform-test3))
+  (conform-test3)
+  (multi-spec-coercer-test))

@@ -61,7 +61,7 @@
 (defmethod parse-form ::default [_ _] {:type nil})
 
 (defn- non-leaf-types []
-  #{:map :map-of :and :or :nilable :tuple :set :vector})
+  #{:map :map-of :and :or :nilable :tuple :set :vector :multi-spec})
 
 (defn types []
   #{:long
@@ -77,6 +77,7 @@
     :ratio
     :map
     :map-of
+    :multi-spec
     :and
     :or
     :set
@@ -146,6 +147,22 @@
              ::keys (set (concat req opt req-un opt-un))}
             (or req req-un) (assoc ::keys-req (set (concat req req-un)))
             (or opt opt-un) (assoc ::keys-opt (set (concat opt opt-un))))))
+
+(defn get-multi-spec-sub-specs
+  "Given a multi-spec form, call its multi method methods to retrieve
+its subspecs."
+  [multi-spec-form]
+  (let [[_ multi-method-symbol & _] multi-spec-form]
+    (->> (resolve multi-method-symbol)
+         deref
+         methods
+         (map (fn [[spec-k method]]
+                [spec-k (s/form (method nil))])))))
+
+(defmethod parse-form 'clojure.spec.alpha/multi-spec [_ form]
+  {:type      :multi-spec
+   ::key      (last form)
+   ::dispatch (into {} (get-multi-spec-sub-specs form))})
 
 (defmethod parse-form 'clojure.spec.alpha/or [_ form]
   (let [specs (mapv (comp parse-spec-with-spec-ref second) (partition 2 (rest form)))]
