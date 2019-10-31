@@ -1,3 +1,6 @@
+# 0.10.2 (2019-10-31)
+* Add ability to coerce multi-specs, fixes [#84](https://github.com/metosin/spec-tools/issues/84)
+
 # 0.10.0 (2019-06-26)
 
 * Removed the jackson-databind dependency. [#158](https://github.com/metosin/spec-tools/pull/158)
