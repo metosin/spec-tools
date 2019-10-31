@@ -177,8 +177,9 @@
   [_]
   (s/keys :req-un [::company-id ::customer-type]))
 (s/def ::requester (s/multi-spec requester-type ::customer-type))
-(s/def ::order (s/keys :req-un [::order-id ::orderlines ::receiver]
-                       :opt-un [::requester]))
+(s/def ::order (s/merge
+                 ::requester
+                 (s/keys :req-un [::order-id ::orderlines ::receiver])))
 (s/def ::order-with-line (s/and ::order #(> (::orderlines 1))))
 
 (def sample-order-valid
@@ -206,21 +207,21 @@
               :country "fi"}})
 
 (def sample-multi-order-corporate
-  (assoc sample-order-valid
-    :requester {:customer-type "corporate"
-                :company-id    "12345"}))
+  (merge sample-order-valid
+         {:customer-type "corporate"
+          :company-id    "12345"}))
 
 (defn multi-spec-coercer-test []
 
   (suite "transformer set of multi-specs")
 
-  ;233.668605 µs
+  ;87.668605 µs
   (title "Multi coercer")
   (let [coercer #(st/coerce ::order % st/string-transformer)
         call    #(coercer sample-multi-order-corporate)
-        expected (assoc sample-order-valid
-                   :requester {:customer-type :corporate
-                               :company-id 12345})]
+        expected (merge sample-order-valid
+                        {:customer-type :corporate
+                         :company-id    12345})]
    (assert (= (call) expected))
    (cc/quick-bench
      (call))))

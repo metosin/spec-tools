@@ -176,7 +176,11 @@ its subspecs."
      ::items specs}))
 
 (defmethod parse-form 'clojure.spec.alpha/merge [_ form]
-  (apply impl/deep-merge (map parse-spec (rest form))))
+  (let [type-priority #((:type %) {:map        0
+                                   :multi-spec 1} 0)]
+    (apply impl/deep-merge (->> (rest form)
+                                (map parse-spec)
+                                (sort-by type-priority)))))
 
 (defmethod parse-form 'clojure.spec.alpha/every [_ form]
   (let [{:keys [into]} (apply hash-map (drop 2 form))]
@@ -227,4 +231,8 @@ its subspecs."
      ::item spec}))
 
 (defmethod parse-form 'spec-tools.core/merge [_ form]
-  (apply impl/deep-merge (map parse-spec (rest form))))
+  (let [type-priority #((:type %) {:map        1
+                                   :multi-spec 0})]
+    (apply impl/deep-merge (->> (rest form)
+                                (map parse-spec)
+                                (sort-by type-priority)))))
