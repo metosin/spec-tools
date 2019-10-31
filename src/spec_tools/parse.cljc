@@ -157,7 +157,7 @@ its subspecs."
          deref
          methods
          (map (fn [[spec-k method]]
-                [spec-k (s/form (method nil))])))))
+                [spec-k (method nil)])))))
 
 (defmethod parse-form 'clojure.spec.alpha/multi-spec [_ form]
   {:type      :multi-spec

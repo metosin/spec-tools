@@ -1,5 +1,5 @@
 (ns spec-tools.parse-test
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require [clojure.test :refer [deftest testing is run-tests]]
             [clojure.spec.alpha :as s]
             [spec-tools.parse :as parse]
             [spec-tools.core :as st]))
@@ -12,6 +12,9 @@
 
 (s/def ::f string?)
 (s/def ::g string?)
+(s/def ::h (s/and keyword? #{:type-a :type-b}))
+(s/def ::ha string?)
+(s/def ::hb string?)
 
 (s/def ::keys (s/keys :opt [::e]
                       :opt-un [::e]
@@ -24,6 +27,11 @@
                                 :req-un [::g])))
 
 (s/def ::merged (s/merge ::keys ::keys2))
+
+(defmulti h-type ::h)
+(defmethod h-type :type-a [_] ::ha)
+(defmethod h-type :type-b [_] ::hb)
+(s/def ::multi (s/multi-spec h-type ::h))
 
 (deftest parse-test
   (testing "predicate"
@@ -101,6 +109,12 @@
                           :type [:tuple [:long :keyword]]}
             :type :map-of}
            (parse/parse-spec (s/coll-of (s/tuple int? keyword?) :into {})))))
+  (testing "s/multi-spec"
+    (is (= {:type            :multi-spec
+            ::parse/key      ::h
+            ::parse/dispatch {:type-a ::ha
+                              :type-b ::hb}}
+           (parse/parse-spec ::multi))))
   (testing "s/merge"
     (is (= {:type :map
             ::parse/keys #{:a :b}
