@@ -1,3 +1,7 @@
+# Unreleased
+
+* Add URI transform support. [#194](https://github.com/metosin/spec-tools/pull/194) by [Teemu Heikkilä](https://github.com/theikkila)
+
 # 0.10.0 (2019-06-26)
 
 * Removed the jackson-databind dependency. [#158](https://github.com/metosin/spec-tools/pull/158)
