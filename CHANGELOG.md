@@ -1,4 +1,4 @@
-# 0.10.2 (2019-10-31)
+# Unreleased
 * Add ability to coerce multi-specs, fixes [#84](https://github.com/metosin/spec-tools/issues/84)
 
 # 0.10.0 (2019-06-26)
