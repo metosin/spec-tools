@@ -148,22 +148,21 @@
             (or req req-un) (assoc ::keys-req (set (concat req req-un)))
             (or opt opt-un) (assoc ::keys-opt (set (concat opt opt-un))))))
 
-#?(:clj (defn get-multi-spec-sub-specs
-    "Given a multi-spec form, call its multi method methods to retrieve
-  its subspecs."
-         [multi-spec-form]
-    (let [[_ multi-method-symbol & _] multi-spec-form]
-      (->> (resolve multi-method-symbol)
-           deref
-           methods
-           (map (fn [[spec-k method]]
-                  [spec-k (method nil)]))))))
+(defn get-multi-spec-sub-specs
+   "Given a multi-spec form, call its multi method methods to retrieve
+ its subspecs."
+        [multi-spec-form]
+   (let [[_ multi-method-symbol & _] multi-spec-form]
+     (->> (resolve multi-method-symbol)
+          deref
+          methods
+          (map (fn [[spec-k method]]
+                 [spec-k (method nil)])))))
 
-#?(:clj
-   (defmethod parse-form 'clojure.spec.alpha/multi-spec [_ form]
-     {:type      :multi-spec
-      ::key      (last form)
-      ::dispatch (into {} (get-multi-spec-sub-specs form))}))
+(defmethod parse-form 'clojure.spec.alpha/multi-spec [_ form]
+   {:type      :multi-spec
+    ::key      (last form)
+    ::dispatch (into {} (get-multi-spec-sub-specs form))})
 
 (defmethod parse-form 'clojure.spec.alpha/or [_ form]
   (let [specs (mapv (comp parse-spec-with-spec-ref second) (partition 2 (rest form)))]
