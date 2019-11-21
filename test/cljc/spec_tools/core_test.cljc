@@ -461,23 +461,25 @@
         (s/map-of inst? inst?)
         (keyword "2019-02-23T08:13:21.400-00:00")
         #inst "2019-02-23T08:13:21.400-00:00")))
-  (testing "multi-specs"
-    (s/def ::group (s/and keyword? #{:a :b}))
-    (defmulti multi-test :group)
-    (defmethod multi-test :a [_] (s/keys :req-un [::group ::lat]))
-    (defmethod multi-test :b [_] (s/keys :req-un [::group ::language]))
-    (s/def ::multi-test (s/multi-spec multi-test :group))
 
-    (is (= {:group :a
-            :lat   12.0}
-           (st/coerce ::multi-test {:group "a"
-                                    :lat   "12"}
-                      st/string-transformer)))
-    (is (= {:group    :b
-            :language :clojure}
-           (st/coerce ::multi-test {:group    "b"
-                                    :language "clojure"}
-                      st/string-transformer)))))
+  #?(:clj
+     (testing "multi-specs"
+       (s/def ::group (s/and keyword? #{:a :b}))
+       (defmulti multi-test :group)
+       (defmethod multi-test :a [_] (s/keys :req-un [::group ::lat]))
+       (defmethod multi-test :b [_] (s/keys :req-un [::group ::language]))
+       (s/def ::multi-test (s/multi-spec multi-test :group))
+
+       (is (= {:group :a
+               :lat   12.0}
+              (st/coerce ::multi-test {:group "a"
+                                       :lat   "12"}
+                         st/string-transformer)))
+       (is (= {:group    :b
+               :language :clojure}
+              (st/coerce ::multi-test {:group    "b"
+                                       :language "clojure"}
+                         st/string-transformer))))))
 
 (deftest conform!-test
   (testing "suceess"
