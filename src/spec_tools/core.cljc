@@ -43,7 +43,7 @@
       spec)))
 
 (defn ^:skip-wiki coerce-spec
-  "Returns a spec from a spec name or spec. Throwns exception
+  "Returns a spec from a spec name or spec. Throws exception
   if no spec was found."
   [name-or-spec]
   (or
@@ -56,13 +56,13 @@
 
 (defn ^:skip-wiki serialize
   "Writes specs into a string that can be read by the reader.
-  TODO: Should optionally write the realated Registry entries."
+  TODO: Should optionally write the related Registry entries."
   [spec]
   (pr-str (s/form spec)))
 
 (defn ^:skip-wiki deserialize
   "Reads specs from a string.
-  TODO: Should optionally read the realated Registry entries."
+  TODO: Should optionally read the related Registry entries."
   [s]
   #?(:clj  (clojure.edn/read-string s)
      :cljs (cljs.reader/read-string s)))
@@ -335,6 +335,13 @@
       data)
     data))
 
+(defmethod walk :multi-spec [{:keys [::parse/key ::parse/dispatch]} data accept options]
+  (let [dispatch-key  (#(or (key %)
+                            ((keyword (name key)) %)) data)
+        dispatch-spec (or (dispatch dispatch-key)
+                          (dispatch (keyword dispatch-key)))]
+    (walk (parse/parse-spec dispatch-spec) data accept options)))
+
 ;;
 ;; Spec Record
 ;;
@@ -356,7 +363,7 @@
 (defn- leaf? [spec]
   (:leaf? (into-spec spec)))
 
-(defn- decompose-spec-type 
+(defn- decompose-spec-type
   "Dynamic conforming can't walk over composite specs like s/and & s/or.
   So, we'll use the first type. Examples:
 
@@ -488,7 +495,7 @@
   (if (spec? spec) (:description spec)))
 
 (defn create-spec
-  "Creates a Spec intance from a map containing the following keys:
+  "Creates a Spec instance from a map containing the following keys:
 
            :spec  the wrapped spec predicate (default to `any?`)
            :form  source code of the spec predicate, if :spec is a spec,
@@ -550,7 +557,6 @@
              info#
              {:form form#
               :spec ~pred}))))))
-
 
 (defn- into-spec [x]
   (cond

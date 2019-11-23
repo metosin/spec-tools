@@ -61,7 +61,7 @@
 (defmethod parse-form ::default [_ _] {:type nil})
 
 (defn- non-leaf-types []
-  #{:map :map-of :and :or :nilable :tuple :set :vector})
+  #{:map :map-of :and :or :nilable :tuple :set :vector :multi-spec})
 
 (defn types []
   #{:long
@@ -77,6 +77,7 @@
     :ratio
     :map
     :map-of
+    :multi-spec
     :and
     :or
     :set
@@ -147,6 +148,24 @@
             (or req req-un) (assoc ::keys-req (set (concat req req-un)))
             (or opt opt-un) (assoc ::keys-opt (set (concat opt opt-un))))))
 
+#?(:clj
+   (defn get-multi-spec-sub-specs
+     "Given a multi-spec form, call its multi method methods to retrieve
+   its subspecs."
+     [multi-spec-form]
+     (let [[_ multi-method-symbol & _] multi-spec-form]
+       (->> (resolve multi-method-symbol)
+            deref
+            methods
+            (map (fn [[spec-k method]]
+                   [spec-k (method nil)]))))))
+
+#?(:clj
+   (defmethod parse-form 'clojure.spec.alpha/multi-spec [_ form]
+     {:type      :multi-spec
+      ::key      (last form)
+      ::dispatch (into {} (get-multi-spec-sub-specs form))}))
+
 (defmethod parse-form 'clojure.spec.alpha/or [_ form]
   (let [specs (mapv (comp parse-spec-with-spec-ref second) (partition 2 (rest form)))]
     {:type [:or (->> specs (map :type) (distinct) (keep identity) (vec))]
@@ -159,7 +178,11 @@
      ::items specs}))
 
 (defmethod parse-form 'clojure.spec.alpha/merge [_ form]
-  (apply impl/deep-merge (map parse-spec (rest form))))
+  (let [type-priority #((:type %) {:map        0
+                                   :multi-spec 1} 0)]
+    (apply impl/deep-merge (->> (rest form)
+                                (map parse-spec)
+                                (sort-by type-priority)))))
 
 (defmethod parse-form 'clojure.spec.alpha/every [_ form]
   (let [{:keys [into]} (apply hash-map (drop 2 form))]
@@ -210,4 +233,8 @@
      ::item spec}))
 
 (defmethod parse-form 'spec-tools.core/merge [_ form]
-  (apply impl/deep-merge (map parse-spec (rest form))))
+  (let [type-priority #((:type %) {:map        1
+                                   :multi-spec 0})]
+    (apply impl/deep-merge (->> (rest form)
+                                (map parse-spec)
+                                (sort-by type-priority)))))

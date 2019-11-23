@@ -1,4 +1,5 @@
 # Unreleased
+* Add ability to coerce multi-specs, fixes [#84](https://github.com/metosin/spec-tools/issues/84)
 
 * Add URI transform support. [#194](https://github.com/metosin/spec-tools/pull/194) by [Teemu Heikkilä](https://github.com/theikkila)
 
