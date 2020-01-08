@@ -53,8 +53,8 @@ To turn a data-spec into a Spec, call `ds/spec` on it, providing either a option
 | -----------------|----------------
 | `:spec`          | The wrapped data-spec.
 | `:name`          | Qualified root spec name - used to generate unique names for sub-specs.
-| `:keys-spec`     | Function to wrap not-wrapped keys, e.g. `ds/opt` to make keys optional by default.
-| `:keys-default`  | Function to generate the keys-specs, default `ds/keys-specs`.
+| `:keys-spec`     | Function to generate the keys-specs, default `ds/keys-specs`.
+| `:keys-default`  | Function to wrap not-wrapped keys, e.g. `ds/opt` to make keys optional by default.
 
 ```clj
 ;; options-syntax
