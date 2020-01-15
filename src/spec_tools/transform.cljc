@@ -71,6 +71,14 @@
       :else x)
     x))
 
+#?(:clj
+   (defn string->decimal [_ x]
+     (if (string? x)
+       (try
+         #?(:clj  (BigDecimal. x))
+         (catch #?(:clj Exception) _ x))
+       x)))
+
 (defn string->uri [_ x]
   (if (string? x)
     (try
@@ -172,18 +180,18 @@
 
 (def json-type-decoders
   (merge
-    {:keyword string->keyword
-     :uuid (keyword-or-string-> string->uuid)
-     :date (keyword-or-string-> string->date)
-     :symbol (keyword-or-string-> string->symbol)
-     :long (keyword-> string->long)
-     :double (keyword-> string->double)
-     :boolean (keyword-> string->boolean)
-     :string keyword->string}
-    #?(:clj
-       {:uri string->uri
-        :bigdec nil
-        :ratio nil})))
+   {:keyword string->keyword
+    :uuid (keyword-or-string-> string->uuid)
+    :date (keyword-or-string-> string->date)
+    :symbol (keyword-or-string-> string->symbol)
+    :long (keyword-> string->long)
+    :double (keyword-> string->double)
+    :boolean (keyword-> string->boolean)
+    :string keyword->string}
+   #?(:clj
+      {:uri string->uri
+       :bigdec string->decimal
+       :ratio nil})))
 
 (def string-type-decoders
   (merge
@@ -206,16 +214,16 @@
 ;;
 
 (def json-type-encoders
-  {:keyword keyword->string
-   :symbol any->string
-   :uuid any->string
-   :uri any->string
-   :bigdec any->string
-   :date date->string
-   :map any->any
-   :set any->any
-   :vector any->any
-   #?@(:clj [:ratio number->double])})
+   {:keyword keyword->string
+    :symbol any->string
+    :uuid any->string
+    :uri any->string
+    :bigdec any->string
+    :date date->string
+    :map any->any
+    :set any->any
+    :vector any->any
+    #?@(:clj [:ratio number->double])})
 
 (def string-type-encoders
   (merge
