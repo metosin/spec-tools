@@ -66,18 +66,18 @@
   (is (uri? (stt/string->uri _ "urn:oasis:names:specification:docbook:dtd:xml:4.1.2")))
   (is (not (uri? (stt/string->uri _ nil)))))
 
-(deftest string->decimal
-  (is (decimal? (stt/string->decimal _ "42")))
-  (is (decimal? (stt/string->decimal _ "42.24")))
-  (is (not (decimal? (stt/string->decimal _ nil))))
-  (is (string? (stt/string->decimal _ "42.42M"))))
+#?(:clj (deftest string->decimal
+          (is (decimal? (stt/string->decimal _ "42")))
+          (is (decimal? (stt/string->decimal _ "42.24")))
+          (is (not (decimal? (stt/string->decimal _ nil))))
+          (is (string? (stt/string->decimal _ "42.42M")))))
 
-(deftest properties-string->decimal
-  (checking "Scale and Precision must be preserved" 200
-            [original-bigdec gen-bigdecimal]
-            (let [new-bigdec (stt/string->decimal _ (str original-bigdec))]
-              (is (= (.scale original-bigdec) (.scale new-bigdec)))
-              (is (= (.precision original-bigdec) (.precision new-bigdec))))))
+#?(:clj (deftest properties-string->decimal
+          (checking "Scale and Precision must be preserved" 200
+                    [original-bigdec gen-bigdecimal]
+                    (let [new-bigdec (stt/string->decimal _ (str original-bigdec))]
+                      (is (= (.scale original-bigdec) (.scale new-bigdec)))
+                      (is (= (.precision original-bigdec) (.precision new-bigdec)))))))
 
 (deftest string->date
   (is (= #inst "2018-04-27T18:25:37Z" (stt/string->date _ "2018-04-27T18:25:37Z")))
