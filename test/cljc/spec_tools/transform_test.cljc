@@ -74,10 +74,10 @@
 
 #?(:clj (deftest properties-string->decimal
           (checking "Scale and Precision must be preserved" 200
-                    [original-bigdec gen-bigdecimal]
-                    (let [new-bigdec (stt/string->decimal _ (str original-bigdec))]
-                      (is (= (.scale original-bigdec) (.scale new-bigdec)))
-                      (is (= (.precision original-bigdec) (.precision new-bigdec)))))))
+            [original-bigdec gen-bigdecimal]
+            (let [new-bigdec (stt/string->decimal _ (str original-bigdec))]
+              (is (= (.scale original-bigdec) (.scale new-bigdec)))
+              (is (= (.precision original-bigdec) (.precision new-bigdec)))))))
 
 (deftest string->date
   (is (= #inst "2018-04-27T18:25:37Z" (stt/string->date _ "2018-04-27T18:25:37Z")))
