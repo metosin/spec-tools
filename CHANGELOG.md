@@ -1,6 +1,7 @@
-# Unreleased
-* Add ability to coerce multi-specs, fixes [#84](https://github.com/metosin/spec-tools/issues/84)
+# 0.10.1 (2020-15-01)
 
+* Support for `decimal?` coercion by [Wanderson Ferreira](https://github.com/wandersoncferreira)
+* Add ability to coerce multi-specs, fixes [#84](https://github.com/metosin/spec-tools/issues/84)
 * Add URI transform support. [#194](https://github.com/metosin/spec-tools/pull/194) by [Teemu Heikkilä](https://github.com/theikkila)
 
 # 0.10.0 (2019-06-26)
