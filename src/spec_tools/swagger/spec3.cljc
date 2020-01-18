@@ -1,31 +1,37 @@
 (ns spec-tools.swagger.spec3
   (:require [clojure.spec.alpha :as s]
    [spec-tools.core :as st]
-   [clojure.spec.gen.alpha :as sgen]
+   [clojure.spec.gen.alpha :as gen]
    [clojure.string :as string]
    [spec-tools.data-spec :as ds]))
 
-(defn non-empty-string-ascii
-  []
-  (sgen/such-that #(not= "" %)
-                  (sgen/string-ascii)))
+(def non-empty-string-ascii-gen
+  "Generator for non-empty ascii strings"
+  (gen/such-that #(not= "" %)
+                  (gen/string-ascii)))
+(def non-empty-string-alphanumeric-gen
+  "Generator for non-empty alphanumeric strings"
+  (gen/such-that #(not= "" %)
+                  (gen/string-alphanumeric)))
 
 (s/def ::string-not-empty (s/with-gen
                             (s/and string? #(not= "" %))
-                            non-empty-string-ascii))
+                            (fn [] non-empty-string-ascii-gen)))
 (s/def ::reference
   (ds/spec
    ::reference
    {(ds/req :?ref) ::string-not-empty}))
 
 (s/def ::example
-  (ds/spec {:keys-default ds/opt
-            :name ::example
-            :spec
-            {:summary       ::string-not-empty
-             :description   ::string-not-empty
-             :value         any?
-             :externalValue {keyword? ::string-not-empty}}}))
+  (s/and
+   (ds/spec {:keys-default ds/opt
+             :name ::example
+             :spec
+             {:summary       ::string-not-empty
+              :description   ::string-not-empty
+              :value         any?}
+             :externalValue {keyword? ::string-not-empty}})
+   not-empty))
 
 (s/def ::spec qualified-keyword?)
 (s/def ::json-schema-or-reference
@@ -43,7 +49,8 @@
    :empty-map (s/and map? empty?)
    :bool boolean?))
 
-(s/def ::schema (s/or :spec qualified-keyword? :json-schema ::json-schema-or-reference))
+(s/def ::schema (s/or :spec qualified-keyword?
+                      :json-schema ::json-schema-or-reference))
 
 (def url (re-pattern #"^(https?|ftp)://(-\.)?([^\s/?\.#-]+\.?)+(/\S*)?$"))
 (s/def ::url
@@ -51,23 +58,40 @@
      #(s/gen #{"https://openapi.com"
                "ftp://random.ly"
                "https://clojuredocs.org/clojure.core/rand-nth"})))
-
 (def email (re-pattern #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}"))
+(def email-gen
+  "Generator for email addresses"
+  (gen/fmap
+    (fn [[name host tld]]
+      (str name "@" host "." tld))
+    (gen/tuple
+      non-empty-string-alphanumeric-gen
+      non-empty-string-alphanumeric-gen
+      non-empty-string-alphanumeric-gen)))
 (s/def ::email (s/with-gen (s/and string? #(re-matches email %))
-                #(s/gen #{"https@openapi.com"
-                          "ftp@random.ly"
-                          "https@clojuredocs.org"})))
+                (fn [] email-gen)))
 
 (def path (re-pattern
            #"(?<=/)((\{[^\s/?{}.#-][^\s/{}]+)+}|([^\s/?{}.#-][^\s/{}]+)+)/?"))
-(s/def ::path (s/with-gen (s/and string?
-                                 #(= (count (re-seq path %))
-                                     (as-> (string/split % #"/") loc
-                                       ((fn [x] (if (empty? (first x)) (rest x) x)) loc)
-                                       (count loc))))
-                          #(s/gen #{"/openapi/com"
-                                    "/{random}/ly"
-                                    "/clojuredocs/{org}"})))
+(def path-gen
+  "Generator for generating paths"
+  (gen/fmap #(as-> (interleave (repeat "/") %) inter
+                   (conj (vec inter) (rand-nth [nil "/"]))
+                   (apply str inter))
+    (gen/not-empty
+      (gen/vector
+       (gen/one-of
+        [(gen/fmap
+          #(str "{"  % "}")
+          non-empty-string-alphanumeric-gen)
+         non-empty-string-alphanumeric-gen]) 2 6))))
+(s/def ::path (s/with-gen
+                (s/and string?
+                       #(= (count (re-seq path %))
+                           (as-> (string/split % #"/") loc
+                             ((fn [x] (if (empty? (first x)) (rest x) x)) loc)
+                             (count loc))))
+                (fn [] path-gen)))
 
 (s/def ::external-docs
   (ds/spec
@@ -87,49 +111,60 @@
   (ds/spec {:keys-default ds/opt
             :name ::oauth-flows
             :spec
-            {:implicit (s/and ::oauth-flow (s/keys :req-un [::authorizationUrl ::scopes]))
-             :password (s/and ::oauth-flow (s/keys :req-un [::tokenUrl ::scopes]))
-             :clientCredentials (s/and ::oauth-flow (s/keys :req-un [::tokenUrl ::scopes]))
+            {:implicit (s/and
+                        ::oauth-flow
+                        (s/keys :req-un [::authorizationUrl ::scopes]))
+             :password (s/and
+                        ::oauth-flow
+                        (s/keys :req-un [::tokenUrl ::scopes]))
+             :clientCredentials (s/and
+                                 ::oauth-flow
+                                 (s/keys :req-un [::tokenUrl ::scopes]))
              :authorizationCode
              (s/and ::oauth-flow
               (s/keys :req-un [::authorizationUrl ::tokenUrl ::scopes]))}}))
-
 (defmulti security-scheme-type :type)
 (defmethod security-scheme-type "apiKey" [_]
  (ds/spec
     ::apiKey
-    {(ds/req :name) ::string-not-empty
-     (ds/req :in)  (s/spec #{"query" "header" "cookie"})}))
+    {:name ::string-not-empty
+     :in  (s/spec #{"query" "header" "cookie"})}))
 
 (defmethod security-scheme-type "http" [_]
- (ds/spec ::http {(ds/req :scheme) ::string-not-empty
+ (ds/spec ::http {:scheme ::string-not-empty
                   (ds/opt :bearerFormat) ::string-not-empty}))
 
 (defmethod security-scheme-type "oauth2" [_]
- (ds/spec ::oauth2 {(ds/req :flows) ::oauth-flows}))
+ (ds/spec ::oauth2 {:flows ::oauth-flows}))
 
 (defmethod security-scheme-type "openIdConnect" [_]
- (ds/spec ::openIdConnect {(ds/req :openIdConnectUrl) ::string-not-empty}))
+ (ds/spec ::openIdConnect {:openIdConnectUrl ::url}))
+
 
 (def auth-sample {:type "http" :scheme "basic"})
 (def api-key-sample {:type "apiKey" :name "api_key" :in "header"})
 (def jwt-bearer-sample {:type "http" :scheme "bearer" :bearerFormat "JWT"})
 (def implicit-oauth2-sample
   {:type  "oauth2"
-   :flows {:implicit {:authorizationUrl "https://example.com/api/oauth/dialog"
-                      :scopes           {
-                                         :write:pets "modify pets in your account"
-                                         :read:pets  "read your pets"}}}})
+   :flows {:implicit
+           {:authorizationUrl "https://example.com/api/oauth/dialog"
+            :scopes           {:write:pets "modify pets in your account"
+                               :read:pets  "read your pets"}}}})
+
+(s/def ::security-scheme-type
+  (s/with-gen
+    (s/multi-spec security-scheme-type :type)
+    #(s/gen #{auth-sample
+              api-key-sample
+              jwt-bearer-sample
+              implicit-oauth2-sample})))
 
 (s/def ::security-scheme
- (s/with-gen
-  (s/and
-      (ds/spec
-       ::security-scheme-base
-       {(ds/req :type)        (s/spec #{"apiKey", "http", "oauth2", "openIdConnect"})
-         (ds/opt :description) ::string-not-empty})
-      (s/multi-spec security-scheme-type :type))
-  #(s/gen #{auth-sample api-key-sample jwt-bearer-sample implicit-oauth2-sample})))
+ (s/and
+  ::security-scheme-type
+  (ds/spec
+   ::security-scheme-base
+   {(ds/opt :description) ::string-not-empty})))
 
 (s/def ::security-scheme-or-reference
  (s/or
@@ -151,7 +186,7 @@
   :example ::example
   :reference ::reference))
 
-(defmulti parameter-style :style)
+(defmulti parameter-style :style :default "simple")
 (defmethod parameter-style "form" [_]
  (ds/spec ::parameter-explode-header-form
   {(ds/opt :explode) (st/spec
@@ -159,10 +194,11 @@
                        :json-schema/default true})}))
 (def parameter-explode-header-default
   {(ds/opt :explode) ::boolean-default-false})
-(defmethod parameter-style :default [_]
+(defmethod parameter-style "simple" [_]
  (ds/spec ::parameter-explode-header-default
           parameter-explode-header-default))
-
+(s/def ::parameter-style
+  (s/multi-spec parameter-style :style))
 
 (defmulti parameter-in :in)
 
@@ -194,137 +230,179 @@
 
 (defmethod parameter-in "cookie" [_]
   (ds/spec ::cookie-parameter {:style (s/spec #{"form"})}))
+(s/def ::parameter-in
+  (s/multi-spec parameter-in :in))
 
-(def param-sample1 {:name        "token",
-                    :in          "header",
-                    :description "token to be passed as a header",
-                    :required    true,
-                    :schema      {:type  "array"
-                                  :items {:type   "integer"
-                                          :format "int64"}}
-                    :style       "simple"})
-
-
-(def param-sample2 {:name        "username"
-                    :in          "path"
-                    :description "username to fetch"
-                    :required    true
-                    :schema      {:type "string"}})
-
-
-(def param-sample3 {:name        "id"
-                    :in          "query"
-                    :description "ID of the object to fetch"
-                    :required    false
-                    :schema      {:type  "array"
-                                  :items {:type "string"}}
-                    :style       "form"
-                    :explode     true})
-
-(def param-sample4 {:in     "query"
-                    :name   "freeForm"
-                    :schema {:type                 "object"
-                             :additionalProperties {:type "integer"}}
-                    :style  "form"})
-
-(def param-sample5
-  {:in      "query"
-   :name    "coordinates"
-   :content {"application/json"
-             {:schema {:type       "object"
-                       :required   ["lat" "long"]
-                       :properties {:lat  {:type "number"}
-                                    :long {:type "number"}}}}}})
-
-(def param-sample #{param-sample1 param-sample2 param-sample3 param-sample4})
-(def header-sample (map
-                    #(apply dissoc % [:in :name :content]) param-sample))
-
-(def header {:description ::string-not-empty
-              :required ::boolean-default-false
-              :deprecated ::boolean-default-false
-              :example any?
-              :schema ::schema
-              :examples {keyword? ::example-or-reference}})
-
+(def header-param-shared {:description ::string-not-empty
+                          :required ::boolean-default-false
+                          :deprecated ::boolean-default-false
+                          :example any?
+                          :examples {keyword? ::example-or-reference}})
+(def header-base (merge header-param-shared
+                        header-parameter
+                        parameter-explode-header-default))
 (s/def ::header-base-no-content
   (s/and (ds/spec {:keys-default ds/opt
-                   :name ::header-no-content
-                   :spec  (merge header
-                                 header-parameter
-                                 parameter-explode-header-default)})
+                   :name ::header-base-no-content
+                   :spec (merge header-base {:schema ::schema})})
          not-empty))
-
 (s/def ::header-no-content
   (s/with-gen
    (s/and
       ::header-base-no-content
       #(-> % (select-keys [:name :in]) count (= 0)))
-   (fn [] (s/gen ::header-base-no-content))))
+   #(s/gen ::header-base-no-content)))
 
 
-(s/def ::header-no-content-or-reference (s/or
-                                         :header-no-content ::header-no-content
-                                         :reference ::reference))
 
-(s/def ::encoding
+(s/def ::header-no-content-or-reference
+  (s/or :header-no-content ::header-no-content
+        :reference ::reference))
+
+(s/def ::encoding-obj
  (s/and
   (ds/spec
-   ::encoding
-    { (ds/opt :contentType) ::string-not-empty
-      (ds/opt :headers) {keyword? ::header-no-content-or-reference}})
+   ::encoding-obj
+    {(ds/opt :contentType) ::string-not-empty
+     (ds/opt :headers) {keyword? ::header-no-content-or-reference}})
   ::query-parameter
-  (s/multi-spec parameter-style :style)))
+  ::parameter-style
+  not-empty))
 
 (s/def ::media-type
- (ds/spec {:keys-default ds/opt
+ (s/and
+  (ds/spec {:keys-default ds/opt
              :name ::media-type
              :spec  {:example any?
                      :schema ::schema
                      :examples {keyword? ::example-or-reference}
-                     :encoding {keyword?  ::encoding}}}))
+                     :encoding {keyword?  ::encoding-obj}}})
+  not-empty))
 
-(s/def ::content (s/every-kv ::string-not-empty ::media-type))
+(def content-types [:application/json
+                    :application/xml
+                    :application/x-www-form-urlencoded
+                    :text/css
+                    :text/css
+                    :text/html])
 
-(s/def ::schema-xor-content
-  (s/and map?
-         #(-> % (select-keys [:schema :content]) count (< 2))))
+(def content-gen (gen/fmap #(into {} (partition-all 2) %)
+                   (gen/fmap (partial apply interleave)
+                     (gen/tuple (gen/return content-types)
+                      (gen/list (s/gen ::media-type))))))
 
-(s/def ::with-content
-  (s/and (s/keys :opt-un [::content]) ::schema-xor-content))
+(s/def ::content
+  (s/with-gen
+    (s/every-kv keyword? ::media-type)
+    (fn [] content-gen)))
+(defn schema-xor-content?
+  "checks that content and schema are not both present"
+  [x]
+  {:pre [(map? x)]}
+  (-> x (select-keys [:content :schema]) count (not= 2)))
+
+(def schema-xor-content-gen
+  (gen/one-of
+   [(gen/fmap (fn [x] {:schema x}) (s/gen ::schema))
+    (gen/fmap (fn [x] {:content x}) (s/gen ::content))]))
+(s/def ::header-base-for-content
+  (s/and (ds/spec {:keys-default ds/opt
+                   :name ::header-base-for-content
+                   :spec header-base})
+         not-empty))
+
+(def gen-header
+  (gen/fmap
+            (partial apply merge)
+            (gen/tuple
+              schema-xor-content-gen
+              (s/gen ::header-base-for-content))))
 
 (s/def ::header
-  (s/and ::header-no-content ::with-content))
+  (s/with-gen
+   (s/and
+      (ds/spec {:keys-default ds/opt
+                :name ::header
+                :spec (merge header-base {:content ::content :schema ::schema})})
+      #(-> % (select-keys [:name :in]) count (= 0))
+      schema-xor-content?)
+   (fn [] gen-header)))
 
 (s/def ::header-or-reference (s/or
                               :header ::header
                               :reference ::reference))
+(def parameter-shared
+  (merge
+    header-param-shared
+    {(ds/req :name) ::string-not-empty
+     (ds/req :in )  (s/spec #{"query" "header" "path" "cookie"})}))
 
-(def parameter (merge
-                header
-                {(ds/req :name) ::string-not-empty
-                 (ds/req :in)   (s/spec #{"query" "header" "path" "cookie"})}))
+(s/def ::parameter-shared
+  (ds/spec ::parameter-shared parameter-shared))
+
+(def param-gen (gen/fmap
+                (partial apply merge)
+                (gen/tuple
+                 schema-xor-content-gen
+                  (s/gen ::parameter-shared)
+                  (s/gen ::parameter-style)
+                  (s/gen ::parameter-in))))
 
 (s/def ::parameter
-  (s/and
-   (ds/spec {:keys-default ds/opt
-             :name ::parameter
-             :spec  parameter})
-   (s/multi-spec parameter-in :in)
-   ::with-content
-   (s/multi-spec  parameter-style :style)))
+  (s/with-gen
+    (s/and
+      (ds/spec
+       {:keys-default ds/opt
+        :name ::parameter
+        :spec  (merge
+                parameter-shared
+                {:content ::content
+                 :schema ::schema})})
+      ::parameter-in
+      ::parameter-style
+      schema-xor-content?)
+    (fn [] param-gen)))
+
+
+(defn distinct-params?
+  "Checks that all entries in a collection of parameters have distinct locations"
+  [params]
+  (->> params
+   (into #{} (map #(select-keys % [:name :in])))
+   count
+   (= (count params))))
+
+(s/def ::parameter-or-reference (s/or
+                                 :parameter ::parameter
+                                 :reference ::reference))
+
+(def ref-or-param-coll-gen  (gen/vector
+                              (gen/one-of
+                               [(s/gen ::parameter)
+                                (s/gen ::reference)]) 3 5))
+
+(s/def
+  ::distinct-parameter-or-reference-list
+  (s/with-gen
+    (s/and
+     coll?
+     (s/conformer seq)
+     (s/cat
+      :params (s/& (s/* ::parameter) distinct-params?)
+      :refs (s/* ::reference)))
+   (fn [] ref-or-param-coll-gen)))
 
 (s/def ::server-variable (ds/spec
                           ::server-variable
                           {(ds/opt :enum) [::string-not-empty]
-                           (ds/req :default) ::string-not-empty
+                           :default ::string-not-empty
                            (ds/opt :description) ::string-not-empty}))
 
 (s/def ::server (ds/spec
                  ::server
-                 {(ds/req :url) ::url
+                 {:url ::url
                   (ds/opt :description) ::string-not-empty
-                  :variables {keyword? ::server-variable}}))
+                  (ds/opt :variables) {keyword? ::server-variable}}))
 
 (s/def ::link
   (ds/spec
@@ -365,44 +443,45 @@
 (s/def ::response-or-reference (s/or
                                 :response ::response
                                 :reference ::reference))
+(def number-or-x-gen
+  (gen/one-of [(gen/choose 0 9)
+               (gen/return "x")]))
+(def number-codes-gen
+  (gen/fmap
+   (partial apply (comp keyword (rand-nth [identity string/upper-case]) str))
+   (gen/tuple (gen/choose 1 5) number-or-x-gen number-or-x-gen)))
 
-(defn distinct-params?
-  "Checks that all entries in a collection of parameters have distinct locations"
-  [params]
-  (->> params
-   (into #{} (map #(select-keys % [:name :in])))
-   count
-   (= (count params))))
+(def response-code-gen
+  (gen/one-of [number-codes-gen
+               (gen/return :default)]))
 
-(s/def ::parameter-or-reference (s/or
-                                 :parameter ::parameter
-                                 :reference ::reference))
-(def ref-or-param-coll (vec (conj
-                             param-sample
-                             param-sample5
-                             {:?ref "reference"})))
-(defn ref-or-param-coll-sample [] (sgen/vector-distinct
-                                   (sgen/elements ref-or-param-coll)
-                                   {:min-elements 3 :max-elements 5}))
-
-(s/def
-  ::distinct-parameter-or-reference-list
-  (s/with-gen
-    (s/and
-     (s/conformer seq)
-     (s/cat
-      :params (s/& (s/* ::parameter) distinct-params?)
-      :refs (s/* ::reference)))
-   ref-or-param-coll-sample))
 (s/def ::response-code
   (s/with-gen
-   (s/or
-    :code (s/and ::string-not-empty #(re-matches #"^[1-5](\d|[xX]){2}$" %))
-    :default #(= % :default))
-   #(s/gen #{"1xx" "200" "201" "204" "304" "400" "403" "404" "500" "5xx" :default})))
-(s/def ::responses (s/every-kv
-                     ::response-code ::response-or-reference
-                     :distinct true))
+   (s/and
+    keyword?
+    (s/conformer name)
+    (s/or
+      :code #(re-matches #"^[1-5](\d|[xX]){2}$" %)
+      :default #(= % "default")))
+   (fn [] response-code-gen)))
+
+(defn homogenous-map-gen [k-spec opt v-spec]
+  (gen/fmap #(into {} (partition-all 2) %)
+    (gen/fmap (partial apply interleave)
+      (gen/tuple
+       (gen/vector-distinct (s/gen k-spec) opt)
+       (gen/list (s/gen v-spec))))))
+
+(def responses-gen
+  (gen/not-empty
+   (homogenous-map-gen
+    ::response-code {:min-elements 1 :max-elements 5} ::response-or-reference)))
+
+(s/def ::responses
+  (s/with-gen (s/and
+               (s/every-kv ::response-code ::response-or-reference)
+               not-empty)
+    (fn [] responses-gen)))
 
 (def operation-without-callbacks
    {:tags [::string-not-empty]
@@ -442,26 +521,29 @@
            :name ::path-item-in-callback
            :spec (merge base-path-item callback-operations)}))
 
-(def sample-callback
- {:trace
-      {:requestBody
-        {:description "Callback payload"
-         :content
-          {"application/json"
-            {:schema
-              {:?ref "#/components/schemas/SomePayload"}}}}
-       :responses
-        {"200"
-          {:description "webhook successfully processed and no retries will be performed"}}}})
+(def callback-gen
+  (gen/not-empty
+   (homogenous-map-gen
+    keyword? {:min-elements 1 :max-elements 3} ::path-item-in-callback)))
 
 (s/def ::callback
-  (s/every-kv ::string-not-empty ::path-item-in-callback))
+  (s/with-gen
+    (s/every-kv keyword? ::path-item-in-callback)
+    (fn [] callback-gen)))
 
 (s/def ::callback-or-reference (s/or
                                 :callback ::callback
                                 :reference ::reference))
 
-(def callbacks {(ds/opt :callbacks)  {::string-not-empty ::callback-or-reference}})
+(def callbacks-gen
+  (homogenous-map-gen
+   keyword? {:min-elements 0 :max-elements 3} ::callback-or-reference))
+
+(s/def ::callbacks
+  (s/with-gen
+    (s/every-kv keyword? ::callback-or-reference)
+    (fn [] callbacks-gen)))
+(def callbacks {:callbacks  ::callbacks})
 
 (s/def ::operation
   (ds/spec
@@ -476,6 +558,7 @@
   (ds/spec {:keys-default ds/opt
             :name ::path-item
             :spec (merge base-path-item path-operations)}))
+
 (s/def ::open-api
   (ds/spec
     {:keys-default ds/opt
@@ -507,5 +590,3 @@
                              :description ::string-not-empty
                              :externalDocs ::external-docs}]
             :externalDocs ::external-docs}}))
-
-
