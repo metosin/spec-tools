@@ -460,7 +460,7 @@
           spec-reason (:reason this)
           with-reason (fn [problem]
                         (cond-> problem
-                                spec-reason
+                                (and spec-reason (not (:reason problem)))
                                 (assoc :reason spec-reason)))]
       (if problems
         (map with-reason problems))))
