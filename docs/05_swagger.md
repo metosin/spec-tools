@@ -41,7 +41,7 @@ Specs can be annotated to populate the JSON Schemas.
  
 * `:name` is copied into `:title` 
 * `:description` is used as-is
-* all keys with namespace `json-schema` and `swagger2` are used, without the namespace
+* all keys with namespace `json-schema` and `swagger` are used without the namespace
 
 ```clj
 (require '[spec-tools.core :as st])
