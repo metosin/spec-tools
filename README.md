@@ -31,3 +31,5 @@ Status: **Alpha** (as spec is still alpha too).
 Copyright © 2016-2019 [Metosin Oy](http://www.metosin.fi)
 
 Distributed under the Eclipse Public License, the same as Clojure.
+
+The spell-spec library, Copyright © 2018 Bruce Hauman, is distributed under the Eclipse Public License as well 

@@ -11,7 +11,9 @@
             spec-tools.visitor-all-test
             spec-tools.visitor-test
             spec-tools.swagger.core-test
-            spec-tools.swagger.spec-test))
+            spec-tools.swagger.spec-test
+            spell-spec.alpha-test
+            spell-spec.expound-test))
 
 (enable-console-print!)
 
@@ -26,4 +28,6 @@
            'spec-tools.visitor-all-test
            'spec-tools.visitor-test
            'spec-tools.swagger.core-test
-           'spec-tools.swagger.spec-test)
+           'spec-tools.swagger.spec-test
+           'spell-spec.alpha-test
+           'spell-spec.expound-test)
