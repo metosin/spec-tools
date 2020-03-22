@@ -279,7 +279,8 @@
    (fn [v item]
      (let [transformed (accept item v options)
            valid-branch? (s/valid? (create-spec item) transformed)
-           any-spec? (= (:form spec) 'clojure.core/any?)]
+           any-spec? (= (:form spec) #?(:clj 'clojure.core/any?
+                                        :cljs 'cljs.core/any?))]
        (cond
          (and valid-branch? (not any-spec?)) (reduced transformed)
          (= transformed v) v
