@@ -72,6 +72,12 @@
           (is (not (decimal? (stt/string->decimal _ nil))))
           (is (string? (stt/string->decimal _ "42.42M")))))
 
+(deftest number->string
+  (is (string? (stt/number->string _ 42.42)))
+  (is (string? (stt/number->string _ 42)))
+  (is (string? #?(:clj (stt/number->string _ (BigDecimal. 23123))
+                  :cljs (stt/number->string _ js/Math.PI)))))
+
 #?(:clj (deftest number->decimal
           (letfn [(num->decimal [n] ((stt/number-or-string-> stt/string->decimal) _ n))]
             (is (decimal? (num->decimal 42)))
