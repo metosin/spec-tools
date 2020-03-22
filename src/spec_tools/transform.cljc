@@ -5,6 +5,7 @@
                        [goog.date.Date]
                        [goog.Uri]])
             [clojure.set :as set]
+            [clojure.edn :as edn]
             [spec-tools.parse :as parse]
             [clojure.string :as str]
             [spec-tools.impl :as impl])
@@ -76,6 +77,17 @@
      (if (string? x)
        (try
          (BigDecimal. ^String x)
+         (catch Exception _ x))
+       x)))
+
+#?(:clj
+   (defn string->ratio [_ x]
+     (if (string? x)
+       (try
+         (let [parsed-x (edn/read-string ^String x)]
+           (if (ratio? parsed-x)
+             parsed-x
+             x))
          (catch Exception _ x))
        x)))
 
@@ -191,7 +203,7 @@
     #?(:clj
        {:uri string->uri
         :bigdec string->decimal
-        :ratio nil})))
+        :ratio string->ratio})))
 
 (def string-type-decoders
   (merge
