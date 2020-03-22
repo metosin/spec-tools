@@ -72,6 +72,13 @@
           (is (not (decimal? (stt/string->decimal _ nil))))
           (is (string? (stt/string->decimal _ "42.42M")))))
 
+#?(:clj (deftest number->decimal
+          (letfn [(num->decimal [n] ((stt/number-or-string-> stt/string->decimal) _ n))]
+            (is (decimal? (num->decimal 42)))
+            (is (decimal? (num->decimal 42.4224)))
+            (is (decimal? (num->decimal (Float. 42.4223))))
+            (is (decimal? (num->decimal (BigDecimal. 42.4222)))))))
+
 #?(:clj (deftest properties-string->decimal
           (checking "Scale and Precision must be preserved" 200
             [original-bigdec gen-bigdecimal]

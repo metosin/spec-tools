@@ -36,6 +36,21 @@
     (cond
       (keyword? x) (f spec (keyword->string spec x))
       :else x)))
+
+;; Numbers
+;;
+
+(defn number->string [_ x]
+  (if (number? x)
+    (str x)
+    x))
+
+(defn number-or-string-> [f]
+  (fn [spec x]
+    (cond
+      (number? x) (f spec (number->string spec x))
+      (string? x) (f spec x)
+      :else x)))
 ;;
 ;; Strings
 ;;
@@ -190,7 +205,7 @@
      :string keyword->string}
     #?(:clj
        {:uri string->uri
-        :bigdec string->decimal
+        :bigdec (number-or-string-> string->decimal)
         :ratio nil})))
 
 (def string-type-decoders
