@@ -91,10 +91,15 @@
            res (if cljs? (partial cljs-resolve env) clojure.core/resolve)]
        (->> pred
             (walk/postwalk
-              (fn [x]
-                (if (symbol? x)
-                  (or (some->> x res ->sym) x)
-                  x)))
+             (fn [x]
+               (if (symbol? x)
+                 (let [x' (res x)]
+                   (if (var? x')
+                     (if (s/get-spec (var-get x'))
+                       (var-get x')
+                       (->sym x'))
+                     x))
+                 x)))
             (unfn cljs?)))))
 
 (defn extract-pred-and-info [x]
