@@ -30,6 +30,25 @@ Utility to transform Specs into JSON Schemas. The generated schema conforms to [
 ; :title "user/user"}
 ```
 
+You also has an option to disable the title inference from specs that
+does not have an explicit `:name` attribute assigned to them, see more
+details below. Therefore, the current example would become:
+
+```clj
+(json-schema/transform ::user {:infer-titles false})
+;{:type "object"
+; :properties {"id" {:type "string"}
+;              "name" {:type "string"}
+;              "address" {:type "object"
+;                         :properties {"street" {:type "string"}
+;                                      "city" {:enum [:tre :hki]}}
+;                         :required ["street" "city"]
+;                         }}
+; :required ["id" "name" "address"]}
+```
+
+
+
 ## Annotated Specs
 
 Specs can be annotated to populate the JSON Schemas.

@@ -127,6 +127,17 @@
     (is (not= (jsc/transform (s/coll-of (s/tuple string? any?) :into {}))
               {:type "object", :additionalProperties {:type "string"}}))))
 
+(s/def ::id string?)
+(s/def ::age string?)
+(s/def ::zipcode string?)
+(s/def ::user (s/keys :req-un [::id ::age]))
+(s/def ::address (s/keys :req-un [::user ::zipcode]))
+
+(deftest infer-schema-titles-test
+  (is (some? (:title (jsc/transform ::address))))
+  (is (nil? (:title (jsc/transform ::address {:infer-titles false}))))
+  (is (some? (:title (jsc/transform ::address {:infer-titles true})))))
+
 #?(:clj
    (defn test-spec-conversion [spec]
      (let [validate (scjsv/validator (jsc/transform spec))]
