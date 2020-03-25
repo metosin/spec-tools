@@ -1,14 +1,14 @@
 (ns spec-tools.transform-test
   (:require [clojure.test :refer [deftest testing is]]
             [spec-tools.transform :as stt]
-            [clojure.test.check.generators :as gen]
-            [com.gfredericks.test.chuck.clojure-test :refer [checking]]
+            #?(:clj [clojure.test.check.generators :as gen])
+            #?(:clj [com.gfredericks.test.chuck.clojure-test :refer [checking]])
             #?@(:cljs [[goog.Uri]])))
 #?(:clj
    (:import java.net.URI))
 
-(def gen-bigdecimal
-  (gen/fmap #(BigDecimal. %) (gen/double* {:infinite? false :NaN? false})))
+#?(:clj (def gen-bigdecimal
+          (gen/fmap #(BigDecimal. %) (gen/double* {:infinite? false :NaN? false}))))
 
 (def _ ::irrelevant)
 
