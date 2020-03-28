@@ -206,24 +206,26 @@
 (defmethod accept-spec 'clojure.spec.alpha/and [_ _ children _]
   (simplify-all-of {:allOf children}))
 
-(defn- accept-merge [children]
-  {:type "object"
-   :properties (->> (concat children
-                            (mapcat :anyOf children)
-                            (mapcat :allOf children))
-                    (map :properties)
-                    (reduce merge {}))
-   :required (->> (concat children
-                          (mapcat :allOf children))
-                  (map :required)
-                  (reduce into (sorted-set))
-                  (into []))})
+(defn- accept-merge [children spec options]
+  (maybe-with-title
+   {:type "object"
+    :properties (->> (concat children
+                             (mapcat :anyOf children)
+                             (mapcat :allOf children))
+                     (map :properties)
+                     (reduce merge {}))
+    :required (->> (concat children
+                           (mapcat :allOf children))
+                   (map :required)
+                   (reduce into (sorted-set))
+                   (into []))}
+   spec))
 
-(defmethod accept-spec 'clojure.spec.alpha/merge [_ _ children _]
-  (accept-merge children))
+(defmethod accept-spec 'clojure.spec.alpha/merge [_ spec children options]
+  (accept-merge children spec options))
 
-(defmethod accept-spec 'spec-tools.core/merge [_ _ children _]
-  (accept-merge children))
+(defmethod accept-spec 'spec-tools.core/merge [_ spec children options]
+  (accept-merge children spec options))
 
 (defmethod accept-spec 'clojure.spec.alpha/every [_ spec children options]
   (let [form (impl/extract-form spec)
@@ -254,12 +256,16 @@
 (defmethod accept-spec 'clojure.spec.alpha/? [_ _ children _]
   {:type "array" :items (impl/unwrap children) :minItems 0})
 
-(defmethod accept-spec 'clojure.spec.alpha/alt [_ _ children _]
-  {:anyOf children})
+(defmethod accept-spec 'clojure.spec.alpha/alt [_ spec children options]
+  (maybe-with-title
+   {:anyOf children}
+   spec))
 
-(defmethod accept-spec 'clojure.spec.alpha/cat [_ _ children _]
-  {:type "array"
-   :items {:anyOf children}})
+(defmethod accept-spec 'clojure.spec.alpha/cat [_ spec children options]
+  (maybe-with-title
+   {:type "array"
+    :items {:anyOf children}}
+   spec))
 
 ; &
 
