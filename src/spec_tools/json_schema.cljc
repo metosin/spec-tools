@@ -178,12 +178,13 @@
 (defmethod accept-spec ::visitor/set [dispatch spec children _]
   {:enum children})
 
-(defn- maybe-with-title [schema spec]
-  (if-let [title (st/spec-name spec)]
-    (assoc schema :title (impl/qualified-name title))
-    schema))
+(defn- maybe-with-title [schema spec options]
+  (letfn [(infer-titles? [options] (or (nil? (:infer-titles options)) (:infer-titles options)))]
+    (if-let [title (and (infer-titles? options) (st/spec-name spec))]
+      (assoc schema :title (impl/qualified-name title))
+      schema)))
 
-(defmethod accept-spec 'clojure.spec.alpha/keys [_ spec children _]
+(defmethod accept-spec 'clojure.spec.alpha/keys [_ spec children options]
   (let [{:keys [req req-un opt opt-un]} (impl/parse-keys (impl/extract-form spec))
         names-un (map name (concat req-un opt-un))
         names (map impl/qualified-name (concat req opt))
@@ -196,7 +197,8 @@
          :properties (zipmap (concat names names-un) children)}
         (when all-required
           {:required (vec all-required)}))
-      spec)))
+      spec
+      options)))
 
 (defmethod accept-spec 'clojure.spec.alpha/or [_ _ children _]
   {:anyOf children})
@@ -223,19 +225,19 @@
 (defmethod accept-spec 'spec-tools.core/merge [_ _ children _]
   (accept-merge children))
 
-(defmethod accept-spec 'clojure.spec.alpha/every [_ spec children _]
+(defmethod accept-spec 'clojure.spec.alpha/every [_ spec children options]
   (let [form (impl/extract-form spec)
         {:keys [type]} (parse/parse-spec form)]
     (case type
-      :map (maybe-with-title {:type "object", :additionalProperties (impl/unwrap children)} spec)
+      :map (maybe-with-title {:type "object", :additionalProperties (impl/unwrap children)} spec options)
       :set {:type "array", :uniqueItems true, :items (impl/unwrap children)}
       :vector {:type "array", :items (impl/unwrap children)})))
 
-(defmethod accept-spec 'clojure.spec.alpha/every-kv [_ spec children _]
-  (maybe-with-title {:type "object", :additionalProperties (second children)} spec))
+(defmethod accept-spec 'clojure.spec.alpha/every-kv [_ spec children options]
+  (maybe-with-title {:type "object", :additionalProperties (second children)} spec options))
 
-(defmethod accept-spec ::visitor/map-of [_ spec children _]
-  (maybe-with-title {:type "object", :additionalProperties (second children)} spec))
+(defmethod accept-spec ::visitor/map-of [_ spec children options]
+  (maybe-with-title {:type "object", :additionalProperties (second children)} spec options))
 
 (defmethod accept-spec ::visitor/set-of [_ _ children _]
   {:type "array", :items (impl/unwrap children), :uniqueItems true})
