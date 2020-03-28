@@ -93,12 +93,15 @@
             (walk/postwalk
              (fn [x]
                (if (symbol? x)
-                 (let [x' (res x)]
-                   (if (var? x')
-                     (if (s/get-spec (var-get x'))
-                       (var-get x')
-                       (->sym x'))
-                     x))
+                 (let [y (res x)
+                       -var-get (fn [v] (if cljs? @v (var-get v)))
+                       sym-or-x (fn [v] (or (->sym v) x))]
+                   (cond
+                     (var? y) (if (s/get-spec (-var-get y))
+                                (-var-get y)
+                                (sym-or-x y))
+                     (some? y) (sym-or-x y)
+                     :else x))
                  x)))
             (unfn cljs?)))))
 

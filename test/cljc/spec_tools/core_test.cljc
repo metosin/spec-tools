@@ -798,3 +798,16 @@
              (st/decode spec "114.0" st/string-transformer)
              (st/conform spec "114.0" st/string-transformer)
              (st/coerce spec "114.0" st/string-transformer))))))
+
+(s/def ::foo string?)
+(s/def ::bar string?)
+(s/def ::qix (s/keys :req-un [::foo]))
+(s/def ::qux (s/keys :req-un [::bar]))
+
+(def qix ::qix)
+
+#?(:clj
+   (deftest issue-201
+     (testing "merge should work with symbols too"
+       (is (st/spec? (st/merge ::qix ::qux)))
+       (is (st/spec? (st/merge qix ::qux))))))
