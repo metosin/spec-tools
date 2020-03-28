@@ -207,7 +207,7 @@
   (simplify-all-of {:allOf children}))
 
 (defn- accept-merge [children spec options]
- (maybe-with-title
+  (maybe-with-title
    {:type "object"
     :properties (->> (concat children
                              (mapcat :anyOf children)
