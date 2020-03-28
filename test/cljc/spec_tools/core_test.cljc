@@ -798,3 +798,23 @@
              (st/decode spec "114.0" st/string-transformer)
              (st/conform spec "114.0" st/string-transformer)
              (st/coerce spec "114.0" st/string-transformer))))))
+
+(s/def ::car (s/keys :req-un [::doors]))
+(s/def ::bike (s/keys :req-un [::wheels]))
+(s/def ::tires (s/coll-of (s/and int?) :into #{}))
+(s/def ::vehicle (s/or :car ::car
+                       :bike ::bike))
+(s/def ::new-vehicle (s/map-of
+                      keyword?
+                      (s/or :vehicle ::vehicle
+                            :tires (s/coll-of (s/and int?) :into #{}))))
+
+(deftest issue-179
+  (testing "st/coerce can work properly with s/or specs"
+    (let [chevy {:doors 4}]
+      (is (= (st/coerce ::car chevy st/strip-extra-keys-transformer)
+             {:doors 4}))
+      (is (= (st/coerce ::vehicle chevy st/strip-extra-keys-transformer)
+             {:doors 4}))
+      (is (= (st/coerce ::new-vehicle {:rodas [1 "1" 3]} st/strip-extra-keys-transformer)
+             {:rodas #{1 "1" 3}})))))
