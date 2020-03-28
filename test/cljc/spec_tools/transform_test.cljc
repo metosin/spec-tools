@@ -92,6 +92,12 @@
               (is (= (.scale original-bigdec) (.scale new-bigdec)))
               (is (= (.precision original-bigdec) (.precision new-bigdec)))))))
 
+#?(:clj (deftest string->ratio
+          (is (ratio? (stt/string->ratio _ "1/2")))
+          (is (string? (stt/string->ratio _ "0.5")))
+          (is (ratio? (stt/string->ratio _ "4242424242424421424242422/14242422121212121212")))
+          (is (not (ratio? (stt/string->ratio _ "1/1"))))))
+
 (deftest string->date
   (is (= #inst "2018-04-27T18:25:37Z" (stt/string->date _ "2018-04-27T18:25:37Z")))
   (is (= #inst "2018-04-27T00:00:00Z" (stt/string->date _ "2018-04-27")))
