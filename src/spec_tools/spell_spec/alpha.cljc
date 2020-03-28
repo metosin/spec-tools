@@ -3,7 +3,8 @@
   (:require
    [#?(:clj clojure.spec.alpha
        :cljs cljs.spec.alpha)
-    :as s])
+    :as s]
+   #?(:cljs [goog.string]))
   #?(:cljs (:require-macros [spec-tools.spell-spec.alpha :refer [keys warn-keys strict-keys warn-strict-keys]])))
 
 (def ^:dynamic *value* {})
@@ -57,7 +58,8 @@
       dist)))
 
 (defn- similar-key [ky ky2]
-  (let [min-len (apply min (map (comp count #(if (.startsWith % ":") (subs % 1) %) str) [ky ky2]))]
+  (let [starts-with? #?(:clj (fn [a b] (.startsWith a b)) :cljs (fn [a b] (goog.string/startsWith a b)))
+        min-len (apply min (map (comp count #(if (starts-with? % ":") (subs % 1) %) str) [ky ky2]))]
     (similar-key* (#?(:clj *length->threshold*
                       :cljs length->threshold)
                    min-len) ky ky2)))
