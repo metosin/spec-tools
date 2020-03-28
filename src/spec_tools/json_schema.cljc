@@ -179,7 +179,7 @@
   {:enum children})
 
 (defn- maybe-with-title [schema spec options]
-  (letfn [(infer-titles? [options] (or (nil? (:infer-titles options)) (:infer-titles options)))]
+  (letfn [(infer-titles? [options] (-> options :infer-titles false? not))]
     (if-let [title (and (infer-titles? options) (st/spec-name spec))]
       (assoc schema :title (impl/qualified-name title))
       schema)))
@@ -207,7 +207,7 @@
   (simplify-all-of {:allOf children}))
 
 (defn- accept-merge [children spec options]
-  (maybe-with-title
+ (maybe-with-title
    {:type "object"
     :properties (->> (concat children
                              (mapcat :anyOf children)
@@ -219,7 +219,8 @@
                    (map :required)
                    (reduce into (sorted-set))
                    (into []))}
-   spec))
+   spec
+   options))
 
 (defmethod accept-spec 'clojure.spec.alpha/merge [_ spec children options]
   (accept-merge children spec options))
@@ -259,13 +260,15 @@
 (defmethod accept-spec 'clojure.spec.alpha/alt [_ spec children options]
   (maybe-with-title
    {:anyOf children}
-   spec))
+   spec
+   options))
 
 (defmethod accept-spec 'clojure.spec.alpha/cat [_ spec children options]
   (maybe-with-title
    {:type "array"
     :items {:anyOf children}}
-   spec))
+   spec
+   options))
 
 ; &
 
