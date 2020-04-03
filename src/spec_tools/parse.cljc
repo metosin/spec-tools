@@ -44,7 +44,7 @@
 
     ;; a predicate
     (ifn? x)
-    (parse-form (form/resolve-form x) nil)
+    (parse-form (impl/normalize-symbol (form/resolve-form x)) nil)
 
     ;; default
     :else (parse-form x nil)))
@@ -158,13 +158,24 @@
             deref
             methods
             (map (fn [[spec-k method]]
-                   [spec-k (method nil)]))))))
+                   [spec-k (method nil)])))))
+   :cljs
+   (defn get-multi-spec-sub-specs
+	   "Given a multi-spec form, call its multi method methods to retrieve
+	 its subspecs."
+	   [multi-spec-form]
+	   (let [[_ multi-method-symbol & _ :as form] multi-spec-form]
+		   (when-let [spec (first (filter (fn [v] (= form (s/form v))) (vals (s/registry))))]
+			   (->> (.-mmvar spec)
+					deref
+					methods
+					(map (fn [[spec-k method]]
+							 [spec-k (method nil)])))))))
 
-#?(:clj
-   (defmethod parse-form 'clojure.spec.alpha/multi-spec [_ form]
-     {:type      :multi-spec
-      ::key      (last form)
-      ::dispatch (into {} (get-multi-spec-sub-specs form))}))
+(defmethod parse-form 'clojure.spec.alpha/multi-spec [_ form]
+  {:type      :multi-spec
+   ::key      (last form)
+   ::dispatch (into {} (get-multi-spec-sub-specs form))})
 
 (defmethod parse-form 'clojure.spec.alpha/or [_ form]
   (let [specs (mapv (comp parse-spec-with-spec-ref second) (partition 2 (rest form)))]

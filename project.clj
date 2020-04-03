@@ -31,7 +31,10 @@
                                   [org.clojure/test.check "0.10.0"]
                                   [org.clojure/tools.namespace "0.3.1"]
                                   [com.gfredericks/test.chuck "0.2.10"]
-                                  [com.bhauman/spell-spec "0.1.1"]
+                                  ; com.bhauman/spell-spec library doesn't get any updates, so it has to be copied here
+                                  ; under spec-tools.spell-spec namespace in order to fix its bugs.
+                                  ; If the library gets updated with fixes it would be desirable to switch back to it.
+                                  ;[com.bhauman/spell-spec "0.1.1"]
                                   [expound "0.8.4"]
                                   [metosin/ring-swagger "0.26.2"]
                                   [metosin/muuntaja "0.6.4"]
