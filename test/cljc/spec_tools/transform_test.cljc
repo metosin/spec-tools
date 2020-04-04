@@ -1,14 +1,14 @@
 (ns spec-tools.transform-test
   (:require [clojure.test :refer [deftest testing is]]
             [spec-tools.transform :as stt]
-            [clojure.test.check.generators :as gen]
-            [com.gfredericks.test.chuck.clojure-test :refer [checking]]
+            #?(:clj [clojure.test.check.generators :as gen])
+            #?(:clj [com.gfredericks.test.chuck.clojure-test :refer [checking]])
             #?@(:cljs [[goog.Uri]])))
 #?(:clj
    (:import java.net.URI))
 
-(def gen-bigdecimal
-  (gen/fmap #(BigDecimal. %) (gen/double* {:infinite? false :NaN? false})))
+#?(:clj (def gen-bigdecimal
+          (gen/fmap #(BigDecimal. %) (gen/double* {:infinite? false :NaN? false}))))
 
 (def _ ::irrelevant)
 
@@ -72,12 +72,31 @@
           (is (not (decimal? (stt/string->decimal _ nil))))
           (is (string? (stt/string->decimal _ "42.42M")))))
 
+(deftest number->string
+  (is (string? (stt/number->string _ 42.42)))
+  (is (string? (stt/number->string _ 42)))
+  (is (string? #?(:clj (stt/number->string _ (BigDecimal. 23123))
+                  :cljs (stt/number->string _ js/Math.PI)))))
+
+#?(:clj (deftest number->decimal
+          (letfn [(num->decimal [n] ((stt/number-or-string-> stt/string->decimal) _ n))]
+            (is (decimal? (num->decimal 42)))
+            (is (decimal? (num->decimal 42.4224)))
+            (is (decimal? (num->decimal (Float. 42.4223))))
+            (is (decimal? (num->decimal (BigDecimal. 42.4222)))))))
+
 #?(:clj (deftest properties-string->decimal
           (checking "Scale and Precision must be preserved" 200
             [original-bigdec gen-bigdecimal]
             (let [new-bigdec (stt/string->decimal _ (str original-bigdec))]
               (is (= (.scale original-bigdec) (.scale new-bigdec)))
               (is (= (.precision original-bigdec) (.precision new-bigdec)))))))
+
+#?(:clj (deftest string->ratio
+          (is (ratio? (stt/string->ratio _ "1/2")))
+          (is (string? (stt/string->ratio _ "0.5")))
+          (is (ratio? (stt/string->ratio _ "4242424242424421424242422/14242422121212121212")))
+          (is (not (ratio? (stt/string->ratio _ "1/1"))))))
 
 (deftest string->date
   (is (= #inst "2018-04-27T18:25:37Z" (stt/string->date _ "2018-04-27T18:25:37Z")))

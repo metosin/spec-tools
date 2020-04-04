@@ -1,11 +1,9 @@
 (ns spec-tools.spell
-  (:require [spell-spec.alpha :as ssa]
-            [spell-spec.expound]
+  (:require [spec-tools.spell-spec.alpha :as ssa]
             [spec-tools.parse :as parse]
             [clojure.spec.alpha :as s]
             [spec-tools.core :as st]
             [spec-tools.impl :as impl]
-            [spell-spec.expound]
             [expound.alpha :as expound]
             [expound.ansi :as ansi]))
 

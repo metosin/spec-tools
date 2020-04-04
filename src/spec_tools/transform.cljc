@@ -5,6 +5,7 @@
                        [goog.date.Date]
                        [goog.Uri]])
             [clojure.set :as set]
+            [clojure.edn :as edn]
             [spec-tools.parse :as parse]
             [clojure.string :as str]
             [spec-tools.impl :as impl])
@@ -35,6 +36,21 @@
   (fn [spec x]
     (cond
       (keyword? x) (f spec (keyword->string spec x))
+      :else x)))
+
+;; Numbers
+;;
+
+(defn number->string [_ x]
+  (if (number? x)
+    (str x)
+    x))
+
+(defn number-or-string-> [f]
+  (fn [spec x]
+    (cond
+      (number? x) (f spec (number->string spec x))
+      (string? x) (f spec x)
       :else x)))
 ;;
 ;; Strings
@@ -76,6 +92,17 @@
      (if (string? x)
        (try
          (BigDecimal. ^String x)
+         (catch Exception _ x))
+       x)))
+
+#?(:clj
+   (defn string->ratio [_ x]
+     (if (string? x)
+       (try
+         (let [parsed-x (edn/read-string ^String x)]
+           (if (ratio? parsed-x)
+             parsed-x
+             x))
          (catch Exception _ x))
        x)))
 
@@ -190,8 +217,8 @@
      :string keyword->string}
     #?(:clj
        {:uri string->uri
-        :bigdec string->decimal
-        :ratio nil})))
+        :bigdec (number-or-string-> string->decimal)
+        :ratio string->ratio})))
 
 (def string-type-decoders
   (merge

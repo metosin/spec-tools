@@ -827,3 +827,16 @@
              {:rodas #{1 "1" 3}}))
       (is (= (st/coerce ::s {:keyword "a" :date "2020-02-22"} st/json-transformer)
              {:keyword :a :date #inst "2020-02-22T00:00:00.000-00:00"})))))
+
+(s/def ::foo string?)
+(s/def ::bar string?)
+(s/def ::qix (s/keys :req-un [::foo]))
+(s/def ::qux (s/keys :req-un [::bar]))
+(def qix ::qix)
+
+#?(:clj
+   (deftest issue-201
+     (testing "merge should work with symbols too"
+       (is (st/spec? (st/merge ::qix ::qux)))
+       (is (st/spec? (st/merge qix ::qux))))))
+
