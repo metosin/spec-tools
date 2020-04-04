@@ -804,10 +804,17 @@
 (s/def ::tires (s/coll-of (s/and int?) :into #{}))
 (s/def ::vehicle (s/or :car ::car
                        :bike ::bike))
+
 (s/def ::new-vehicle (s/map-of
                       keyword?
                       (s/or :vehicle ::vehicle
                             :tires (s/coll-of (s/and int?) :into #{}))))
+
+(s/def ::keyword keyword?)
+(s/def ::int int?)
+(s/def ::date inst?)
+(s/def ::s (s/or :x (s/keys :req-un [::keyword ::int])
+                 :y (s/keys :req-un [::keyword ::date])))
 
 (deftest issue-179
   (testing "st/coerce can work properly with s/or specs"
@@ -817,4 +824,6 @@
       (is (= (st/coerce ::vehicle chevy st/strip-extra-keys-transformer)
              {:doors 4}))
       (is (= (st/coerce ::new-vehicle {:rodas [1 "1" 3]} st/strip-extra-keys-transformer)
-             {:rodas #{1 "1" 3}})))))
+             {:rodas #{1 "1" 3}}))
+      (is (= (st/coerce ::s {:keyword "a" :date "2020-02-22"} st/json-transformer)
+             {:keyword :a :date #inst "2020-02-22T00:00:00.000-00:00"})))))

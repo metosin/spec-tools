@@ -274,16 +274,21 @@
     (accept spec value (assoc options :skip? true))
     value))
 
-(defmethod walk :or [{:keys [::parse/items] :as spec} value accept options]
+(defn- valid-spec [item transformed]
+  (let [spec (:spec item)]
+    (cond
+      (qualified-keyword? spec) (s/valid? (s/get-spec spec) transformed)
+      (fn? spec) (spec transformed)
+      :else nil)))
+
+(defmethod walk :or [{:keys [::parse/items]} value accept options]
   (reduce
    (fn [v item]
      (let [transformed (accept item v options)
-           valid-branch? (s/valid? (create-spec item) transformed)
-           any-spec? (= (:form spec) #?(:clj 'clojure.core/any?
-                                        :cljs 'cljs.core/any?))]
+           valid? (valid-spec item transformed)]
        (cond
-         (and valid-branch? (not any-spec?)) (reduced transformed)
-         (= transformed v) v
+         valid? (reduced transformed)
+         (not valid?) transformed
          :else (reduced transformed))))
    value items))
 
