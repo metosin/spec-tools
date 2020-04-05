@@ -286,10 +286,9 @@
    (fn [v item]
      (let [transformed (accept item v options)
            valid? (valid-spec item transformed)]
-       (cond
-         valid? (reduced transformed)
-         (not valid?) transformed
-         :else (reduced transformed))))
+       (if valid?
+         (reduced transformed)
+         transformed)))
    value items))
 
 (defmethod walk :and [{:keys [::parse/items]} value accept options]
