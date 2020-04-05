@@ -274,12 +274,22 @@
     (accept spec value (assoc options :skip? true))
     value))
 
+(defn- valid-spec [item transformed]
+  (let [spec (:spec item)]
+    (cond
+      (qualified-keyword? spec) (s/valid? (s/get-spec spec) transformed)
+      (fn? spec) (spec transformed)
+      :else nil)))
+
 (defmethod walk :or [{:keys [::parse/items]} value accept options]
   (reduce
-    (fn [v item]
-      (let [transformed (accept item v options)]
-        (if (= transformed v) v (reduced transformed))))
-    value items))
+   (fn [v item]
+     (let [transformed (accept item v options)
+           valid? (valid-spec item transformed)]
+       (if valid?
+         (reduced transformed)
+         transformed)))
+   value items))
 
 (defmethod walk :and [{:keys [::parse/items]} value accept options]
   (reduce
