@@ -302,3 +302,51 @@
     (testing "nested maps have a name"
       (let [spec (st/get-spec :spec-tools.data-spec-test$named3/map)]
         (is (and spec (:name spec)))))))
+
+#?(:clj
+   (deftest unspecing
+     (testing "simpler possible specs"
+       (is (= int? (ds/unspec (ds/spec {:name ::t1 :spec int?}))))
+       (is (= string? (ds/unspec (ds/spec {:name ::t1 :spec string?}))))
+       (is (= float? (ds/unspec (ds/spec {:name ::t1 :spec float?}))))
+       (is (= boolean? (ds/unspec (ds/spec {:name ::t1 :spec boolean?}))))
+       (is (= keyword? (ds/unspec (ds/spec {:name ::t1 :spec keyword?})))))
+
+     (testing "simple map using data-spec"
+       (let [ds1 {:street          string?
+                  :number          int?
+                  :value           float?
+                  :is_main?        boolean?
+                  :clj-programmer? keyword?}]
+         (is (= ds1 (ds/unspec (ds/spec {:name ::ds1 :spec ds1}))))
+
+         (testing "we can handle nillable keywords"
+           (let [ds2 (merge ds1 {:address (ds/maybe {:street string?
+                                                     :number int?})
+                                 :city    string?})]
+             (is (= ds2 (ds/unspec (ds/spec {:name ::ds2 :spec ds2}))))))
+
+         (testing "also vector field, that also should be homogeneous."
+           (let [ds3 (merge ds1 {:orders [{:id          int?
+                                           :description string?}]})]
+             (is (= ds3 (ds/unspec (ds/spec {:name ::ds3 :spec ds3}))))))
+
+         (testing "support for a set"
+           (let [ds4 (assoc ds1 :languages #{keyword?})
+                 ds5 (assoc ds1 :languages #{string?})
+                 ds6 (assoc ds1 :languages #{int?})
+                 ds7 (assoc ds1 :languages #{boolean?})]
+             (is (= ds4 (ds/unspec (ds/spec {:name ::ds4 :spec ds4}))))
+             (is (= ds5 (ds/unspec (ds/spec {:name ::ds5 :spec ds5}))))
+             (is (= ds6 (ds/unspec (ds/spec {:name ::ds6 :spec ds6}))))
+             (is (= ds7 (ds/unspec (ds/spec {:name ::ds7 :spec ds7}))))))
+
+         (testing "support for or operator"
+           (let [ds8 (merge ds1 {:aliases [(or {:maps    {:alias string?}
+                                                :strings string?})]})
+                 ds9 (merge ds1 {:testing [(or {:ints int?
+                                                :bol  boolean?
+                                                :val  float?
+                                                :key  keyword?})]})]
+             (is (= ds8 (ds/unspec (ds/spec {:name ::ds8 :spec ds8}))))
+             (is (= ds9 (ds/unspec (ds/spec {:name ::ds9 :spec ds9}))))))))))

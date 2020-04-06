@@ -193,3 +193,38 @@
        :else (maybe-named-spec (st/create-spec {:spec data})))))
   ([name data]
    (spec {:name name, :spec data})))
+
+(defmulti unspec (fn [{:keys [type]}] (parse/type-dispatch-value type)) :default ::default)
+
+(defmethod unspec ::default [{:keys [form]}]
+  #?(:clj (var-get (resolve form))
+     :cljs @(resolve (quote form))))
+
+(defmethod unspec :nilable [{:keys [form] :as sp}]
+  (maybe (unspec (st/create-spec (second (second form))))))
+
+(defmethod unspec :vector [{:keys [form]}]
+  [(unspec (st/create-spec {:spec (second form)}))])
+
+(defmethod unspec :map [{:keys [::parse/key->spec]}]
+  (reduce-kv
+   (fn [acc key val]
+     (if (qualified-keyword? val)
+       (assoc acc key (unspec (s/get-spec val)))
+       val))
+   {}
+   key->spec))
+
+(defmethod unspec :set [{:keys [::parse/item]}]
+  #{(unspec (st/create-spec item))})
+
+(defmethod unspec :or [{:keys [form]}]
+  (let [form-partitioned (partition 2 (rest form))]
+    (or (reduce
+         (fn [acc [key spec-val]]
+           (let [-spec (second spec-val)]
+             (if (symbol? (:spec -spec))
+               (assoc acc key (unspec (st/create-spec (parse/parse-spec (:spec -spec)))))
+               (assoc acc key (unspec (st/create-spec -spec))))))
+         {}
+         form-partitioned))))
