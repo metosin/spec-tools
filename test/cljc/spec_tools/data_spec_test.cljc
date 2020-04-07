@@ -2,12 +2,15 @@
   (:require [clojure.test :refer [deftest testing is]]
             [clojure.spec.alpha :as s]
             [spec-tools.data-spec :as ds]
+            #?(:clj [clojure.test.check.generators :as gen])
+            #?(:clj [com.gfredericks.test.chuck.clojure-test :refer [checking]])
             [spec-tools.core :as st]
             [spec-tools.spec :as spec])
   #?(:clj
      (:import clojure.lang.ExceptionInfo)))
 
 (s/def ::age (s/and spec/integer? #(> % 10)))
+
 
 (deftest data-spec-tests
   (testing "nested data-spec"
@@ -350,3 +353,26 @@
                                                 :key  keyword?})]})]
              (is (= ds8 (ds/unspec (ds/spec {:name ::ds8 :spec ds8}))))
              (is (= ds9 (ds/unspec (ds/spec {:name ::ds9 :spec ds9}))))))))))
+
+#?(:clj
+   (def unspec-gen (let [-kw?      (gen/return keyword?)
+                         -str?     (gen/return string?)
+                         -bol?     (gen/return boolean?)
+                         -flt?     (gen/return float?)
+                         -int?     (gen/return integer?)
+                         -compound [-kw? -str? -bol? -flt? -int?]
+                         -vec?     (gen/vector (gen/one-of -compound) 1)
+                         -set?     (gen/set (gen/one-of -compound) {:num-elements 1})
+                         -map?     (fn [inner-gen] (gen/not-empty (gen/map gen/keyword inner-gen)))]
+                     (gen/recursive-gen (fn [inner-gen]
+                                          (gen/frequency
+                                           [[6 (-map? inner-gen)]
+                                            [2 (gen/fmap (fn [v] (ds/or v)) (-map? inner-gen))]
+                                            [2 (gen/fmap (fn [v] (ds/maybe v)) (-map? inner-gen))]]))
+                                        (gen/one-of (concat -compound [-vec? -set?]))))))
+
+#?(:clj
+   (deftest property-spec->unspec->spec
+     (checking "able to perform a complete round-trip going from data-spec -> spec -> data-spec again" 200
+               [data-spec unspec-gen]
+               (is (ds/unspec (ds/spec {:name ::property-based :spec data-spec}))))))

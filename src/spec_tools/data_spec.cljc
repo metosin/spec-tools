@@ -194,37 +194,48 @@
   ([name data]
    (spec {:name name, :spec data})))
 
-(defmulti unspec (fn [{:keys [type]}] (parse/type-dispatch-value type)) :default ::default)
 
-(defmethod unspec ::default [{:keys [form]}]
+(defmulti unwalk (fn [{:keys [type]}]
+                   (parse/type-dispatch-value type)) :default ::default)
+
+(defmethod unwalk ::default [{:keys [form]}]
   #?(:clj (var-get (resolve form))
      :cljs @(resolve (quote form))))
 
-(defmethod unspec :nilable [{:keys [form] :as sp}]
-  (maybe (unspec (st/create-spec (second (second form))))))
+(defmethod unwalk :nilable [{:keys [form]}]
+  (maybe (unwalk (st/create-spec (second (second form))))))
 
-(defmethod unspec :vector [{:keys [form]}]
-  [(unspec (st/create-spec {:spec (second form)}))])
+(defmethod unwalk :vector [{:keys [::parse/item]}]
+  [(unwalk (st/create-spec item))])
 
-(defmethod unspec :map [{:keys [::parse/key->spec]}]
+(defmethod unwalk :map [{:keys [::parse/key->spec]}]
   (reduce-kv
    (fn [acc key val]
      (if (qualified-keyword? val)
-       (assoc acc key (unspec (s/get-spec val)))
+       (let [spec  (s/get-spec val)
+             -spec (if (st/spec? spec) spec {:spec val})]
+         (assoc acc key (unwalk (st/create-spec -spec))))
        val))
    {}
    key->spec))
 
-(defmethod unspec :set [{:keys [::parse/item]}]
-  #{(unspec (st/create-spec item))})
+(defmethod unwalk :set [{:keys [::parse/item]}]
+  #{(unwalk (st/create-spec item))})
 
-(defmethod unspec :or [{:keys [form]}]
+(defmethod unwalk :or [{:keys [form]}]
   (let [form-partitioned (partition 2 (rest form))]
     (or (reduce
          (fn [acc [key spec-val]]
            (let [-spec (second spec-val)]
-             (if (symbol? (:spec -spec))
-               (assoc acc key (unspec (st/create-spec (parse/parse-spec (:spec -spec)))))
-               (assoc acc key (unspec (st/create-spec -spec))))))
+             (cond
+               (symbol? (:spec -spec)) (assoc acc key (unwalk (st/create-spec (parse/parse-spec (:spec -spec)))))
+               (= 'clojure.spec.alpha/or (first spec-val))
+               (assoc acc key (unwalk (st/create-spec {:spec spec-val})))
+               :else
+               (assoc acc key (unwalk (st/create-spec -spec))))))
          {}
          form-partitioned))))
+
+(defn unspec [spec]
+  (let [-spec (if (st/spec? spec) spec (st/create-spec {:spec spec}))]
+    (unwalk -spec)))
