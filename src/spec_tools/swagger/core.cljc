@@ -68,6 +68,10 @@
    :items {}
    :x-items children})
 
+(defmethod accept-spec 'clojure.core/sequential? [_ _ _ _]
+  {:type "array"
+   :items {}})
+
 ;; FIXME: resolve a real type, https://github.com/metosin/spec-tools/issues/60
 (defmethod accept-spec ::visitor/set [_ _ children _]
   {:enum children :type "string"})
