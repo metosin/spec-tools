@@ -205,16 +205,19 @@
 (defmethod unwalk :nilable [{:keys [form]}]
   (maybe (unwalk (st/create-spec (second (second form))))))
 
-(defmethod unwalk :vector [{:keys [::parse/item]}]
-  [(unwalk (st/create-spec item))])
+(defmethod unwalk :vector [{:keys [::parse/item form]}]
+  (if (= (parse/type-dispatch-value (:type item)) :or)
+    [(unwalk (st/create-spec {:spec (second form)}))]
+    [(unwalk (st/create-spec item))]))
 
-(defmethod unwalk :map [{:keys [::parse/key->spec]}]
+(defmethod unwalk :map [{:keys [::parse/key->spec ::parse/keys-opt]}]
   (reduce-kv
    (fn [acc key val]
      (if (qualified-keyword? val)
-       (let [spec  (s/get-spec val)
+       (let [maybe-key (if (contains? keys-opt key) (opt key) key)
+             spec  (s/get-spec val)
              -spec (if (st/spec? spec) spec {:spec val})]
-         (assoc acc key (unwalk (st/create-spec -spec))))
+         (assoc acc maybe-key (unwalk (st/create-spec -spec))))
        val))
    {}
    key->spec))
@@ -222,19 +225,13 @@
 (defmethod unwalk :set [{:keys [::parse/item]}]
   #{(unwalk (st/create-spec item))})
 
-(defmethod unwalk :or [{:keys [form]}]
-  (let [form-partitioned (partition 2 (rest form))]
+(defmethod unwalk :or [{:keys [form ::parse/items]}]
+  (let [labels (take-nth 2 (rest form))]
     (or (reduce
-         (fn [acc [key spec-val]]
-           (let [-spec (second spec-val)]
-             (cond
-               (symbol? (:spec -spec)) (assoc acc key (unwalk (st/create-spec (parse/parse-spec (:spec -spec)))))
-               (= 'clojure.spec.alpha/or (first spec-val))
-               (assoc acc key (unwalk (st/create-spec {:spec spec-val})))
-               :else
-               (assoc acc key (unwalk (st/create-spec -spec))))))
+         (fn [acc [k spec]]
+           (assoc acc k (unwalk (st/create-spec (parse/parse-spec spec)))))
          {}
-         form-partitioned))))
+         (map vector labels items)))))
 
 (defn unspec [spec]
   (let [-spec (if (st/spec? spec) spec (st/create-spec {:spec spec}))]

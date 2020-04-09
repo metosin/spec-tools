@@ -363,10 +363,15 @@
                          -compound [-kw? -str? -bol? -flt? -int?]
                          -vec?     (gen/vector (gen/one-of -compound) 1)
                          -set?     (gen/set (gen/one-of -compound) {:num-elements 1})
-                         -map?     (fn [inner-gen] (gen/not-empty (gen/map gen/keyword inner-gen)))]
+                         -map?     (fn [inner-gen] (gen/not-empty (gen/map gen/keyword inner-gen)))
+                         -map-opt? (fn [inner-gen] (gen/not-empty (gen/map (gen/bind gen/keyword
+                                                                                    (fn [k]
+                                                                                      (gen/return (ds/opt k))))
+                                                                          inner-gen)))]
                      (gen/recursive-gen (fn [inner-gen]
                                           (gen/frequency
-                                           [[6 (-map? inner-gen)]
+                                           [[3 (-map? inner-gen)]
+                                            [3 (-map-opt? inner-gen)]
                                             [2 (gen/fmap (fn [v] (ds/or v)) (-map? inner-gen))]
                                             [2 (gen/fmap (fn [v] (ds/maybe v)) (-map? inner-gen))]]))
                                         (gen/one-of (concat -compound [-vec? -set?]))))))
