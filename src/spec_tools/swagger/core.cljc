@@ -78,7 +78,8 @@
 
 (defmethod accept-spec ::visitor/spec [dispatch spec children options]
   (let [[_ data] (impl/extract-form spec)
-        swagger-meta (impl/unlift-keys data "swagger")]
+        swagger-meta (impl/unlift-keys data "swagger")
+        swagger-meta (merge (:swagger data) swagger-meta)]
     (merge (json-schema/accept-spec dispatch spec children options) swagger-meta)))
 
 (defmethod accept-spec ::default [dispatch spec children options]
