@@ -173,7 +173,7 @@
 (defmethod accept-spec 'clojure.core/ratio? [_ _ _ _] {:type "integer"})
 
 ; bytes? (bytes)
-(defmethod accept-spec 'clojure.core/ratio? [_ _ _ _] {:type "string" :format "byte"})
+(defmethod accept-spec 'clojure.core/bytes? [_ _ _ _] {:type "string" :format "byte"})
 
 (defmethod accept-spec ::visitor/set [dispatch spec children _]
   {:enum children})
