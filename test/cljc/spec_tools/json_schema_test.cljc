@@ -39,6 +39,7 @@
     (is (= (jsc/transform (s/spec boolean?)) {:type "boolean"}))
     #?(:clj (is (= (jsc/transform rational?) {:type "double"})))
     #?(:clj (is (= (jsc/transform (s/spec decimal?)) {:type "number" :format "double"})))
+    #?(:clj (is (= (jsc/transform (s/spec bytes?)) {:type "string" :format "byte"})))
     (is (= (jsc/transform (s/spec inst?)) {:type "string", :format "date-time"}))
     (is (= (jsc/transform (s/spec nil?)) {:type "null"}))
     (is (= (jsc/transform #{1 2 3}) {:enum [1 3 2]})))
