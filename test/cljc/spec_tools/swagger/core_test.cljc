@@ -110,6 +110,9 @@
                         :type "string"}},
     :required ["integer"]}
 
+   sequential?
+   {:type "array" :items {}}
+
    (s/every integer?)
    {:type "array", :items {:type "integer"}}
 
