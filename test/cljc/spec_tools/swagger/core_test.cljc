@@ -370,3 +370,25 @@
                                                                        :description "Found it!"}
                                                                   404 {:description "Ohnoes."}}}}}}]
        (is (nil? (-> data swagger/swagger-spec v/validate))))))
+
+
+(deftest backport-swagger-meta-unnamespaced
+  (is (= (swagger/transform
+          (st/spec {:spec    string?
+                    :swagger {:type   "string"
+                              :format "password"
+                              :random-value "42"}}))
+         {:type "string" :format "password" :random-value "42"}))
+
+  (is (= (swagger/transform
+          (st/spec {:spec string?
+                    :swagger {:type "string"}
+                    :swagger/format "password"}))
+         {:type "string" :format "password"}))
+
+  (is (= (swagger/transform
+          (st/spec {:spec string?
+                    :swagger/type "string"
+                    :swagger/format "password"
+                    :swagger/random-value "42"}))
+         {:type "string" :format "password" :random-value "42"})))
