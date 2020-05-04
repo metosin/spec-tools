@@ -262,3 +262,11 @@
                     (s/and (s/keys :req-un [::bar])
                            (s/keys :req-un [::foo])))))
       "allOf properties are merged into properties and required"))
+
+(s/def ::spec-with-explicit-name
+  (st/spec {:spec ::keys-no-req
+            :name "specific-name"}))
+
+(deftest name-is-respected-test
+  (is (= (:title (jsc/transform ::spec-with-explicit-name))
+         "specific-name")))

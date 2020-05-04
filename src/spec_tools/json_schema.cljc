@@ -293,7 +293,10 @@
         json-schema-meta (impl/unlift-keys data "json-schema")
         extra-info (-> (select-keys data [:description])
                        (cond-> (and name (not synthetic?))
-                               (assoc :title (impl/qualified-name name))))]
+                               (assoc :title (or (when-let [name-use (:name data)]
+                                                   (when (string? name-use)
+                                                     name-use))
+                                                 (impl/qualified-name name)))))]
     (merge (impl/unwrap children) extra-info json-schema-meta)))
 
 (defmethod accept-spec ::default [_ _ _ _]
