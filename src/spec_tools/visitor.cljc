@@ -43,8 +43,8 @@
   ([spec accept]
    (visit spec accept nil))
   ([spec accept {:keys [::visited] :as options}]
-    ;; quick fix for #75: don't rewalk on recursive specs
-    ;; correct solution would be walk on a reference of a spec?
+   ;; quick fix for #75: don't rewalk on recursive specs
+   ;; correct solution would be walk on a reference of a spec?
    (if-not (get visited spec)
      (let [options (if (keyword? spec)
                      (update options ::visited (fnil conj #{}) spec)

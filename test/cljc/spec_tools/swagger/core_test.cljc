@@ -94,7 +94,7 @@
     :required ["integer" "string"]}
 
    (st/merge (s/keys :req-un [::integer])
-               (s/keys :req-un [::string]))
+             (s/keys :req-un [::string]))
    {:type "object",
     :properties {"integer" {:type "integer"},
                  "string" {:type "string"}},
@@ -374,24 +374,23 @@
                                                                   404 {:description "Ohnoes."}}}}}}]
        (is (nil? (-> data swagger/swagger-spec v/validate))))))
 
-
 (deftest backport-swagger-meta-unnamespaced
   (is (= (swagger/transform
-          (st/spec {:spec    string?
-                    :swagger {:type   "string"
-                              :format "password"
-                              :random-value "42"}}))
+           (st/spec {:spec string?
+                     :swagger {:type "string"
+                               :format "password"
+                               :random-value "42"}}))
          {:type "string" :format "password" :random-value "42"}))
 
   (is (= (swagger/transform
-          (st/spec {:spec string?
-                    :swagger {:type "string"}
-                    :swagger/format "password"}))
-         {:type "string" :format "password"}))
+           (st/spec {:spec string?
+                     :swagger {:type "object"}
+                     :swagger/format "password"}))
+         {:type "object"}))
 
   (is (= (swagger/transform
-          (st/spec {:spec string?
-                    :swagger/type "string"
-                    :swagger/format "password"
-                    :swagger/random-value "42"}))
+           (st/spec {:spec string?
+                     :swagger/type "string"
+                     :swagger/format "password"
+                     :swagger/random-value "42"}))
          {:type "string" :format "password" :random-value "42"})))

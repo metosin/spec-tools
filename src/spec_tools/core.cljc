@@ -276,13 +276,13 @@
 
 (defmethod walk :or [{:keys [::parse/items]} value accept options]
   (reduce
-   (fn [v item]
-     (let [transformed (accept item v options)
-           valid? (some-> item :spec (s/valid? transformed))]
-       (if valid?
-         (reduced transformed)
-         transformed)))
-   value items))
+    (fn [v item]
+      (let [transformed (accept item v options)
+            valid? (some-> item :spec (s/valid? transformed))]
+        (if valid?
+          (reduced transformed)
+          transformed)))
+    value items))
 
 (defmethod walk :and [{:keys [::parse/items]} value accept options]
   (reduce
@@ -339,8 +339,8 @@
     data))
 
 (defmethod walk :multi-spec [{:keys [::parse/key ::parse/dispatch]} data accept options]
-  (let [dispatch-key  (#(or (key %)
-                            ((keyword (name key)) %)) data)
+  (let [dispatch-key (#(or (key %)
+                           ((keyword (name key)) %)) data)
         dispatch-spec (or (dispatch dispatch-key)
                           (dispatch (keyword dispatch-key)))]
     (walk (parse/parse-spec dispatch-spec) data accept options)))

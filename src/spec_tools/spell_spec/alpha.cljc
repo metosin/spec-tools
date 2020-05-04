@@ -1,10 +1,10 @@
 (ns spec-tools.spell-spec.alpha
   (:refer-clojure :exclude [keys])
   (:require
-   [#?(:clj clojure.spec.alpha
-       :cljs cljs.spec.alpha)
-    :as s]
-   #?(:cljs [goog.string]))
+    [#?(:clj  clojure.spec.alpha
+        :cljs cljs.spec.alpha)
+     :as s]
+    #?(:cljs [goog.string]))
   #?(:cljs (:require-macros [spec-tools.spell-spec.alpha :refer [keys warn-keys strict-keys warn-strict-keys]])))
 
 (def ^:dynamic *value* {})
@@ -38,8 +38,8 @@
   (reduce
     (fn [row [diagonal above other]]
       (let [update-val (if (= other current)
-                          diagonal
-                          (inc (min diagonal above (peek row))))]
+                         diagonal
+                         (inc (min diagonal above (peek row))))]
         (conj row update-val)))
     [(inc (first previous))]
     (map vector previous (next previous) other-seq)))
@@ -60,9 +60,9 @@
 (defn- similar-key [ky ky2]
   (let [starts-with? #?(:clj (fn [a b] (.startsWith a b)) :cljs (fn [a b] (goog.string/startsWith a b)))
         min-len (apply min (map (comp count #(if (starts-with? % ":") (subs % 1) %) str) [ky ky2]))]
-    (similar-key* (#?(:clj *length->threshold*
+    (similar-key* (#?(:clj  *length->threshold*
                       :cljs length->threshold)
-                   min-len) ky ky2)))
+                    min-len) ky ky2)))
 
 ;; a tricky part is is that a keyword is not considered misspelled
 ;; if its substitute is already present in the original map
@@ -71,9 +71,9 @@
     (when-not (known-keys key)
       (->> known-keys
            (filter #(similar-key % key))
-           (remove (set (#?(:clj clojure.core/keys
+           (remove (set (#?(:clj  clojure.core/keys
                             :cljs cljs.core/keys)
-                         *value*)))
+                          *value*)))
            not-empty))))
 
 (defn not-misspelled [known-keys] (complement (likely-misspelled known-keys)))
@@ -117,13 +117,13 @@
          (pr-str value))))
 
 (defn- problem-warnings [value problems]
-  (#?@(:clj [binding [*out* *err*]]
-       :cljs  [do])
-   (doseq [prob problems]
-     (*warning-handler*
-      (assoc prob
-             ::value value
-             ::warning-message (warning-message* prob value))))))
+  (#?@(:clj  [binding [*out* *err*]]
+       :cljs [do])
+    (doseq [prob problems]
+      (*warning-handler*
+        (assoc prob
+          ::value value
+          ::warning-message (warning-message* prob value))))))
 
 (defn warning-spec
   "Wraps a spec and will behave just like the wrapped spec but if
@@ -136,8 +136,8 @@
   [wspec]
   (reify
     s/Specize
-     (specize* [s] s)
-     (specize* [s _] s)
+    (specize* [s] s)
+    (specize* [s _] s)
     s/Spec
     (conform* [_ x]
       (binding [*value* x]
@@ -174,10 +174,10 @@
 #?(:clj
    (defn spec-ns-var [var-sym]
      (symbol
-      (if (in-cljs-compile?)
-       "cljs.spec.alpha"
-       "clojure.spec.alpha")
-      (name var-sym))))
+       (if (in-cljs-compile?)
+         "cljs.spec.alpha"
+         "clojure.spec.alpha")
+       (name var-sym))))
 
 ;; ----------------------------------------------------------------------
 ;; Misspelled and Unknown-keys
@@ -213,22 +213,22 @@
                                        :else nil)]
                  (most-similar-to val known-keys))]
     (assoc prob
-           :expound.spec.problem/type ::misspelled-key
-           ;; limiting the predicate to the matches
-           ;; makes the default expound errors pretty good
-           ;; but could be confusing in other circumstances
-           :pred (set sim)
-           ::misspelled-key val
-           ::likely-misspelling-of sim)
+      :expound.spec.problem/type ::misspelled-key
+      ;; limiting the predicate to the matches
+      ;; makes the default expound errors pretty good
+      ;; but could be confusing in other circumstances
+      :pred (set sim)
+      ::misspelled-key val
+      ::likely-misspelling-of sim)
     (assoc prob
-           :expound.spec.problem/type ::unknown-key
-           ::unknown-key val)))
+      :expound.spec.problem/type ::unknown-key
+      ::unknown-key val)))
 
 #?(:clj
    (defmacro not-misspelled-spec
-  "A spec that verifies that a keyword is not a near misspelling of
-  the provided set of keywords. Will produce problems with a
-  `:expound.spec.problem/type` of `:spec-tools.spell-spec.alpha/misspelled-key`"
+     "A spec that verifies that a keyword is not a near misspelling of
+     the provided set of keywords. Will produce problems with a
+     `:expound.spec.problem/type` of `:spec-tools.spell-spec.alpha/misspelled-key`"
      [known-keys]
      (assert (and (set? known-keys)
                   (every? keyword? known-keys))
@@ -237,11 +237,11 @@
 
 #?(:clj
    (defmacro known-keys-spec
-  "A spec that verifies that a keyword is a member of the provided set
-  of keywords. Will produce problems with a
-  `:expound.spec.problem/type` of both
-  `:spec-tools.spell-spec.alpha/misspelled-key` and
-  `:spec-tools.spell-spec.alpha/unknown-key`"
+     "A spec that verifies that a keyword is a member of the provided set
+     of keywords. Will produce problems with a
+     `:expound.spec.problem/type` of both
+     `:spec-tools.spell-spec.alpha/misspelled-key` and
+     `:spec-tools.spell-spec.alpha/unknown-key`"
      [known-keys]
      (assert (and (set? known-keys)
                   (every? keyword? known-keys))
@@ -250,7 +250,7 @@
 
 
 (defn- get-known-keys [{:keys [req opt req-un opt-un]}]
-  (let [key-specs    (into (set (filterv keyword? (flatten req))) opt)
+  (let [key-specs (into (set (filterv keyword? (flatten req))) opt)
         un-key-specs (into (set (filterv keyword? (flatten req-un))) opt-un)]
     (assert (every? #(and (keyword? %) (namespace %)) (concat key-specs un-key-specs))
             "all keys must be namespace-qualified keywords")
@@ -308,9 +308,9 @@
   this in mind and is fairly conservative in its spelling checks."
      [& args]
      `(pre-check
-       (warning-spec (~(spec-ns-var 'map-of)
-                      (not-misspelled-spec ~(get-known-keys args)) any?))
-       (~(spec-ns-var 'keys) ~@args))))
+        (warning-spec (~(spec-ns-var 'map-of)
+                        (not-misspelled-spec ~(get-known-keys args)) any?))
+        (~(spec-ns-var 'keys) ~@args))))
 
 #?(:clj
    (defmacro strict-keys
@@ -326,9 +326,9 @@
   `strict-keys`"
      [& args]
      `(pre-check ;~(spec-ns-var 'and)
-       (warning-spec (~(spec-ns-var 'map-of)
-                      (known-keys-spec ~(get-known-keys args)) any?))
-       (~(spec-ns-var 'keys) ~@args))))
+        (warning-spec (~(spec-ns-var 'map-of)
+                        (known-keys-spec ~(get-known-keys args)) any?))
+        (~(spec-ns-var 'keys) ~@args))))
 
 ;; ----------------------------------------------------------------------
 ;; Warning only specs
@@ -339,8 +339,8 @@
   [spec]
   (reify
     s/Specize
-     (specize* [s] (s/specize* spec))
-     (specize* [s _] (s/specize* spec))
+    (specize* [s] (s/specize* spec))
+    (specize* [s _] (s/specize* spec))
     s/Spec
     (conform* [_ x]
       (binding [*warn-only* true]
