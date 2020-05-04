@@ -294,7 +294,8 @@
         extra-info (-> (select-keys data [:description])
                        (cond-> (and name (not synthetic?))
                                (assoc :title (impl/qualified-name name))))]
-    (merge (impl/unwrap children) extra-info json-schema-meta)))
+    (or (:json-schema data)
+        (merge (impl/unwrap children) extra-info json-schema-meta))))
 
 (defmethod accept-spec ::default [_ _ _ _]
   {})

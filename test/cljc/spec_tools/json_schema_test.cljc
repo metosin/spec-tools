@@ -262,3 +262,24 @@
                     (s/and (s/keys :req-un [::bar])
                            (s/keys :req-un [::foo])))))
       "allOf properties are merged into properties and required"))
+
+(deftest backport-swagger-meta-unnamespaced
+  (is (= (jsc/transform
+           (st/spec {:spec string?
+                     :json-schema {:type "string"
+                                   :format "password"
+                                   :random-value "42"}}))
+         {:type "string" :format "password" :random-value "42"}))
+
+  (is (= (jsc/transform
+           (st/spec {:spec string?
+                     :json-schema {:type "object"}
+                     :json-schema/format "password"}))
+         {:type "object"}))
+
+  (is (= (jsc/transform
+           (st/spec {:spec string?
+                     :json-schema/type "string"
+                     :json-schema/format "password"
+                     :json-schema/random-value "42"}))
+         {:type "string" :format "password" :random-value "42"})))
