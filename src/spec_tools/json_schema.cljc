@@ -208,19 +208,19 @@
 
 (defn- accept-merge [children spec options]
   (maybe-with-title
-   {:type "object"
-    :properties (->> (concat children
-                             (mapcat :anyOf children)
-                             (mapcat :allOf children))
-                     (map :properties)
-                     (reduce merge {}))
-    :required (->> (concat children
-                           (mapcat :allOf children))
-                   (map :required)
-                   (reduce into (sorted-set))
-                   (into []))}
-   spec
-   options))
+    {:type "object"
+     :properties (->> (concat children
+                              (mapcat :anyOf children)
+                              (mapcat :allOf children))
+                      (map :properties)
+                      (reduce merge {}))
+     :required (->> (concat children
+                            (mapcat :allOf children))
+                    (map :required)
+                    (reduce into (sorted-set))
+                    (into []))}
+    spec
+    options))
 
 (defmethod accept-spec 'clojure.spec.alpha/merge [_ spec children options]
   (accept-merge children spec options))
@@ -259,16 +259,16 @@
 
 (defmethod accept-spec 'clojure.spec.alpha/alt [_ spec children options]
   (maybe-with-title
-   {:anyOf children}
-   spec
-   options))
+    {:anyOf children}
+    spec
+    options))
 
 (defmethod accept-spec 'clojure.spec.alpha/cat [_ spec children options]
   (maybe-with-title
-   {:type "array"
-    :items {:anyOf children}}
-   spec
-   options))
+    {:type "array"
+     :items {:anyOf children}}
+    spec
+    options))
 
 ; &
 

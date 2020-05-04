@@ -7,7 +7,6 @@
             [clojure.set :as set]
             [clojure.edn :as edn]
             [spec-tools.parse :as parse]
-            [clojure.string :as str]
             [spec-tools.impl :as impl])
   #?(:clj
      (:import (java.util Date UUID)

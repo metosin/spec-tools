@@ -161,20 +161,20 @@
                    [spec-k (method nil)])))))
    :cljs
    (defn get-multi-spec-sub-specs
-	   "Given a multi-spec form, call its multi method methods to retrieve
-	 its subspecs."
-	   [multi-spec-form]
-	   (let [[_ multi-method-symbol & _ :as form] multi-spec-form]
-		   (when-let [spec (first (filter (fn [v] (= form (s/form v))) (vals (s/registry))))]
-			   (->> (.-mmvar spec)
-					deref
-					methods
-					(map (fn [[spec-k method]]
-							 [spec-k (method nil)])))))))
+     "Given a multi-spec form, call its multi method methods to retrieve
+   its subspecs."
+     [multi-spec-form]
+     (let [[_ multi-method-symbol & _ :as form] multi-spec-form]
+       (when-let [spec (first (filter (fn [v] (= form (s/form v))) (vals (s/registry))))]
+         (->> (.-mmvar spec)
+              deref
+              methods
+              (map (fn [[spec-k method]]
+                     [spec-k (method nil)])))))))
 
 (defmethod parse-form 'clojure.spec.alpha/multi-spec [_ form]
-  {:type      :multi-spec
-   ::key      (last form)
+  {:type :multi-spec
+   ::key (last form)
    ::dispatch (into {} (get-multi-spec-sub-specs form))})
 
 (defmethod parse-form 'clojure.spec.alpha/or [_ form]
@@ -189,7 +189,7 @@
      ::items specs}))
 
 (defmethod parse-form 'clojure.spec.alpha/merge [_ form]
-  (let [type-priority #((:type %) {:map        0
+  (let [type-priority #((:type %) {:map 0
                                    :multi-spec 1} 0)]
     (apply impl/deep-merge (->> (rest form)
                                 (map parse-spec)
@@ -244,7 +244,7 @@
      ::item spec}))
 
 (defmethod parse-form 'spec-tools.core/merge [_ form]
-  (let [type-priority #((:type %) {:map        1
+  (let [type-priority #((:type %) {:map 1
                                    :multi-spec 0})]
     (apply impl/deep-merge (->> (rest form)
                                 (map parse-spec)
