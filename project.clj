@@ -25,7 +25,8 @@
                              [lein-doo "0.1.11"]
                              [lein-cljsbuild "1.1.7"]
                              [lein-cloverage "1.1.1"]
-                             [lein-codox "0.10.7"]]
+                             [lein-codox "0.10.7"]
+                             [lein-pprint "1.3.2"]]
                    :jvm-opts ^:replace ["-server"]
                    ;:global-vars {*warn-on-reflection* true}
                    :dependencies [[org.clojure/clojure "1.10.0"]
