@@ -1,4 +1,4 @@
-# 0.10.1 (2020-15-01)
+# 0.10.1 (2020-01-15)
 
 * Support for `decimal?` coercion by [Wanderson Ferreira](https://github.com/wandersoncferreira)
 * Add ability to coerce multi-specs, fixes [#84](https://github.com/metosin/spec-tools/issues/84)
