@@ -20,7 +20,7 @@ if ! git diff-index --quiet HEAD -- project.clj; then
     exit 1
 fi
 
-if ! git merge-base --is-ancestor "master@{u}" master; then
+if ! git merge-base --is-ancestor "master" "master@{u}"; then
     echo "The master branch has not been pushed. Please git push."
     exit 1
 fi
