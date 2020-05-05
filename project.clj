@@ -1,10 +1,7 @@
 (defproject metosin/spec-tools "0.10.2"
   :description "Clojure(Script) tools for clojure.spec"
   :url "https://github.com/metosin/spec-tools"
-  :license {:name "Eclipse Public License"
-            :url "http://www.eclipse.org/legal/epl-v10.html"
-            :distribution :repo
-            :comments "same as Clojure"}
+  :license {:name "Eclipse Public License", :url "https://www.eclipse.org/legal/epl-2.0/"}
   :test-paths ["test/clj" "test/cljc"]
 
   :deploy-repositories [["releases" {:url "https://repo.clojars.org/"
