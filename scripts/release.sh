@@ -53,8 +53,6 @@ if hub release show "$VERSION" 2>/dev/null; then
     echo
     echo "Release $VERSION already exists"
     exit 1
-else
-    echo "* Release $VERSION does not yet exist"
 fi
 
 # Let's just check if the chanelog contains an appropriate title
@@ -62,8 +60,6 @@ if ! grep -q -F "# $VERSION " CHANGELOG.md; then
     echo
     echo "Please update CHANGELOG to contain the release $VERSION"
     exit 1
-else
-    echo "* Changelog has been updated"
 fi
 
 hub release create -m "$VERSION" "$VERSION"
