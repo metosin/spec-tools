@@ -1,0 +1,43 @@
+name: tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test-type: [clj, cljs]
+    steps:
+      - uses: actions/checkout@v1
+      - name: Cache Clojure dependencies
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2
+          key: lein-${{ github.job }}-${{ hashFiles('project.clj') }}
+          restore-keys: |
+            lein-${{ github.job }}
+            lein-
+      - name: Run tests
+        run: ./scripts/test.sh "${{matrix.test-type}}"
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Cache Clojure dependencies
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2
+          key: lein-${{ github.job }}-${{ hashFiles('project.clj') }}
+          restore-keys: |
+            lein-${{ github.job }}
+            lein-
+      - name: Run tests with coverage
+        run: lein cloverage --codecov
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
