@@ -1,4 +1,4 @@
-# Unreleased
+# 0.10.2 (2020-05-05)
 
 * You can use `:json-schema` and `:swagger` spec data to overwrite the generated
   JSON Schema and Swagger, respectively. PRs [#229](https://github.com/metosin/spec-tools/pull/229) by [Wanderson Ferreira]
