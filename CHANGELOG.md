@@ -1,3 +1,19 @@
+# Unreleased
+
+* You can use `:json-schema` and `:swagger` spec data to overwrite the generated
+  JSON Schema and Swagger, respectively. PRs [#229](https://github.com/metosin/spec-tools/pull/229) by [Wanderson Ferreira]
+  and [#231](https://github.com/metosin/spec-tools/pull/231) by [Tommi Reiman](https://github.com/ikitommi)
+* Add support for coercing strings to ratios. [#209](https://github.com/metosin/spec-tools/issues/209). PR [#218](https://github.com/metosin/spec-tools/pull/218) by [Wanderson Ferreira]
+* Allow disabling title inference. [#198](https://github.com/metosin/spec-tools/issues/198). PR [#221](https://github.com/metosin/spec-tools/pull/221) by [Wanderson Ferreira]
+* Fix JSON Schema for `bytes?`. PR [#230](https://github.com/metosin/spec-tools/pull/230) by [Joe Lane](https://github.com/MageMasher)
+* Fix Swagger for `sequential?`. [#193](https://github.com/metosin/spec-tools/issues/193). PR [#227](https://github.com/metosin/spec-tools/pull/227) by [Wanderson Ferreira]
+* Fix `spec-tools.core/merge` with symbol specs. [#201](https://github.com/metosin/spec-tools/issues/201). PR [#220](https://github.com/metosin/spec-tools/pull/220) by [Wanderson Ferreira]
+* Fix decimal coercion for numbers. PR [#217](https://github.com/metosin/spec-tools/pull/217) by [Wanderson Ferreira]
+* Fix how `strip-extra-keys-transformer` works with `s/or`. [#178](https://github.com/metosin/spec-tools/issues/178). PR [#219](https://github.com/metosin/spec-tools/pull/219) by [Wanderson Ferreira]
+* Fix multi-spec parsing with ClojureScript. PR [#225](https://github.com/metosin/spec-tools/pull/225) by [Toropenko Sergey](https://github.com/akond)
+
+ [Wanderson Ferreira]: https://github.com/wandersoncferreira
+
 # 0.10.1 (2020-01-15)
 
 * Support for `decimal?` coercion by [Wanderson Ferreira](https://github.com/wandersoncferreira)
