@@ -6,7 +6,11 @@
             :distribution :repo
             :comments "same as Clojure"}
   :test-paths ["test/clj" "test/cljc"]
-  :deploy-repositories [["releases" :clojars]]
+
+  :repositories [["releases" {:url "https://repo.clojars.org/"
+                              :username "metosinci"
+                              :password :env}]]
+
   :codox {:output-path "doc"
           :source-uri "https://github.com/metosin/spec-tools/{version}/{filepath}#L{line}"
           :metadata {:doc/format :markdown}}
