@@ -1,4 +1,4 @@
-# spec-tools [![Build Status](https://travis-ci.org/metosin/spec-tools.svg?branch=master)](https://travis-ci.org/metosin/spec-tools) [![cljdoc badge](https://cljdoc.xyz/badge/metosin/spec-tools)](https://cljdoc.xyz/jump/release/metosin/spec-tools)
+# spec-tools [![Build Status](https://github.com/metosin/spec-tools/workflows/tests/badge.svg)](https://travis-ci.org/metosin/spec-tools) [![cljdoc badge](https://cljdoc.xyz/badge/metosin/spec-tools)](https://cljdoc.xyz/jump/release/metosin/spec-tools)
 
 Clojure/Script utilities on top of [clojure.spec](http://clojure.org/about/spec). Bundled in one project but features in separate namespaces.
 
