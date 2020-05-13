@@ -130,7 +130,7 @@ Data is now valid:
 
 ### Strict coercion
 
-At system boundaries, like in web apis with external clients and in front of data stores, it is important to check data no extra data is carried in. In `clojure.spec`, maps are open by design. We could add extra constrains to `s/keys` with `s/and` not to contain extra keys, but there are no utilities for it in Spec1 and it would be a static constraint on spec, effecting all call sites. Spec should be open within the boundaries.
+At system boundaries, like in web apis with external clients and in front of data stores, it is important to check that no extra data is carried in. In `clojure.spec`, maps are open by design. We could add extra constrains to `s/keys` with `s/and` not to contain extra keys, but there are no utilities for it in Spec1 and it would be a static constraint on spec, effecting all call sites. Spec should be open within the boundaries.
 
 We can use coercion for this.
 
