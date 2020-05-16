@@ -177,7 +177,7 @@
 (deftest parameter-test
   (testing "nilable body is not required"
     (is (= [{:in "body",
-             :name "",
+             :name "body",
              :description "",
              :required false,
              :schema {:type "object",

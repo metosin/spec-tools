@@ -109,7 +109,7 @@
 (defmethod extract-parameter :body [_ spec]
   (let [schema (transform spec {:in :body, :type :parameter})]
     [{:in "body"
-      :name (-> spec st/spec-name impl/qualified-name (or ""))
+      :name (-> spec st/spec-name impl/qualified-name (or "body"))
       :description (-> spec st/spec-description (or ""))
       :required (not (impl/nilable-spec? spec))
       :schema schema}]))
