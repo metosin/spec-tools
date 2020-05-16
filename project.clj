@@ -18,11 +18,11 @@
 
   :dependencies [[org.clojure/spec.alpha "0.2.187"]]
 
-  :profiles {:dev {:plugins [[jonase/eastwood "0.3.5"]
+  :profiles {:dev {:plugins [[jonase/eastwood "0.3.11"]
                              [lein-tach "1.0.0"]
                              [lein-doo "0.1.11"]
-                             [lein-cljsbuild "1.1.7"]
-                             [lein-cloverage "1.1.1"]
+                             [lein-cljsbuild "1.1.8"]
+                             [lein-cloverage "1.1.2"]
                              [lein-codox "0.10.7"]
                              [lein-pprint "1.3.2"]]
                    :jvm-opts ^:replace ["-server"]
@@ -31,17 +31,17 @@
                                   [org.clojure/clojurescript "1.10.520"]
                                   [criterium "0.4.5"]
                                   [prismatic/schema "1.1.12"]
-                                  [org.clojure/test.check "0.10.0"]
-                                  [org.clojure/tools.namespace "0.3.1"]
+                                  [org.clojure/test.check "1.0.0"]
+                                  [org.clojure/tools.namespace "1.0.0"]
                                   [com.gfredericks/test.chuck "0.2.10"]
                                   ; com.bhauman/spell-spec library doesn't get any updates, so it has to be copied here
                                   ; under spec-tools.spell-spec namespace in order to fix its bugs.
                                   ; If the library gets updated with fixes it would be desirable to switch back to it.
                                   ;[com.bhauman/spell-spec "0.1.1"]
                                   [expound "0.8.4"]
+																																		[metosin/muuntaja "0.6.7"]
                                   [metosin/ring-swagger "0.26.2"]
-                                  [metosin/muuntaja "0.6.4"]
-                                  [metosin/scjsv "0.5.0"]]}
+                                  [metosin/scjsv "0.6.1"]]}
              :perf {:jvm-opts ^:replace ["-server"]}}
   :aliases {"all" ["with-profile" "dev"]
             "perf" ["with-profile" "default,dev,perf"]
