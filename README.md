@@ -1,5 +1,7 @@
 # spec-tools [![Build Status](https://github.com/metosin/spec-tools/workflows/tests/badge.svg)](https://travis-ci.org/metosin/spec-tools) [![cljdoc badge](https://cljdoc.org/badge/metosin/spec-tools)](https://cljdoc.org/d/metosin/spec-tools/CURRENT)
 
+<img src="docs/Broussins.jpg" width=330 align="right"/>
+
 Clojure/Script utilities on top of [clojure.spec](http://clojure.org/about/spec). Bundled in one project but features in separate namespaces.
 
 * [Spec Coercion](docs/01_coercion.md)
@@ -29,5 +31,7 @@ Status: **Alpha** (as spec is still alpha too).
 ## License
 
 Copyright © [Metosin Oy](http://www.metosin.fi) and contributors. Distributed under the Eclipse Public License 2.0, see `LICENSE`.
+
+[Picture](https://fi.wiktionary.org/wiki/Tiedosto:Broussins_(burr_-_burl).jpg), Noveau Larousse Ilustré (Larousse XIXs. 1866-1877). [Public domain](https://en.wikipedia.org/wiki/Public_domain), via Wikimedia Commons.
 
 The spell-spec library, Copyright © 2018 Bruce Hauman, is distributed under the Eclipse Public License as well.
