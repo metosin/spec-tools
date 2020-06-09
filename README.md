@@ -14,6 +14,7 @@ Clojure/Script utilities on top of [clojure.spec](http://clojure.org/about/spec)
 * [Spec Driven Transformations](docs/10_spec_transformations.md)
 
 Posts:
+* [Spec Transformers](https://www.metosin.fi/blog/spec-transformers/)
 * [Clojure.spec with Ring (& Swagger)](http://www.metosin.fi/blog/clojure-spec-with-ring-and-swagger/)
 * [Clojure.spec as a Runtime Transformation Engine](http://www.metosin.fi/blog/clojure-spec-as-a-runtime-transformation-engine/)
 * [Schema & Clojure Spec for the Web Developer](http://www.metosin.fi/blog/schema-spec-web-devs/)
