@@ -180,7 +180,7 @@
 
 (defn swagger-spec
   "Transforms data into a swagger2 spec. Input data must conform
-  to the Swagger2 Spec (http://swagger.io/specification/) with a
+  to the Swagger2 Spec (https://swagger.io/specification/v2/) with a
   exception that it can have any qualified keywords that are expanded
   with the `spec-tools.swagger.core/expand` multimethod."
   ([x]

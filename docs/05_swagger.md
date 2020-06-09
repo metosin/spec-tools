@@ -38,8 +38,8 @@ An utility to transform Specs to Swagger2 Schemas.
 ## Annotated Specs
 
 Specs can be annotated to populate the JSON Schemas.
- 
-* `:name` is copied into `:title` 
+
+* `:name` is copied into `:title`
 * `:description` is used as-is
 * all keys with namespace `json-schema` and `swagger` are used without the namespace
 
@@ -69,7 +69,7 @@ Specs can be annotated to populate the JSON Schemas.
   * dispatches on the key, defaulting to `::swagger/extension`
   * returns a map that get's merged in to original map, without the dispatched key
 
-Predifined dispatch keys below.
+Predefined dispatch keys below.
 
 ### `::swagger/parameters`
 
