@@ -51,25 +51,58 @@
 ;; Extract OpenAPI3 parameters
 ;;
 
-(defn extract-parameter
-  [in spec]
-  (let [{:keys [properties required]} (transform spec {:type :parameter})]
-    (mapv
-     (fn [[k {:keys [type] :as schema}]]
-       (merge
-        {:name k
-         :in (name in)
-         :description (-> spec st/spec-description (or ""))
-         :type type
-         :required (contains? (set required) k)}
-        schema))
-     properties)))
+(defmulti extract-parameter (fn [in _] in))
 
 ;;
 ;; Expand the spec
 ;;
 
 (defmulti expand (fn [k _ _ _] k))
+
+(defmethod expand ::schemas [_ v acc _]
+  {:schemas
+   (into
+    (or (:schemas acc) {})
+    (for [[name schema] v]
+      {name (transform schema)}))})
+
+(defmethod extract-parameter :default [in spec]
+  (let [parameter-spec (transform spec {:type :parameter})
+        object?        (and (contains? parameter-spec :properties)
+                            (= "object" (:type parameter-spec)))]
+    (if object?
+      (let [{:keys [properties required]} parameter-spec]
+        (mapv
+         (fn [[k {:keys [type] :as schema}]]
+           {:name        k
+            :in          (name in)
+            :description (-> spec st/spec-description (or ""))
+            :required    (contains? (set required) k)
+            :schema      schema})
+        properties))
+      (let [{:keys [type] :as schema} parameter-spec]
+        (vector {:name        type
+                 :in          (name in)
+                 :description (-> spec st/spec-description (or ""))
+                 :required    true
+                 :schema      schema})))))
+
+(defmethod expand ::parameters [_ v acc _]
+  (let [old (or (:parameters acc) [])
+        new (mapcat (fn [[in spec]] (extract-parameter in spec)) v)
+        merged (->> (into old new)
+                    (reverse)
+                    (reduce
+                     (fn [[ps cache :as acc] p]
+                       (let [c (select-keys p [:in :name])]
+                         (if-not (cache c)
+                           [(conj ps p) (conj cache c)]
+                           acc)))
+                     [[] #{}])
+                    (first)
+                    (reverse)
+                    (vec))]
+    {:parameters merged}))
 
 (defn expand-qualified-keywords
   [x options]
