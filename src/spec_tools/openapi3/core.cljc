@@ -26,11 +26,6 @@
 (defmethod accept-spec ::visitor/set [_ _ children _]
   {:enum children :type "string"})
 
-(defmethod accept-spec 'clojure.spec.alpha/nilable [_ _ children {:keys [type]}]
-  (if (= type :parameter)
-    (assoc (impl/unwrap children) :allowEmptyValue true)
-    {:oneOf [(impl/unwrap children) {:type "null"}]}))
-
 (defmethod accept-spec ::visitor/spec [dispatch spec children options]
   (let [[_ data] (impl/extract-form spec)
         swagger-meta (impl/unlift-keys data "swagger")]
@@ -50,8 +45,38 @@
 ;;
 ;; Extract OpenAPI3 parameters
 ;;
+(defn- extract-primitive-param
+  [in spec]
+  (vector
+   {:name        (or (:title spec) (:type spec))
+    :in          in
+    :description (or (:description spec) "")
+    :required    (case in
+                   :path true
+                   false)
+    :schema      spec}))
 
-(defmulti extract-parameter (fn [in _] in))
+(defn- extract-object-param
+  [in {:keys [properties required]}]
+  (mapv
+   (fn [[k {:keys [type description allowEmptyValue] :as schema}]]
+     {:name        k
+      :in          (name in)
+      :description (or description "")
+      :required    (case in
+                     :path true
+                     (contains? (set required) k))
+      :schema      schema})
+   properties))
+
+(defn extract-parameter
+  [in spec]
+  (let [parameter-spec (transform spec)
+        object?        (and (contains? parameter-spec :properties)
+                            (= "object" (:type parameter-spec)))]
+    (if object?
+      (extract-object-param in parameter-spec)
+      (extract-primitive-param in parameter-spec))))
 
 ;;
 ;; Expand the spec
@@ -65,27 +90,6 @@
     (or (:schemas acc) {})
     (for [[name schema] v]
       {name (transform schema)}))})
-
-(defmethod extract-parameter :default [in spec]
-  (let [parameter-spec (transform spec {:type :parameter})
-        object?        (and (contains? parameter-spec :properties)
-                            (= "object" (:type parameter-spec)))]
-    (if object?
-      (let [{:keys [properties required]} parameter-spec]
-        (mapv
-         (fn [[k {:keys [type] :as schema}]]
-           {:name        k
-            :in          (name in)
-            :description (-> spec st/spec-description (or ""))
-            :required    (contains? (set required) k)
-            :schema      schema})
-        properties))
-      (let [{:keys [type] :as schema} parameter-spec]
-        (vector {:name        type
-                 :in          (name in)
-                 :description (-> spec st/spec-description (or ""))
-                 :required    true
-                 :schema      schema})))))
 
 (defmethod expand ::parameters [_ v acc _]
   (let [old (or (:parameters acc) [])
