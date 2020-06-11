@@ -50,19 +50,55 @@
 ;;
 ;; Extract OpenAPI3 parameters
 ;;
+(defn- is-nilable?
+  [spec]
+  (and (contains? spec :oneOf)
+       (= 2 (count (:oneOf spec)))
+       (-> :type
+           (group-by (:oneOf spec))
+           (contains? "null"))))
+
+(defn- extract-nilable
+  [spec]
+  (->> (:oneOf spec)
+       (remove #(= (:type %) "null"))
+       first))
+
+(defn- extract-single-param
+  [in spec]
+  (let [nilable? (is-nilable? spec)
+        new-spec (if nilable?
+                   (extract-nilable spec)
+                   spec)]
+    {:name        (or (:title spec) (:type spec))
+     :in          in
+     :description (or (:description spec) "")
+     :required    (case in
+                    :path true
+                    (not nilable?))
+     :schema      spec}))
+
+(defn- extract-object-param
+  [in {:keys [properties required]}]
+  (mapv
+   (fn [[k {:keys [type description allowEmptyValue] :as schema}]]
+     {:name        k
+      :in          (name in)
+      :description (or description "")
+      :required    (case in
+                     :path true
+                     (contains? (set required) k))
+      :schema      schema})
+   properties))
+
 (defn extract-parameter
   [in spec]
-  (let [{:keys [properties required]} (transform spec)]
-   (mapv
-    (fn [[k {:keys [type description allowEmptyValue] :as schema}]]
-      {:name        k
-       :in          (name in)
-       :description (or description "")
-       :required    (case in
-                      :path true
-                      (contains? (set required) k))
-       :schema      schema})
-    properties)))
+  (let [parameter-spec (transform spec)
+        object?        (and (contains? parameter-spec :properties)
+                            (= "object" (:type parameter-spec)))]
+    (if object?
+      (extract-object-param in parameter-spec)
+      (-> (extract-single-param in parameter-spec) vector))))
 
 ;;
 ;; Expand the spec
@@ -76,6 +112,14 @@
     (or (:schemas acc) {})
     (for [[name schema] v]
       {name (transform schema)}))})
+
+;; FIXME: Validate content-type value?
+(defmethod expand ::content [_ v acc _]
+  {:content
+   (into
+    (or (:content acc) {})
+    (for [[content-type schema] v]
+      {content-type {:schema (transform schema)}}))})
 
 (defmethod expand ::parameters [_ v acc _]
   (let [old    (or (:parameters acc) [])
@@ -93,6 +137,15 @@
                     (reverse)
                     (vec))]
     {:parameters merged}))
+
+(defmethod expand ::headers [_ v acc _]
+  {:headers
+   (into
+    (or (:headers acc) {})
+    (for [[name spec] v]
+      {name (-> (extract-single-param :header (transform spec))
+                (dissoc :in)
+                (dissoc :name))}))})
 
 (defn expand-qualified-keywords
   [x options]

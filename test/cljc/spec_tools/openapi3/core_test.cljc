@@ -166,6 +166,7 @@
 (s/def ::filters (s/coll-of string? :into []))
 (s/def ::address (s/keys :req-un [::street ::city]))
 (s/def ::user (s/keys :req-un [::id ::name ::address]))
+(s/def ::token string?)
 
 (deftest expand-test
   (testing "::parameters"
@@ -309,7 +310,13 @@
   (testing "::schemas"
     (is (= {:components
             {:schemas
-             {:user
+             {:some-object
+              {:type "object"
+               :properties
+               {"name" {:type "string"}
+                "desc" {:type "string"}}}
+              :id {:type "integer" :format "int64"}
+              :user
               {:type     "object"
                :properties
                {"id"      {:type "integer" :format "int64"},
@@ -318,7 +325,7 @@
                            :properties
                            {"street" {:type "string"},
                             "city"   {:oneOf [{:enum [:tre :hki] :type "string"}
-                                              {:type "null"}]}},
+                                              {:type "null"}]}}
                            :required ["street" "city"]
                            :title    "spec-tools.openapi3.core-test/address"}}
                :required ["id" "name" "address"]
@@ -341,11 +348,155 @@
                :required ["id" "name"]}}}}
            (openapi/openapi3-spec
             {:components
-             {::openapi/schemas
-              {:user         ::user
+             {:schemas
+              {:some-object
+               {:type "object"
+                :properties
+                {"name" {:type "string"}
+                 "desc" {:type "string"}}}
+               :user
+               {:type  "string"
+                :title "Will be overridden"}}
+              ::openapi/schemas
+              {:id           ::id
+               :user         ::user
                :address      ::address
                :some-request (s/keys :req-un [::id ::name]
-                                     :opt-un [::street ::filters])}}})))))
+                                     :opt-un [::street ::filters])}}}))))
+
+  (testing "::content"
+    (is (= {:content
+            {"test/html"
+             {:schema
+              {:type "string"}}
+             "application/json"
+             {:schema
+              {:type     "object"
+               :properties
+               {"id"   {:type "integer" :format "int64"}
+                "name" {:type "string"}
+                "address"
+                {:type     "object"
+                 :properties
+                 {"street" {:type "string"}
+                  "city"
+                  {:oneOf [{:enum [:tre :hki] :type "string"}
+                           {:type "null"}]}}
+                 :required ["street" "city"]
+                 :title    "spec-tools.openapi3.core-test/address"}}
+               :required ["id" "name" "address"]
+               :title    "spec-tools.openapi3.core-test/user"}}
+             "application/xml"
+             {:schema
+              {:type     "object"
+               :properties
+               {"street" {:type "string"}
+                "city"
+                {:oneOf [{:enum [:tre :hki] :type "string"}
+                         {:type "null"}]}}
+               :required ["street" "city"]
+               :title    "spec-tools.openapi3.core-test/address"}}
+             "*/*"
+             {:schema
+              {:type     "object"
+               :properties
+               {"id"      {:type "integer" :format "int64"}
+                "name"    {:type "string"}
+                "street"  {:type "string"}
+                "filters" {:type "array" :items {:type "string"}}}
+               :required ["id" "name"]}}}}
+           (openapi/openapi3-spec
+            {:content
+             {"test/html"
+              {:schema
+               {:type "string"}}}
+             ::openapi/content {"application/json" ::user
+                                "application/xml"  ::address
+                                "*/*"              (s/keys :req-un [::id ::name]
+                                                           :opt-un [::street ::filters])}})))
+
+    (is (= {:content
+            {"application/json"
+             {:schema
+              {:type     "object"
+               :properties
+               {"id"   {:type "integer" :format "int64"}
+                "name" {:type "string"}
+                "address"
+                {:type     "object"
+                 :properties
+                 {"street" {:type "string"}
+                  "city"
+                  {:oneOf [{:enum [:tre :hki] :type "string"}
+                           {:type "null"}]}}
+                 :required ["street" "city"]
+                 :title    "spec-tools.openapi3.core-test/address"}}
+               :required ["id" "name" "address"]
+               :title    "spec-tools.openapi3.core-test/user"
+               :example  "Some examples here"
+               :examples
+               {:admin
+                {:summary       "Admin user"
+                 :description   "Super user"
+                 :value         {:anything :here}
+                 :externalValue "External value"}}
+               :encoding {:contentType "application/json"}}}}}
+           (openapi/openapi3-spec
+            {::openapi/content
+             {"application/json"
+              (st/spec
+               {:spec              ::user
+                :openapi3/example  "Some examples here"
+                :openapi3/examples {:admin
+                                    {:summary       "Admin user"
+                                     :description   "Super user"
+                                     :value         {:anything :here}
+                                     :externalValue "External value"}}
+                :openapi3/encoding {:contentType "application/json"}})}}))))
+
+  (testing "::headers"
+    (is (= {:headers
+            {:X-Rate-Limit-Limit
+             {:description "The number of allowed requests in the current period",
+              :schema      {:type "integer"}},
+             :City
+             {:description "",
+              :required    false,
+              :schema
+              {:oneOf [{:enum [:tre :hki] :type "string"}
+                       {:type "null"}]}}
+             :Authorization
+             {:description ""
+              :required    true
+              :schema      {:type "string"}}
+             :User
+             {:description ""
+              :required    true
+              :schema
+              {:type     "object"
+               :properties
+               {"id"   {:type "integer" :format "int64"}
+                "name" {:type "string"}
+                "address"
+                {:type     "object"
+                 :properties
+                 {"street" {:type "string"}
+                  "city"
+                  {:oneOf [{:enum [:tre :hki] :type "string"}
+                           {:type "null"}]}}
+                 :required ["street" "city"]
+                 :title    "spec-tools.openapi3.core-test/address"}}
+               :required ["id" "name" "address"]
+               :title    "spec-tools.openapi3.core-test/user"}}}}
+           (openapi/openapi3-spec
+            {:headers
+             {:X-Rate-Limit-Limit
+              {:description "The number of allowed requests in the current period"
+               :schema      {:type "integer"}}}
+             ::openapi/headers
+             {:City          ::city
+              :Authorization ::token
+              :User          ::user}})))))
 
 (deftest backport-openapi3-meta-unnamespaced
   (is (= (openapi/transform
