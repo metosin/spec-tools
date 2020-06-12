@@ -498,6 +498,68 @@
               :Authorization ::token
               :User          ::user}})))))
 
+;; TODO: This test is not really validate schema
+#?(:clj
+   (deftest test-schema-validation
+     (is (not
+          (nil?
+           (openapi/openapi3-spec
+            {:openapi "3.0.3"
+             :info
+             {:title          "Sample Pet Store App"
+              :description    "This is a sample server for a pet store."
+              :termsOfService "http://example.com/terms/"
+              :contact
+              {:name  "API Support",
+               :url   "http://www.example.com/support"
+               :email "support@example.com"}
+              :license
+              {:name "Apache 2.0",
+               :url  "https://www.apache.org/licenses/LICENSE-2.0.html"}
+              :version        "1.0.1"}
+             :servers
+             [{:url         "https://development.gigantic-server.com/v1"
+               :description "Development server"}
+              {:url         "https://staging.gigantic-server.com/v1"
+               :description "Staging server"}
+              {:url         "https://api.gigantic-server.com/v1"
+               :description "Production server"}]
+             :components
+             {::openapi/schemas {:user    ::user
+                                 :address ::address}
+              ::openapi/headers {:token ::token}}
+             :paths
+             {"/api/ping"
+              {:get
+               {:description "Returns all pets from the system that the user has access to"
+                :responses   {200 {::openapi/content
+                                   {"application/xml" ::user
+                                    "application/json"
+                                    (st/spec
+                                     {:spec              ::address
+                                      :openapi3/example  "Some examples here"
+                                      :openapi3/examples {:admin
+                                                          {:summary       "Admin user"
+                                                           :description   "Super user"
+                                                           :value         {:anything :here}
+                                                           :externalValue "External value"}}
+                                      :openapi3/encoding {:contentType "application/json"}})}}}}}
+              "/user/:id"
+              {:post
+               {:tags                ["user"]
+                :description         "Returns pets based on ID"
+                :summary             "Find pets by ID"
+                :operationId         "getPetsById"
+                :requestBody         {::openapi/content {"application/json" ::user}}
+                :responses           {200      {:description "pet response"
+                                                ::openapi/content
+                                                {"application/json" ::user}}
+                                      :default {:description "error payload",
+                                                ::openapi/content
+                                                {"text/html" ::user}}}
+                ::openapi/parameters {:path   (s/keys :req-un [::id])
+                                      :header (s/keys :req-un [::token])}}}}}))))))
+
 (deftest backport-openapi3-meta-unnamespaced
   (is (= (openapi/transform
           (st/spec

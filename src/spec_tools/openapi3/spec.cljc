@@ -45,7 +45,10 @@
    {(ds/opt :description) string?
     (ds/req :url)         string?}))
 
-(s/def ::schema qualified-keyword?)
+;; FIXME: Not sure about this
+(s/def ::schema (s/map-of
+                 (s/or :kw keyword? :str string?)
+                 (s/or :kw keyword? :str string?)))
 
 (s/def ::example
   (ds/spec
@@ -263,10 +266,10 @@
     (ds/opt :links)           {string? ::link}
     (ds/opt :callbacks)       {string? ::callback}}))
 
-(s/def ::swagger
+(s/def ::openapi
   (ds/spec
-   ::swagger
-   {(ds/req :openapi)      string?
+   ::openapi
+   {(ds/req :openapi)      (s/and string? #(re-matches #"^3\.\d\.\d$" %))
     (ds/req :info)         ::info
     (ds/opt :servers)      [::server]
     (ds/req :paths)        {string? ::path}

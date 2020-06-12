@@ -330,4 +330,223 @@ the existing `:headers`. All duplicated names will be overridden.
 
 ### Full example ###
 
-TODO
+```clojure
+(openapi/openapi3-spec
+ {:openapi "3.0.3"
+  :info
+  {:title          "Sample Pet Store App"
+   :description    "This is a sample server for a pet store."
+   :termsOfService "http://example.com/terms/"
+   :contact
+   {:name  "API Support",
+    :url   "http://www.example.com/support"
+    :email "support@example.com"}
+   :license
+   {:name "Apache 2.0",
+    :url  "https://www.apache.org/licenses/LICENSE-2.0.html"}
+   :version        "1.0.1"}
+  :servers
+  [{:url         "https://development.gigantic-server.com/v1"
+    :description "Development server"}
+   {:url         "https://staging.gigantic-server.com/v1"
+    :description "Staging server"}
+   {:url         "https://api.gigantic-server.com/v1"
+    :description "Production server"}]
+  :components
+  {::openapi/schemas {:user    ::user
+                      :address ::address}
+   ::openapi/headers {:token ::token}}
+  :paths
+  {"/api/ping"
+   {:get
+    {:description "Returns all pets from the system that the user has access to"
+     :responses   {200 {::openapi/content
+                        {"application/xml" ::user
+                         "application/json"
+                         (st/spec
+                          {:spec              ::address
+                           :openapi3/example  "Some examples here"
+                           :openapi3/examples {:admin
+                                               {:summary       "Admin user"
+                                                :description   "Super user"
+                                                :value         {:anything :here}
+                                                :externalValue "External value"}}
+                           :openapi3/encoding {:contentType "application/json"}})}}}}}
+   "/user/:id"
+   {:post
+    {:tags                ["user"]
+     :description         "Returns pets based on ID"
+     :summary             "Find pets by ID"
+     :operationId         "getPetsById"
+     :requestBody         {::openapi/content {"application/json" ::user}}
+     :responses           {200      {:description "pet response"
+                                     ::openapi/content
+                                     {"application/json" ::user}}
+                           :default {:description "error payload",
+                                     ::openapi/content
+                                     {"text/html" ::user}}}
+     ::openapi/parameters {:path   (s/keys :req-un [::id])
+                           :header (s/keys :req-un [::token])}}}}})
+
+;; =>
+;; {:openapi "3.0.3",
+;;  :info
+;;  {:title          "Sample Pet Store App",
+;;   :description    "This is a sample server for a pet store.",
+;;   :termsOfService "http://example.com/terms/",
+;;   :contact
+;;   {:name  "API Support",
+;;    :url   "http://www.example.com/support",
+;;    :email "support@example.com"},
+;;   :license
+;;   {:name "Apache 2.0",
+;;    :url  "https://www.apache.org/licenses/LICENSE-2.0.html"},
+;;   :version        "1.0.1"},
+;;  :servers
+;;  [{:url         "https://development.gigantic-server.com/v1",
+;;    :description "Development server"}
+;;   {:url         "https://staging.gigantic-server.com/v1",
+;;    :description "Staging server"}
+;;   {:url         "https://api.gigantic-server.com/v1",
+;;    :description "Production server"}],
+;;  :components
+;;  {:schemas
+;;   {:user
+;;    {:type     "object",
+;;     :properties
+;;     {"id"   {:type "integer", :format "int64"},
+;;      "name" {:type "string"},
+;;      "address"
+;;      {:type     "object",
+;;       :properties
+;;       {"street" {:type "string"},
+;;        "city"   {:oneOf [{:enum [:tre :hki], :type "string"} {:type "null"}]}},
+;;       :required ["street" "city"],
+;;       :title    "spec-tools.openapi3.core-test/address"}},
+;;     :required ["id" "name" "address"],
+;;     :title    "spec-tools.openapi3.core-test/user"},
+;;    :address
+;;    {:type     "object",
+;;     :properties
+;;     {"street" {:type "string"},
+;;      "city"   {:oneOf [{:enum [:tre :hki], :type "string"} {:type "null"}]}},
+;;     :required ["street" "city"],
+;;     :title    "spec-tools.openapi3.core-test/address"}},
+;;   :headers
+;;   {:token {:description "", :required true, :schema {:type "string"}}}},
+;;  :paths
+;;  {"/api/ping"
+;;   {:get
+;;    {:description
+;;     "Returns all pets from the system that the user has access to",
+;;     :responses
+;;     {200
+;;      {:content
+;;       {"application/xml"
+;;        {:schema
+;;         {:type     "object",
+;;          :properties
+;;          {"id"   {:type "integer", :format "int64"},
+;;           "name" {:type "string"},
+;;           "address"
+;;           {:type     "object",
+;;            :properties
+;;            {"street" {:type "string"},
+;;             "city"
+;;             {:oneOf [{:enum [:tre :hki], :type "string"} {:type "null"}]}},
+;;            :required ["street" "city"],
+;;            :title    "spec-tools.openapi3.core-test/address"}},
+;;          :required ["id" "name" "address"],
+;;          :title    "spec-tools.openapi3.core-test/user"}},
+;;        "application/json"
+;;        {:schema
+;;         {:type     "object",
+;;          :properties
+;;          {"street" {:type "string"},
+;;           "city"
+;;           {:oneOf [{:enum [:tre :hki], :type "string"} {:type "null"}]}},
+;;          :required ["street" "city"],
+;;          :title    "spec-tools.openapi3.core-test/address",
+;;          :example  "Some examples here",
+;;          :examples
+;;          {:admin
+;;           {:summary       "Admin user",
+;;            :description   "Super user",
+;;            :value         {:anything :here},
+;;            :externalValue "External value"}},
+;;          :encoding {:contentType "application/json"}}}}}}}},
+;;   "/user/:id"
+;;   {:post
+;;    {:tags        ["user"],
+;;     :description "Returns pets based on ID",
+;;     :summary     "Find pets by ID",
+;;     :operationId "getPetsById",
+;;     :requestBody
+;;     {:content
+;;      {"application/json"
+;;       {:schema
+;;        {:type     "object",
+;;         :properties
+;;         {"id"   {:type "integer", :format "int64"},
+;;          "name" {:type "string"},
+;;          "address"
+;;          {:type     "object",
+;;           :properties
+;;           {"street" {:type "string"},
+;;            "city"
+;;            {:oneOf [{:enum [:tre :hki], :type "string"} {:type "null"}]}},
+;;           :required ["street" "city"],
+;;           :title    "spec-tools.openapi3.core-test/address"}},
+;;         :required ["id" "name" "address"],
+;;         :title    "spec-tools.openapi3.core-test/user"}}}},
+;;     :responses
+;;     {200
+;;      {:description "pet response",
+;;       :content
+;;       {"application/json"
+;;        {:schema
+;;         {:type     "object",
+;;          :properties
+;;          {"id"   {:type "integer", :format "int64"},
+;;           "name" {:type "string"},
+;;           "address"
+;;           {:type     "object",
+;;            :properties
+;;            {"street" {:type "string"},
+;;             "city"
+;;             {:oneOf [{:enum [:tre :hki], :type "string"} {:type "null"}]}},
+;;            :required ["street" "city"],
+;;            :title    "spec-tools.openapi3.core-test/address"}},
+;;          :required ["id" "name" "address"],
+;;          :title    "spec-tools.openapi3.core-test/user"}}}},
+;;      :default
+;;      {:description "error payload",
+;;       :content
+;;       {"text/html"
+;;        {:schema
+;;         {:type     "object",
+;;          :properties
+;;          {"id"   {:type "integer", :format "int64"},
+;;           "name" {:type "string"},
+;;           "address"
+;;           {:type     "object",
+;;            :properties
+;;            {"street" {:type "string"},
+;;             "city"
+;;             {:oneOf [{:enum [:tre :hki], :type "string"} {:type "null"}]}},
+;;            :required ["street" "city"],
+;;            :title    "spec-tools.openapi3.core-test/address"}},
+;;          :required ["id" "name" "address"],
+;;          :title    "spec-tools.openapi3.core-test/user"}}}}},
+;;     :parameters
+;;     [{:name        "id",
+;;       :in          "path",
+;;       :description "",
+;;       :required    true,
+;;       :schema      {:type "integer", :format "int64"}}
+;;      {:name        "token",
+;;       :in          "header",
+;;       :description "",
+;;       :required    true,
+;;       :schema      {:type "string"}}]}}}}
+```
