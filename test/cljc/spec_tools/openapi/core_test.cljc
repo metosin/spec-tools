@@ -1,8 +1,8 @@
-(ns spec-tools.openapi3.core-test
+(ns spec-tools.openapi.core-test
   (:require [clojure.spec.alpha :as s]
             [clojure.test :refer [deftest is testing]]
             [spec-tools.core :as st]
-            [spec-tools.openapi3.core :as openapi]
+            [spec-tools.openapi.core :as openapi]
             [spec-tools.spec :as spec]))
 
 (s/def ::integer-spec integer?)
@@ -16,7 +16,7 @@
                 :json-schema/default "123"
                 :json-schema/example "json-schema-exapmle"
                 :swagger/example     "swagger-example"
-                :openapi3/example    "openapi3-example"}))
+                :openapi/example     "openapi3-example"}))
 (s/def ::keys-spec2 (s/keys :req-un [::integer-spec ::spec]))
 
 (def expectations
@@ -59,7 +59,7 @@
    {:type       "object"
     :properties {"integer-spec" {:type "integer"}}
     :required   ["integer-spec"]
-    :title      "spec-tools.openapi3.core-test/keys-spec"}
+    :title      "spec-tools.openapi.core-test/keys-spec"}
 
    (s/and int? pos?)
    {:allOf [{:type "integer" :format "int64"}
@@ -150,7 +150,7 @@
    ::spec
    {:type        "string"
     :description "Spec description"
-    :title       "spec-tools.openapi3.core-test/spec"
+    :title       "spec-tools.openapi.core-test/spec"
     :example     "openapi3-example",
     :default     "123"}})
 
@@ -227,8 +227,8 @@
                 "city"   {:oneOf [{:enum [:tre :hki] :type "string"}
                                   {:type "null"}]}}
                :required ["street" "city"]
-               :title    "spec-tools.openapi3.core-test/address"}}]}
-           (openapi/openapi3-spec
+               :title    "spec-tools.openapi.core-test/address"}}]}
+           (openapi/openapi-spec
             {:parameters
              [{:name        "username"
                :in          "path"
@@ -246,7 +246,7 @@
               :description "Will be the same"
               :required    true
               :schema      {:type "string"}}
-             {:name        "spec-tools.openapi3.core-test/id"
+             {:name        "spec-tools.openapi.core-test/id"
               :in          "path"
               :description ""
               :required    true
@@ -283,7 +283,7 @@
               :required    true
               :schema
               {:oneOf [{:enum [:tre :hki] :type "string"} {:type "null"}]}}]}
-           (openapi/openapi3-spec
+           (openapi/openapi-spec
             {:parameters
              [{:name        "name"
                :in          "query"
@@ -327,9 +327,9 @@
                             "city"   {:oneOf [{:enum [:tre :hki] :type "string"}
                                               {:type "null"}]}}
                            :required ["street" "city"]
-                           :title    "spec-tools.openapi3.core-test/address"}}
+                           :title    "spec-tools.openapi.core-test/address"}}
                :required ["id" "name" "address"]
-               :title    "spec-tools.openapi3.core-test/user"}
+               :title    "spec-tools.openapi.core-test/user"}
               :address
               {:type     "object"
                :properties
@@ -337,7 +337,7 @@
                 "city"   {:oneOf [{:enum [:tre :hki] :type "string"}
                                   {:type "null"}]}}
                :required ["street" "city"]
-               :title    "spec-tools.openapi3.core-test/address"}
+               :title    "spec-tools.openapi.core-test/address"}
               :some-request
               {:type     "object"
                :properties
@@ -346,7 +346,7 @@
                 "street"  {:type "string"}
                 "filters" {:type "array" :items {:type "string"}}}
                :required ["id" "name"]}}}}
-           (openapi/openapi3-spec
+           (openapi/openapi-spec
             {:components
              {:schemas
               {:some-object
@@ -383,9 +383,9 @@
                   {:oneOf [{:enum [:tre :hki] :type "string"}
                            {:type "null"}]}}
                  :required ["street" "city"]
-                 :title    "spec-tools.openapi3.core-test/address"}}
+                 :title    "spec-tools.openapi.core-test/address"}}
                :required ["id" "name" "address"]
-               :title    "spec-tools.openapi3.core-test/user"}}
+               :title    "spec-tools.openapi.core-test/user"}}
              "application/xml"
              {:schema
               {:type     "object"
@@ -395,7 +395,7 @@
                 {:oneOf [{:enum [:tre :hki] :type "string"}
                          {:type "null"}]}}
                :required ["street" "city"]
-               :title    "spec-tools.openapi3.core-test/address"}}
+               :title    "spec-tools.openapi.core-test/address"}}
              "*/*"
              {:schema
               {:type     "object"
@@ -405,7 +405,7 @@
                 "street"  {:type "string"}
                 "filters" {:type "array" :items {:type "string"}}}
                :required ["id" "name"]}}}}
-           (openapi/openapi3-spec
+           (openapi/openapi-spec
             {:content
              {"test/html"
               {:schema
@@ -430,9 +430,9 @@
                   {:oneOf [{:enum [:tre :hki] :type "string"}
                            {:type "null"}]}}
                  :required ["street" "city"]
-                 :title    "spec-tools.openapi3.core-test/address"}}
+                 :title    "spec-tools.openapi.core-test/address"}}
                :required ["id" "name" "address"]
-               :title    "spec-tools.openapi3.core-test/user"
+               :title    "spec-tools.openapi.core-test/user"
                :example  "Some examples here"
                :examples
                {:admin
@@ -441,18 +441,18 @@
                  :value         {:anything :here}
                  :externalValue "External value"}}
                :encoding {:contentType "application/json"}}}}}
-           (openapi/openapi3-spec
+           (openapi/openapi-spec
             {::openapi/content
              {"application/json"
               (st/spec
-               {:spec              ::user
-                :openapi3/example  "Some examples here"
-                :openapi3/examples {:admin
-                                    {:summary       "Admin user"
-                                     :description   "Super user"
-                                     :value         {:anything :here}
-                                     :externalValue "External value"}}
-                :openapi3/encoding {:contentType "application/json"}})}}))))
+               {:spec             ::user
+                :openapi/example  "Some examples here"
+                :openapi/examples {:admin
+                                   {:summary       "Admin user"
+                                    :description   "Super user"
+                                    :value         {:anything :here}
+                                    :externalValue "External value"}}
+                :openapi/encoding {:contentType "application/json"}})}}))))
 
   (testing "::headers"
     (is (= {:headers
@@ -463,8 +463,7 @@
              {:description "",
               :required    false,
               :schema
-              {:oneOf [{:enum [:tre :hki] :type "string"}
-                       {:type "null"}]}}
+              {:enum [:tre :hki] :type "string"}}
              :Authorization
              {:description ""
               :required    true
@@ -485,10 +484,10 @@
                   {:oneOf [{:enum [:tre :hki] :type "string"}
                            {:type "null"}]}}
                  :required ["street" "city"]
-                 :title    "spec-tools.openapi3.core-test/address"}}
+                 :title    "spec-tools.openapi.core-test/address"}}
                :required ["id" "name" "address"]
-               :title    "spec-tools.openapi3.core-test/user"}}}}
-           (openapi/openapi3-spec
+               :title    "spec-tools.openapi.core-test/user"}}}}
+           (openapi/openapi-spec
             {:headers
              {:X-Rate-Limit-Limit
               {:description "The number of allowed requests in the current period"
@@ -503,7 +502,7 @@
    (deftest test-schema-validation
      (is (not
           (nil?
-           (openapi/openapi3-spec
+           (openapi/openapi-spec
             {:openapi "3.0.3"
              :info
              {:title          "Sample Pet Store App"
@@ -536,14 +535,14 @@
                                    {"application/xml" ::user
                                     "application/json"
                                     (st/spec
-                                     {:spec              ::address
-                                      :openapi3/example  "Some examples here"
-                                      :openapi3/examples {:admin
-                                                          {:summary       "Admin user"
-                                                           :description   "Super user"
-                                                           :value         {:anything :here}
-                                                           :externalValue "External value"}}
-                                      :openapi3/encoding {:contentType "application/json"}})}}}}}
+                                     {:spec             ::address
+                                      :openapi/example  "Some examples here"
+                                      :openapi/examples {:admin
+                                                         {:summary       "Admin user"
+                                                          :description   "Super user"
+                                                          :value         {:anything :here}
+                                                          :externalValue "External value"}}
+                                      :openapi/encoding {:contentType "application/json"}})}}}}}
               "/user/:id"
               {:post
                {:tags                ["user"]
@@ -560,24 +559,24 @@
                 ::openapi/parameters {:path   (s/keys :req-un [::id])
                                       :header (s/keys :req-un [::token])}}}}}))))))
 
-(deftest backport-openapi3-meta-unnamespaced
+(deftest backport-openapi-meta-unnamespaced
   (is (= (openapi/transform
           (st/spec
-           {:spec     string?
-            :openapi3 {:type         "string"
-                       :format       "password"
-                       :random-value "42"}}))
+           {:spec    string?
+            :openapi {:type         "string"
+                      :format       "password"
+                      :random-value "42"}}))
          {:type "string" :format "password" :random-value "42"}))
   (is (= (openapi/transform
           (st/spec
-           {:spec            string?
-            :openapi3        {:type "object"}
-            :openapi3/format "password"}))
+           {:spec           string?
+            :openapi        {:type "object"}
+            :openapi/format "password"}))
          {:type "object"}))
   (is (= (openapi/transform
           (st/spec
-           {:spec                  string?
-            :openapi3/type         "string"
-            :openapi3/format       "password"
-            :openapi3/random-value "42"}))
+           {:spec                 string?
+            :openapi/type         "string"
+            :openapi/format       "password"
+            :openapi/random-value "42"}))
          {:type "string" :format "password" :random-value "42"})))

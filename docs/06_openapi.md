@@ -1,7 +1,7 @@
 # OpenAPI3
 
 ```clojure
-(require '[spec-tools.openapi3.core :as openapi])
+(require '[spec-tools.openapi.core :as openapi])
 ```
 
 An utility to transform Specs to OpenApi3 Schemas.
@@ -24,7 +24,7 @@ functionality.
 
 ## OpenAPI3 Spec generation ##
 
-`openapi/openapi3-spec` function takes an extended OpenAPI3 spec as map and
+`openapi/openapi-spec` function takes an extended OpenAPI3 spec as map and
 transforms it into a valid [OpenAPI Object](https://swagger.io/specification/#openapi-object). Rules:
   * by default, data is passed through, allowing any valid OpenAPI3 data to be
     used
@@ -36,7 +36,7 @@ transforms it into a valid [OpenAPI Object](https://swagger.io/specification/#op
 
 Predefined dispatch keys below.
 
-### `::openapi3/parameters` ###
+### `::openapi/parameters` ###
 
 Value should be a map with optional keys `:query`, `:header`, `:path` or
 `:cookie`. For all keys value should be a `s/keys` spec (describing the ring
@@ -59,7 +59,7 @@ over the existing `:parameters`. Duplicate parameters (with identical `:in` and
 (s/def ::user (s/keys :req-un [::id ::name ::address]))
 (s/def ::token string?)
 
-(openapi/openapi3-spec
+(openapi/openapi-spec
  {:path
   {"/test"
    {:parameters
@@ -135,10 +135,10 @@ over the existing `:parameters`. Duplicate parameters (with identical `:in` and
 ;;       {"street" {:type "string"},
 ;;        "city"   {:oneOf [{:enum [:tre :hki], :type "string"} {:type "null"}]}},
 ;;       :required ["street" "city"],
-;;       :title    "spec-tools.openapi3.core-test/address"}}]}}}(require '[clojure.spec.alpha :as s])
+;;       :title    "spec-tools.openapi.core-test/address"}}]}}}(require '[clojure.spec.alpha :as s])
 ```
 
-### `::openapi3/schemas` ###
+### `::openapi/schemas` ###
 
 Value should be a map, where key is schema name and value is spec.
 
@@ -147,7 +147,7 @@ as value (should be used inside [Component object](https://swagger.io/specificat
 Parameters with duplicated names will be overridden:
 
 ```clojure
-(openapi/openapi3-spec
+(openapi/openapi-spec
  {:components
   {:schemas
    {:some-object
@@ -181,9 +181,9 @@ Parameters with duplicated names will be overridden:
 ;;       {"street" {:type "string"},
 ;;        "city"   {:oneOf [{:enum [:tre :hki], :type "string"} {:type "null"}]}},
 ;;       :required ["street" "city"],
-;;       :title    "spec-tools.openapi3.core-test/address"}},
+;;       :title    "spec-tools.openapi.core-test/address"}},
 ;;     :required ["id" "name" "address"],
-;;     :title    "spec-tools.openapi3.core-test/user"},
+;;     :title    "spec-tools.openapi.core-test/user"},
 ;;    :id {:type "integer", :format "int64"},
 ;;    :address
 ;;    {:type     "object",
@@ -191,7 +191,7 @@ Parameters with duplicated names will be overridden:
 ;;     {"street" {:type "string"},
 ;;      "city"   {:oneOf [{:enum [:tre :hki], :type "string"} {:type "null"}]}},
 ;;     :required ["street" "city"],
-;;     :title    "spec-tools.openapi3.core-test/address"},
+;;     :title    "spec-tools.openapi.core-test/address"},
 ;;    :some-request
 ;;    {:type     "object",
 ;;     :properties
@@ -202,7 +202,7 @@ Parameters with duplicated names will be overridden:
 ;;     :required ["id" "name"]}}}}
 ```
 
-### `::openapi3/content` ###
+### `::openapi/content` ###
 
 Value should be a map with content-type string as key and spec as value.
 
@@ -211,7 +211,7 @@ key and OpenAPI3 [Media type object](https://swagger.io/specification/#media-typ
 as value. Duplicated content-types will be overridden.
 
 ```clojure
-(openapi/openapi3-spec
+(openapi/openapi-spec
  {:content
   {"test/html"
    {:schema
@@ -223,14 +223,14 @@ as value. Duplicated content-types will be overridden.
   ::openapi/content
   {"application/json"
    (st/spec
-    {:spec              ::user
-     :openapi3/example  "Some examples here"
-     :openapi3/examples {:admin
-                         {:summary       "Admin user"
-                          :description   "Super user"
-                          :value         {:anything :here}
-                          :externalValue "External value"}}
-     :openapi3/encoding {:contentType "application/json"}})
+    {:spec             ::user
+     :openapi/example  "Some examples here"
+     :openapi/examples {:admin
+                        {:summary       "Admin user"
+                         :description   "Super user"
+                         :value         {:anything :here}
+                         :externalValue "External value"}}
+     :openapi/encoding {:contentType "application/json"}})
    "application/xml" ::address
    "*/*"             (s/keys :req-un [::id ::name]
                              :opt-un [::street ::filters])}})
@@ -250,9 +250,9 @@ as value. Duplicated content-types will be overridden.
 ;;       {"street" {:type "string"},
 ;;        "city"   {:oneOf [{:enum [:tre :hki], :type "string"} {:type "null"}]}},
 ;;       :required ["street" "city"],
-;;       :title    "spec-tools.openapi3.core-test/address"}},
+;;       :title    "spec-tools.openapi.core-test/address"}},
 ;;     :required ["id" "name" "address"],
-;;     :title    "spec-tools.openapi3.core-test/user",
+;;     :title    "spec-tools.openapi.core-test/user",
 ;;     :example  "Some examples here",
 ;;     :examples
 ;;     {:admin
@@ -268,7 +268,7 @@ as value. Duplicated content-types will be overridden.
 ;;     {"street" {:type "string"},
 ;;      "city"   {:oneOf [{:enum [:tre :hki], :type "string"} {:type "null"}]}},
 ;;     :required ["street" "city"],
-;;     :title    "spec-tools.openapi3.core-test/address"}},
+;;     :title    "spec-tools.openapi.core-test/address"}},
 ;;   "*/*"
 ;;   {:schema
 ;;    {:type     "object",
@@ -280,7 +280,7 @@ as value. Duplicated content-types will be overridden.
 ;;     :required ["id" "name"]}}}}
 ```
 
-### `::openapi3/headers` ###
+### `::openapi/headers` ###
 
 Value should be a map where key is a header name and value is clojure spec.
 
@@ -289,7 +289,7 @@ Returns map with key `:headers` and value of map of header name and OpenAPI3
 the existing `:headers`. All duplicated names will be overridden.
 
 ```clojure
-(openapi/openapi3-spec
+(openapi/openapi-spec
  {:headers
   {:X-Rate-Limit-Limit
    {:description "The number of allowed requests in the current period"
@@ -323,15 +323,15 @@ the existing `:headers`. All duplicated names will be overridden.
 ;;       {"street" {:type "string"},
 ;;        "city"   {:oneOf [{:enum [:tre :hki], :type "string"} {:type "null"}]}},
 ;;       :required ["street" "city"],
-;;       :title    "spec-tools.openapi3.core-test/address"}},
+;;       :title    "spec-tools.openapi.core-test/address"}},
 ;;     :required ["id" "name" "address"],
-;;     :title    "spec-tools.openapi3.core-test/user"}}}}
+;;     :title    "spec-tools.openapi.core-test/user"}}}}
 ```
 
 ### Full example ###
 
 ```clojure
-(openapi/openapi3-spec
+(openapi/openapi-spec
  {:openapi "3.0.3"
   :info
   {:title          "Sample Pet Store App"
@@ -364,14 +364,14 @@ the existing `:headers`. All duplicated names will be overridden.
                         {"application/xml" ::user
                          "application/json"
                          (st/spec
-                          {:spec              ::address
-                           :openapi3/example  "Some examples here"
-                           :openapi3/examples {:admin
-                                               {:summary       "Admin user"
-                                                :description   "Super user"
-                                                :value         {:anything :here}
-                                                :externalValue "External value"}}
-                           :openapi3/encoding {:contentType "application/json"}})}}}}}
+                          {:spec             ::address
+                           :openapi/example  "Some examples here"
+                           :openapi/examples {:admin
+                                              {:summary       "Admin user"
+                                               :description   "Super user"
+                                               :value         {:anything :here}
+                                               :externalValue "External value"}}
+                           :openapi/encoding {:contentType "application/json"}})}}}}}
    "/user/:id"
    {:post
     {:tags                ["user"]
@@ -422,16 +422,16 @@ the existing `:headers`. All duplicated names will be overridden.
 ;;       {"street" {:type "string"},
 ;;        "city"   {:oneOf [{:enum [:tre :hki], :type "string"} {:type "null"}]}},
 ;;       :required ["street" "city"],
-;;       :title    "spec-tools.openapi3.core-test/address"}},
+;;       :title    "spec-tools.openapi.core-test/address"}},
 ;;     :required ["id" "name" "address"],
-;;     :title    "spec-tools.openapi3.core-test/user"},
+;;     :title    "spec-tools.openapi.core-test/user"},
 ;;    :address
 ;;    {:type     "object",
 ;;     :properties
 ;;     {"street" {:type "string"},
 ;;      "city"   {:oneOf [{:enum [:tre :hki], :type "string"} {:type "null"}]}},
 ;;     :required ["street" "city"],
-;;     :title    "spec-tools.openapi3.core-test/address"}},
+;;     :title    "spec-tools.openapi.core-test/address"}},
 ;;   :headers
 ;;   {:token {:description "", :required true, :schema {:type "string"}}}},
 ;;  :paths
@@ -455,9 +455,9 @@ the existing `:headers`. All duplicated names will be overridden.
 ;;             "city"
 ;;             {:oneOf [{:enum [:tre :hki], :type "string"} {:type "null"}]}},
 ;;            :required ["street" "city"],
-;;            :title    "spec-tools.openapi3.core-test/address"}},
+;;            :title    "spec-tools.openapi.core-test/address"}},
 ;;          :required ["id" "name" "address"],
-;;          :title    "spec-tools.openapi3.core-test/user"}},
+;;          :title    "spec-tools.openapi.core-test/user"}},
 ;;        "application/json"
 ;;        {:schema
 ;;         {:type     "object",
@@ -466,7 +466,7 @@ the existing `:headers`. All duplicated names will be overridden.
 ;;           "city"
 ;;           {:oneOf [{:enum [:tre :hki], :type "string"} {:type "null"}]}},
 ;;          :required ["street" "city"],
-;;          :title    "spec-tools.openapi3.core-test/address",
+;;          :title    "spec-tools.openapi.core-test/address",
 ;;          :example  "Some examples here",
 ;;          :examples
 ;;          {:admin
@@ -496,9 +496,9 @@ the existing `:headers`. All duplicated names will be overridden.
 ;;            "city"
 ;;            {:oneOf [{:enum [:tre :hki], :type "string"} {:type "null"}]}},
 ;;           :required ["street" "city"],
-;;           :title    "spec-tools.openapi3.core-test/address"}},
+;;           :title    "spec-tools.openapi.core-test/address"}},
 ;;         :required ["id" "name" "address"],
-;;         :title    "spec-tools.openapi3.core-test/user"}}}},
+;;         :title    "spec-tools.openapi.core-test/user"}}}},
 ;;     :responses
 ;;     {200
 ;;      {:description "pet response",
@@ -516,9 +516,9 @@ the existing `:headers`. All duplicated names will be overridden.
 ;;             "city"
 ;;             {:oneOf [{:enum [:tre :hki], :type "string"} {:type "null"}]}},
 ;;            :required ["street" "city"],
-;;            :title    "spec-tools.openapi3.core-test/address"}},
+;;            :title    "spec-tools.openapi.core-test/address"}},
 ;;          :required ["id" "name" "address"],
-;;          :title    "spec-tools.openapi3.core-test/user"}}}},
+;;          :title    "spec-tools.openapi.core-test/user"}}}},
 ;;      :default
 ;;      {:description "error payload",
 ;;       :content
@@ -535,9 +535,9 @@ the existing `:headers`. All duplicated names will be overridden.
 ;;             "city"
 ;;             {:oneOf [{:enum [:tre :hki], :type "string"} {:type "null"}]}},
 ;;            :required ["street" "city"],
-;;            :title    "spec-tools.openapi3.core-test/address"}},
+;;            :title    "spec-tools.openapi.core-test/address"}},
 ;;          :required ["id" "name" "address"],
-;;          :title    "spec-tools.openapi3.core-test/user"}}}}},
+;;          :title    "spec-tools.openapi.core-test/user"}}}}},
 ;;     :parameters
 ;;     [{:name        "id",
 ;;       :in          "path",

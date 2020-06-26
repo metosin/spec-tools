@@ -1,4 +1,4 @@
-(ns spec-tools.openapi3.spec
+(ns spec-tools.openapi.spec
   (:require [clojure.spec.alpha :as s]
             [spec-tools.data-spec :as ds]))
 

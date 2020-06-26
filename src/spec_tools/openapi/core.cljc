@@ -1,9 +1,8 @@
-(ns spec-tools.openapi3.core
-  (:require [spec-tools.json-schema :as json-schema]
-            [spec-tools.visitor :as visitor]
+(ns spec-tools.openapi.core
+  (:require [clojure.walk :as walk]
             [spec-tools.impl :as impl]
-            [spec-tools.core :as st]
-            [clojure.walk :as walk]))
+            [spec-tools.json-schema :as json-schema]
+            [spec-tools.visitor :as visitor]))
 
 (defn- spec-dispatch [dispatch _ _ _] dispatch)
 
@@ -32,8 +31,8 @@
 
 (defmethod accept-spec ::visitor/spec [dispatch spec children options]
   (let [[_ data]     (impl/extract-form spec)
-        openapi-meta (impl/unlift-keys data "openapi3")]
-    (or (:openapi3 data)
+        openapi-meta (impl/unlift-keys data "openapi")]
+    (or (:openapi data)
         (merge (json-schema/accept-spec dispatch spec children options)
                openapi-meta))))
 
@@ -70,18 +69,18 @@
         new-spec (if nilable?
                    (extract-nilable spec)
                    spec)]
-    {:name        (or (:title spec) (:type spec))
+    {:name        (or (:title new-spec) (:type new-spec))
      :in          in
-     :description (or (:description spec) "")
+     :description (or (:description new-spec) "")
      :required    (case in
                     :path true
                     (not nilable?))
-     :schema      spec}))
+     :schema      new-spec}))
 
 (defn- extract-object-param
   [in {:keys [properties required]}]
   (mapv
-   (fn [[k {:keys [type description allowEmptyValue] :as schema}]]
+   (fn [[k {:keys [description] :as schema}]]
      {:name        k
       :in          (name in)
       :description (or description "")
@@ -167,12 +166,12 @@
 ;; Generate the OpenAPI3 spec
 ;;
 
-(defn openapi3-spec
+(defn openapi-spec
   "Transforms data into a OpenAPI3 spec. Input data must conform to the
   Swagger3 Spec (https://swagger.io/specification/) with a exception that it
   can have any qualified keywords which are expanded with the
-  `spec-tools.openapi3.core/expand` multimethod."
+  `spec-tools.openapi.core/expand` multimethod."
   ([x]
-   (openapi3-spec x nil))
+   (openapi-spec x nil))
   ([x options]
    (expand-qualified-keywords x options)))

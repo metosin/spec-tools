@@ -1,7 +1,7 @@
-(ns spec-tools.openapi3.spec-test
+(ns spec-tools.openapi.spec-test
   (:require [clojure.spec.alpha :as s]
             [clojure.test :refer [deftest is testing]]
-            [spec-tools.openapi3.spec :as openapi-spec]))
+            [spec-tools.openapi.spec :as openapi-spec]))
 
 (deftest openapi-spec-test
   (doseq [spec [::openapi-spec/contact
