@@ -10,8 +10,8 @@ An utility to transform Specs to Swagger2 Schemas.
 
 `swagger/transform` converts specs into Swagger2 Schema. Transformation can be customized with the following optional options:
 
-* `:type` - a target type, either `:parameter` ([Parameter Object](http://swagger.io/specification/#parameterObject)) or `:schema` ([Schema Object](http://swagger.io/specification/#schemaObject)). If value is not defined, `:schema` is used.
-* `:in` - a parameter subtype, which is one of: `:query`, `:header`, `:path`, `:body` or `:formData`. See [Parameter Object](http://swagger.io/specification/#parameterObject) for details.
+* `:type` - a target type, either `:parameter` ([Parameter Object](https://swagger.io/specification/v2/#parameterObject)) or `:schema` ([Schema Object](https://swagger.io/specification/v2/#schemaObject)). If value is not defined, `:schema` is used.
+* `:in` - a parameter subtype, which is one of: `:query`, `:header`, `:path`, `:body` or `:formData`. See [Parameter Object](https://swagger.io/specification/v2/#parameterObject) for details.
 
 **NOTE**: As `clojure.spec` is more powerful than the Swagger2 Schema, we are losing some data in the transformation. We try to retain all the information using vendor extensions.
 
@@ -38,8 +38,8 @@ An utility to transform Specs to Swagger2 Schemas.
 ## Annotated Specs
 
 Specs can be annotated to populate the JSON Schemas.
- 
-* `:name` is copied into `:title` 
+
+* `:name` is copied into `:title`
 * `:description` is used as-is
 * all keys with namespace `json-schema` and `swagger` are used without the namespace
 
@@ -62,20 +62,20 @@ Specs can be annotated to populate the JSON Schemas.
 
 ## Swagger Spec generation
 
-`swagger/swagger-spec` function takes an extended swagger2 spec as map and transforms it into a valid [Swagger Object](http://swagger.io/specification/#swaggerObject). Rules:
+`swagger/swagger-spec` function takes an extended swagger2 spec as map and transforms it into a valid [Swagger Object](https://swagger.io/specification/v2/#swaggerObject). Rules:
 
 * by default, data is passed through, allowing any valid swagger data to be used
 * for qualified map keys, `swagger/expand` multimethod is invoked with the key, value and the map as arguments
   * dispatches on the key, defaulting to `::swagger/extension`
   * returns a map that get's merged in to original map, without the dispatched key
 
-Predifined dispatch keys below.
+Predefined dispatch keys below.
 
 ### `::swagger/parameters`
 
 Value should be a map with optional keys `:body`, `:query`, `:path`, `:header` and `:formData`. For all but `:body`, the value should be a `s/keys` spec (describing the ring parameters). With `:body`, the value can be any `clojure.spec.alpha/Spec`.
 
-Returns a map with key `:parameters` with value of vector of swagger [Parameter Objects](http://swagger.io/specification/#parameterObject), merged over the existing `:parameters`. Duplicate parameters (with identical `:in` and `:name` are overridden)
+Returns a map with key `:parameters` with value of vector of swagger [Parameter Objects](https://swagger.io/specification/v2/#parameterObject), merged over the existing `:parameters`. Duplicate parameters (with identical `:in` and `:name` are overridden)
 
 ```clj
 (require '[clojure.spec.alpha :as s])
@@ -136,7 +136,7 @@ Returns a map with key `:parameters` with value of vector of swagger [Parameter 
 
 ### `::swagger/responses`
 
-Value should a [Swagger2 Responses Definition Object](https://swagger.io/specification/#responsesDefinitionsObject) with Spec or Spec as the `:schema`. Returns a map with key `:responses` with `:schemas` transformed into [Swagger2 Schema Objects](https://swagger.io/specification/#schemaObject), merged over existing `:responses`.
+Value should a [Swagger2 Responses Definition Object](https://swagger.io/specification/v2/#responsesDefinitionsObject) with Spec or Spec as the `:schema`. Returns a map with key `:responses` with `:schemas` transformed into [Swagger2 Schema Objects](https://swagger.io/specification/#schemaObject), merged over existing `:responses`.
 
 ```clj
 (swagger/swagger-spec
