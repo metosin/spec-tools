@@ -182,14 +182,15 @@
 ;;
 
 (defn coll-of-spec [pred type]
-  (let [form (form/resolve-form pred)]
+  (let [form (form/resolve-form pred)
+        cpred (if (set? type) set? vector?)]
     (clojure.spec.alpha/every-impl
       form
       pred
       {:into type
        ::s/conform-all true
        ::s/describe `(s/coll-of ~form :into ~type),
-       ::s/cpred coll?,
+       ::s/cpred cpred,
        ::s/kind-form (quote nil)}
       nil)))
 
@@ -204,7 +205,7 @@
        ::s/kfn (fn [_ v] (nth v 0))
        ::s/conform-all true
        ::s/describe `(s/map-of ~@forms :conform-keys true),
-       ::s/cpred coll?,
+       ::s/cpred map?,
        ::s/kind-form (quote nil)}
       nil)))
 
