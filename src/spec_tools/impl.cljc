@@ -205,7 +205,7 @@
        ::s/kfn (fn [_ v] (nth v 0))
        ::s/conform-all true
        ::s/describe `(s/map-of ~@forms :conform-keys true),
-       ::s/cpred coll?,
+       ::s/cpred map?,
        ::s/kind-form (quote nil)}
       nil)))
 

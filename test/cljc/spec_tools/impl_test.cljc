@@ -59,11 +59,15 @@
 
 (deftest coll-of-specs-distinguish-between-data-types
   (let [spec-set (impl/coll-of-spec int? #{})
-        spec-vec (impl/coll-of-spec int? [])]
+        spec-vec (impl/coll-of-spec int? [])
+        spec-map (impl/map-of-spec int? int?)]
     (is (= true (s/valid? spec-set #{1 2 3})))
     (is (= false (s/valid? spec-set [1 2 3])))
     (is (= true (s/valid? spec-vec [1 2 3])))
-    (is (= false (s/valid? spec-vec #{1 2 3})))))
+    (is (= false (s/valid? spec-vec #{1 2 3})))
+    (is (= true (s/valid? spec-map {4 2})))
+    (is (= false (s/valid? spec-map #{[1 2]})))
+    (is (= false (s/valid? spec-map #{1 2 3 4})))))
 
 (deftest map-of-spec-tests
   (let [spec (s/map-of string? string? :conform-keys true)
