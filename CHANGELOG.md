@@ -1,3 +1,8 @@
+# 0.10.4 (2020-07-24)
+
+* Add OpenAPI 3 schema generation. PR [#236](https://github.com/metosin/spec-tools/pull/236) by [Roman Rudakov](https://github.com/rrudakov)
+* Enforce collection type for collection data specs. [#237](https://github.com/metosin/spec-tools/issues/237). PR [#239](https://github.com/metosin/spec-tools/pull/239) by [Wanderson Ferreira]
+
 # 0.10.3 (2020-05-16)
 
 * Always generat non-empty `:body` parameter name for Swagger, fixes https://github.com/metosin/reitit/issues/399
