@@ -5,7 +5,7 @@
 
 # 0.10.3 (2020-05-16)
 
-* Always generat non-empty `:body` parameter name for Swagger, fixes https://github.com/metosin/reitit/issues/399
+* Always generate non-empty `:body` parameter name for Swagger, fixes https://github.com/metosin/reitit/issues/399
 
 # 0.10.2 (2020-05-05)
 
