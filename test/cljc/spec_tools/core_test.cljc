@@ -840,3 +840,16 @@
        (is (st/spec? (st/merge ::qix ::qux)))
        (is (st/spec? (st/merge qix ::qux))))))
 
+(s/def ::a242 int?)
+(s/def ::b242 int?)
+(s/def ::c242 int?)
+
+(deftest issue-242
+  (testing "parse-form should continue to work with [:or [:map]] specs"
+    (let [desired-spec (st/spec (s/merge (s/or :one (s/keys :req-un [::a242])
+                                               :two (s/keys :req-un [::b242]))
+                                         (s/keys :req-un [::c242])))]
+      (is (s/valid? desired-spec {:a242 1 :c242 2}))
+      (is (not (s/valid? desired-spec {:c242 2})))
+      (is (s/valid? desired-spec {:b242 2 :c242 3}))
+      (is (not (s/valid? desired-spec {:a242 1}))))))
