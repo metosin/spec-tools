@@ -192,14 +192,8 @@
     {:type [:and types]
      ::items specs}))
 
-<<<<<<< HEAD
-(defmethod parse-form 'clojure.spec.alpha/merge [_ form]
-  (let [type-priority #((:type %) {:map 0
-                                   :multi-spec 1} 0)]
-=======
 (defmethod parse-form 'clojure.spec.alpha/merge [_ form options]
   (let [type-priority #(if (= (:type %) :multi-spec) 1 0)]
->>>>>>> cf0ce10 (fix recursive parse-spec visits)
     (apply impl/deep-merge (->> (rest form)
                                 (map #(parse-spec % options))
                                 (sort-by type-priority)))))
