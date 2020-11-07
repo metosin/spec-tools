@@ -840,3 +840,19 @@
        (is (st/spec? (st/merge ::qix ::qux)))
        (is (st/spec? (st/merge qix ::qux))))))
 
+(s/def ::rec-pattern (s/coll-of (s/or :atr qualified-keyword?
+                                      :ref (s/map-of qualified-keyword?
+                                                     (s/or :rec-pattern ::rec-pattern)))))
+
+(deftest issue-244
+  (testing "stop rewalking recursive specs."
+    (let [correct-data [:core-test/stack
+                        {:core-test/overflow [:core-test/stackoverflow
+                                              {:core-test/over [:core-test/flow]}]}]
+          wrong-data [:core-test/stack
+                        {:core-test/overflow [:core-test/stackoverflow
+                                              {:core-test/over [:flow :is :not :right]}]}]]
+      (is (s/valid? ::rec-pattern correct-data))
+      (is (s/valid? (st/spec ::rec-pattern) correct-data))
+      (is (not (s/valid? ::rec-pattern wrong-data)))
+      (is (not (s/valid? (st/spec ::rec-pattern) wrong-data))))))
