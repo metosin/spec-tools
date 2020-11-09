@@ -870,3 +870,32 @@
       (is (s/valid? (st/spec ::rec-pattern) correct-data))
       (is (not (s/valid? ::rec-pattern wrong-data)))
       (is (not (s/valid? (st/spec ::rec-pattern) wrong-data))))))
+
+
+(s/def ::epoch (s/int-in Long/MIN_VALUE Long/MAX_VALUE))
+(s/def ::nano (s/int-in 0 (Math/pow 10 9)))
+(s/def ::time-basis #{:UTC :TAI})
+(s/def ::instant
+  (st/spec {:spec (s/keys :req-un [::epoch ::nano ::time-basis]) :type :instant}))
+
+(defn tai->utc
+  [_ {:keys [epoch nano time-basis] :as x}]
+  (if (= :TAI time-basis)
+    {:epoch "Epoch converted"
+     :nano nano
+     :time-basis :UTC}
+    x))
+
+(def utc-xform
+  (st/type-transformer
+   {:name :utc
+    :encoders {:instant tai->utc}
+    :default-encoder stt/any->any}))
+
+(deftest issue-240
+  (testing "Mutual recursion when using s/valid? inside a transformer"
+    (let [example {:epoch 10 :nano 20 :time-basis :TAI}]
+      (is (= (st/encode ::instant example utc-xform)
+             {:epoch "Epoch converted"
+              :nano 20
+              :time-basis :UTC})))))
