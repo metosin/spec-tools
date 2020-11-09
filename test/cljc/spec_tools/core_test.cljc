@@ -880,7 +880,7 @@
 
 (defn tai->utc
   [_ {:keys [epoch nano time-basis] :as x}]
-  (if (= :TAI time-basis)
+  (if (and (s/valid? ::instant x) (= :TAI time-basis))
     {:epoch "Epoch converted"
      :nano nano
      :time-basis :UTC}
