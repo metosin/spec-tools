@@ -872,8 +872,8 @@
       (is (not (s/valid? (st/spec ::rec-pattern) wrong-data))))))
 
 
-(s/def ::epoch (s/int-in Long/MIN_VALUE Long/MAX_VALUE))
-(s/def ::nano (s/int-in 0 (Math/pow 10 9)))
+(s/def ::epoch (s/int-in 10 20))
+(s/def ::nano (s/int-in 0 100))
 (s/def ::time-basis #{:UTC :TAI})
 (s/def ::instant
   (st/spec {:spec (s/keys :req-un [::epoch ::nano ::time-basis]) :type :instant}))
