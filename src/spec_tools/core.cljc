@@ -73,6 +73,7 @@
 
 (def ^:dynamic ^:private *transformer* nil)
 (def ^:dynamic ^:private *encode?* nil)
+(def ^:dynamic ^:private *spec-transformed* nil)
 
 (defprotocol Coercion
   (-coerce [this value transformer options]))
@@ -232,31 +233,42 @@
 (defn decode
   "Decodes a value using a [[Transformer]] from external format to a value
   defined by the spec. First, calls [[coerce]] and returns the value if it's
-  valid - otherwise, calls [[conform]] & [[unform]]. Returns `::s/invalid`
+  valid - otherwise, calls [[conform]] & [[unform]]. You can also provide a
+  spec to validate the decoded value after transformation. Returns `::s/invalid`
   if the value can't be decoded to conform the spec."
   ([spec value]
    (decode spec value nil))
   ([spec value transformer]
+   (decode spec value transformer nil))
+  ([spec value transformer spec-transformed]
    (let [spec (into-spec spec)
          coerced (coerce spec value transformer)]
      (if (s/valid? spec coerced)
        coerced
-       (binding [*transformer* transformer, *encode?* false]
+       (binding [*transformer* transformer, *encode?* false *spec-transformed* spec-transformed]
          (let [conformed (s/conform spec value)]
            (if (s/invalid? conformed)
              conformed
-             (s/unform spec conformed))))))))
+             (if spec-transformed
+               (s/unform spec-transformed conformed)
+               (s/unform spec conformed)))))))))
 
 (defn encode
   "Transforms a value (using a [[Transformer]]) from external
-  format into a value defined by the spec. On error, returns `::s/invalid`."
-  [spec value transformer]
-  (binding [*transformer* transformer, *encode?* true]
-    (let [spec (into-spec spec)
-          conformed (s/conform spec value)]
-      (if (s/invalid? conformed)
-        conformed
-        (s/unform spec conformed)))))
+  format into a value defined by the spec. You can also provide a
+  spec to validate the encoded value after transformation.
+  On error, returns `::s/invalid`."
+  ([spec value transformer]
+   (encode spec value transformer nil))
+  ([spec value transformer spec-transformed]
+   (binding [*transformer* transformer, *encode?* true, *spec-transformed* spec-transformed]
+     (let [spec (into-spec spec)
+           conformed (s/conform spec value)]
+       (if (s/invalid? conformed)
+         conformed
+         (if spec-transformed
+           (s/unform spec-transformed conformed)
+           (s/unform spec conformed)))))))
 
 (defn select-spec
   "Best effort to drop recursively all extra keys out of a keys spec value."
@@ -400,7 +412,7 @@
 
   s/Spec
   (conform* [this x]
-    (let [transformer *transformer*, encode? *encode?*]
+    (let [transformer *transformer*, encode? *encode?*, spec-transformed *spec-transformed*]
       ;; if there is a transformer present
       (if-let [transform (if transformer ((if encode? -encoder -decoder) transformer (decompose-spec-type this) x))]
         ;; let's transform it
@@ -408,11 +420,15 @@
           ;; short-circuit on ::s/invalid
           (or (and (s/invalid? transformed) transformed)
               ;; recur
-              (let [conformed (s/conform spec transformed)]
+              (let [conformed (if spec-transformed
+                                (binding [*spec-transformed* nil *transformer* nil]
+                                  (s/conform spec-transformed transformed))
+                                (s/conform spec transformed))]
                 ;; it's ok if encode transforms leaf values into invalid values
-                (or (and encode? (s/invalid? conformed) (leaf? this) transformed) conformed))))
+                (or (and spec-transformed conformed)
+                    (and encode? (s/invalid? conformed) (leaf? this) transformed)
+                    conformed))))
         (s/conform spec x))))
-
   (unform* [_ x]
     (s/unform spec x))
 
