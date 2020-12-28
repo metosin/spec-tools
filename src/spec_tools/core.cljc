@@ -130,11 +130,10 @@
         (-options [_] options)
         (-encoder [_ spec _]
           (or (get spec encode-key)
-              (let [e (get encoders (parse/type-dispatch-value (:type spec)))]
-                (when e
-                  (fn [this x]
-                    (binding [*transformer* nil]
-                      (e this x)))))
+              (when-let [e (get encoders (parse/type-dispatch-value (:type spec)))]
+                (fn [this x]
+                  (binding [*transformer* nil]
+                    (e this x))))
               default-encoder))
         (-decoder [_ spec _]
           (or (get spec decode-key)
