@@ -27,7 +27,7 @@ Spec-tools ships with following transformers:
 (require '[spec-tools.core :as st])
 ```
 
-For simple transformations, there is `st/coerce`. It takes a spec, a value and a transformer and uses [Spec Walker](./spec-walker.md) to walk over the specs and transform the value using the transformer. It transforms all values it can, leaving non-coercable parts untouched. Behind the scenes, specs are walked using their `s/form` & spec-tools form parser. Coercion is inspired by [spec-coerce](https://github.com/wilkerlucio/spec-coerce).
+For simple transformations, there is `st/coerce`. It takes a spec, a value and a transformer and uses [Spec Walker](./09_spec_walker.md) to walk over the specs and transform the value using the transformer. It transforms all values it can, leaving non-coercable parts untouched. Behind the scenes, specs are walked using their `s/form` & spec-tools form parser. Coercion is inspired by [spec-coerce](https://github.com/wilkerlucio/spec-coerce).
 
 **NOTE**: with the current spec1 design, form-based coercion is just best effort. There is [CLJ-2251](https://dev.clojure.org/jira/browse/CLJ-2251) which would solve this. 
 
