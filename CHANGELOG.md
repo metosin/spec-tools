@@ -1,6 +1,6 @@
 # Unreleased
 
-* Support validating values transformed via encode/decode functions. Issue [#241](https://github.com/metosin/spec-tools/issues/241), PR [#248](https://github.com/metosin/spec-tools/pull/248) by [Wanderson Ferreira].
+* Support validating values transformed via encode/decode functions. [#241](https://github.com/metosin/spec-tools/issues/241). PR [#248](https://github.com/metosin/spec-tools/pull/248) by [Wanderson Ferreira].
 
 # 0.10.4 (2020-07-24)
 
