@@ -858,6 +858,35 @@
                                       :ref (s/map-of qualified-keyword?
                                                      (s/or :rec-pattern ::rec-pattern)))))
 
+(s/def :db/hostname string?)
+(s/def :db/port pos-int?)
+(s/def :db/database string?)
+(s/def ::jdbc-connection
+  (st/spec {:spec (s/keys :req-un [:db/hostname :db/port :db/database])
+            :type :dbconn}))
+
+(defn dbconn->url
+  [_ {:keys [hostname port database]}]
+  #?(:clj (clojure.core/format "jdbc:postgres://%s:%s/%s" hostname port database)
+     :cljs (cljs.pprint/cl-format nil "jdbc:postgres://~a:~a/~a" hostname port database)))
+
+(def jdbc-transformer
+  (st/type-transformer
+   {:name :jdbc
+    :encoders {:dbconn dbconn->url}
+    :default-encoder stt/any->any}))
+
+(s/def :db/connection-string (st/spec {:spec string?
+                                    :type :dbconn}))
+
+(deftest issue-241
+  (testing "provide a spec to validate transformed values"
+    (let [valid-input {:hostname "127.0.0.1" :port 5432 :database "postgres"}]
+      (is (thrown? #?(:clj ClassCastException :cljs js/Error)
+                       (st/encode ::jdbc-connection valid-input jdbc-transformer)))
+      (is (= (st/encode ::jdbc-connection valid-input jdbc-transformer :db/connection-string)
+             "jdbc:postgres://127.0.0.1:5432/postgres")))))
+
 (deftest issue-244
   (testing "stop rewalking recursive specs."
     (let [correct-data [:core-test/stack

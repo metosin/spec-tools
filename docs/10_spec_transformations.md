@@ -255,3 +255,45 @@ Or using `type-transformer` directly:
     st/strip-extra-keys-transformer
     st/strip-extra-values-transformer))
 ```
+
+It is also possible to add a spec to be used to validate the
+transformed value. Using this feature you decouple the transformation
+into two specs, the original schema before transformation and the
+target schema after transformation.
+
+```clj
+(s/def :db/hostname string?)
+(s/def :db/port pos-int?)
+(s/def :db/database string?)
+(s/def ::jdbc-connection
+  (st/spec {:spec (s/keys :req-un [:db/hostname :db/port :db/database])
+                 :type :dbconn}))
+
+(defn dbconn->url
+  [_ {:keys [hostname port database]}]
+  (format "jdbc:postgres://%s:%s/%s" hostname port database))
+
+(def jdbc-transformer
+  (st/type-transformer
+    {:name :jdbc
+     :encoders {:dbconn dbconn->url}
+     :default-encoder stt/any->any}))
+
+(st/encode
+  ::jdbc-connection
+  {:hostname "127.0.0.1" :port 5432 :database "postgres"}
+  jdbc-transformer)
+
+;; => ::s/invalid
+
+(s/def :db/conn-string string?)
+
+(st/encode 
+  ::jdbc-connection
+  {:hostname "127.0.0.1" :port 5432 :database "postgres"}
+  jdbc-transformer
+  :db/conn-string)
+
+;; => "jdbc:postgres://127.0.0.1:5432/postgres"
+
+```
