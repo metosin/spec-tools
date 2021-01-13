@@ -131,7 +131,10 @@
         (-options [_] options)
         (-encoder [_ spec _]
           (or (get spec encode-key)
-              (get encoders (parse/type-dispatch-value (:type spec)))
+              (when-let [e (get encoders (parse/type-dispatch-value (:type spec)))]
+                (fn [this x]
+                  (binding [*dynamic-conforming* (->DynamicConforming nil false nil)]
+                    (e this x))))
               default-encoder))
         (-decoder [_ spec _]
           (or (get spec decode-key)
