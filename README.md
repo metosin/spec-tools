@@ -1,4 +1,4 @@
-# spec-tools [![Build Status](https://github.com/metosin/spec-tools/workflows/tests/badge.svg)](https://travis-ci.org/metosin/spec-tools) [![cljdoc badge](https://cljdoc.org/badge/metosin/spec-tools)](https://cljdoc.org/d/metosin/spec-tools/CURRENT)
+# spec-tools [![Build Status](https://github.com/metosin/spec-tools/workflows/tests/badge.svg)](https://github.com/metosin/spec-tools/actions?query=workflow%3Atests) [![cljdoc badge](https://cljdoc.org/badge/metosin/spec-tools)](https://cljdoc.org/d/metosin/spec-tools/CURRENT)
 
 <img src="docs/Broussins.jpg" width=330 align="right"/>
 
