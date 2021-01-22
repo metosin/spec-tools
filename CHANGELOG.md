@@ -1,4 +1,4 @@
-# Unreleased
+# 0.10.5 (2021-01-22)
 
 * Support validating values transformed via encode/decode functions. [#241](https://github.com/metosin/spec-tools/issues/241). PR [#248](https://github.com/metosin/spec-tools/pull/248) by [Wanderson Ferreira].
 * Fix calling valid? within a custom type transform fn causing an StackOverflowError. [#240](https://github.com/metosin/spec-tools/issues/240). PR [#247](https://github.com/metosin/spec-tools/pull/247) by [Wanderson Ferreira].
