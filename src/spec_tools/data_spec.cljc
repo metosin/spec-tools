@@ -174,8 +174,8 @@
   | -----------------|----------------
   | `:spec`          | The wrapped data-spec.
   | `:name`          | Qualified root spec name - used to generate unique names for sub-specs.
-  | `:keys-spec`     | Function to wrap not-wrapped keys, e.g. [[opt]] to make keys optional by default.
-  | `:keys-default`  | Function to generate the keys-specs, default [[keys-specs]]."
+  | `:keys-spec`     | Function to generate the keys-specs, default [[keys-specs]].
+  | `:keys-default`  | Function to wrap not-wrapped keys, e.g. [[opt]] to make keys optional by default."
   ([{data :spec name :name nested? ::nested? :as opts}]
    (assert spec "missing :spec predicate in data-spec")
    (let [opts (-> opts (assoc :name name) (dissoc :spec))
