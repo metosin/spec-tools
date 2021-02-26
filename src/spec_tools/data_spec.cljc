@@ -193,3 +193,46 @@
        :else (maybe-named-spec (st/create-spec {:spec data})))))
   ([name data]
    (spec {:name name, :spec data})))
+
+
+(defmulti unwalk (fn [{:keys [type]}]
+                   (parse/type-dispatch-value type)) :default ::default)
+
+(defmethod unwalk ::default [{:keys [form]}]
+  #?(:clj (var-get (resolve form))
+     :cljs @(resolve (quote form))))
+
+(defmethod unwalk :nilable [{:keys [form]}]
+  (maybe (unwalk (st/create-spec (second (second form))))))
+
+(defmethod unwalk :vector [{:keys [::parse/item form]}]
+  (if (= (parse/type-dispatch-value (:type item)) :or)
+    [(unwalk (st/create-spec {:spec (second form)}))]
+    [(unwalk (st/create-spec item))]))
+
+(defmethod unwalk :map [{:keys [::parse/key->spec ::parse/keys-opt]}]
+  (reduce-kv
+   (fn [acc key val]
+     (if (qualified-keyword? val)
+       (let [maybe-key (if (contains? keys-opt key) (opt key) key)
+             spec  (s/get-spec val)
+             -spec (if (st/spec? spec) spec {:spec val})]
+         (assoc acc maybe-key (unwalk (st/create-spec -spec))))
+       val))
+   {}
+   key->spec))
+
+(defmethod unwalk :set [{:keys [::parse/item]}]
+  #{(unwalk (st/create-spec item))})
+
+(defmethod unwalk :or [{:keys [form ::parse/items]}]
+  (let [labels (take-nth 2 (rest form))]
+    (or (reduce
+         (fn [acc [k spec]]
+           (assoc acc k (unwalk (st/create-spec (parse/parse-spec spec)))))
+         {}
+         (map vector labels items)))))
+
+(defn unspec [spec]
+  (let [-spec (if (st/spec? spec) spec (st/create-spec {:spec spec}))]
+    (unwalk -spec)))
