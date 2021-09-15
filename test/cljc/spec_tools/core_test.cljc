@@ -928,3 +928,22 @@
              {:epoch "Epoch converted"
               :nano 20
               :time-basis :UTC})))))
+
+(def strict-json-transformer
+  (st/type-transformer
+   st/strip-extra-keys-transformer   
+   st/json-transformer))
+
+(s/def ::a-string string?)
+(s/def ::a-map-with-string (s/keys :req-un [::a-string]))
+
+(s/def ::a-vector vector?)
+(s/def ::a-map-with-vector (s/keys :req-un [::a-vector]))
+
+(s/def ::issue-494-spec (s/or :foo ::a-map-with-string
+                              :bar ::a-map-with-vector))
+(deftest reitit-issue-494
+  (testing "s/or with s/keys and req-un on reitit's issue 494 example")
+  (is (= {:a-string "1"}
+         (st/coerce::issue-494-spec {:a-string 1} strict-json-transformer)))
+  (is (= {:a-vector ["foo"]} (st/coerce ::issue-494-spec {:a-vector ["foo"]}))))
