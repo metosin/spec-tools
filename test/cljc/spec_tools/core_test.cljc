@@ -947,3 +947,13 @@
   (is (= {:a-string "1"}
          (st/coerce::issue-494-spec {:a-string 1} strict-json-transformer)))
   (is (= {:a-vector ["foo"]} (st/coerce ::issue-494-spec {:a-vector ["foo"]}))))
+
+(s/def ::an-int int?)
+(s/def ::a-string string?)
+(s/def ::issue-255-spec (s/or
+                         :an-int (s/keys :req-un [::an-int])
+                         :a-string (s/keys :req-un [::a-string])))
+(deftest issue-255
+  (testing "s/or with s/keys and req-un on issue 255 example")
+  (is (= {:an-int 1}
+         (st/coerce::issue-255-spec {:an-int 1} strict-json-transformer))))
