@@ -957,3 +957,21 @@
   (testing "s/or with s/keys and req-un on issue 255 example")
   (is (= {:an-int 1}
          (st/coerce::issue-255-spec {:an-int 1} strict-json-transformer))))
+
+(s/def ::keyword keyword?)
+(s/def ::int int?)
+(s/def ::date inst?)
+(s/def ::issue-212-biiwide-spec (s/merge
+                                 (s/keys :req-un [::keyword])
+                                 (s/or :x (s/keys :req-un [::int])
+                                       :y (s/keys :req-un [::date]))))
+(deftest issue-212
+  (testing "s/or with s/keys and req-un on issue biiwide's 212 example")
+  (is (=
+       {:keyword :a :date #inst #inst"2020-02-22T00:00:00.000-00:00"}
+       (st/coerce ::issue-212-biiwide-spec
+                  {:keyword "a" :date "2020-02-22"} st/strip-extra-keys-transformer)))
+    (is (=
+       {:keyword :a :int 1}
+       (st/coerce ::issue-212-biiwide-spec
+                  {:keyword "a" :int "1"} st/strip-extra-keys-transformer))))
