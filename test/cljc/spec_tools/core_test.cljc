@@ -434,11 +434,11 @@
           value {"keys" {:c1 "1" ::c2 "kikka"}
                  "keys2" {:c1 true}
                  "ints" [1 "1" "invalid" "3"]}]
-      (is (= {:keys {:c1 1 ::c2 :kikka}
+      (is (= {:keys {:c1 "1" ::c2 "kikka"}
               :keys2 {:c1 true}
               :ints #{1 "invalid" 3}}
              (st/coerce spec value st/string-transformer)))
-      (is (= {:keys {:c1 "1" ::c2 :kikka}
+      (is (= {:keys {:c1 "1" ::c2 "kikka"}
               :keys2 {:c1 true}
               :ints #{1 "1" "invalid" "3"}}
              (st/coerce spec value st/json-transformer)))))
@@ -971,7 +971,12 @@
        {:keyword :a :date #inst"2020-02-22T00:00:00.000-00:00"}
        (st/coerce ::issue-212-biiwide-spec
                   {:keyword "a" :date "2020-02-22"} strict-json-transformer)))
+  ;; last 2 examples, just because coercion works that way
   (is (=
-       {:keyword :a :int 1}
+       {:keyword :a :int "1"}
+       (st/coerce ::keyword-and-int
+                  {:keyword "a" :int "1"} strict-json-transformer)))
+  (is (=
+       {:keyword :a :int "1"}
        (st/coerce ::issue-212-biiwide-spec
                   {:keyword "a" :int "1"} strict-json-transformer))))
