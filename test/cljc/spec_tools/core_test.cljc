@@ -940,23 +940,21 @@
 (s/def ::a-vector vector?)
 (s/def ::a-map-with-vector (s/keys :req-un [::a-vector]))
 
+(s/def ::an-int int?)
+(s/def ::a-map-with-int (s/keys :req-un [::an-int]))
+
 (s/def ::issue-494-spec (s/or :foo ::a-map-with-string
-                              :bar ::a-map-with-vector))
+                              :bar ::a-map-with-vector
+                              :baz ::a-map-with-int))
+
 (deftest reitit-issue-494
   (testing "s/or with s/keys and req-un on reitit's issue 494 example")
-  (is (= {:a-string "1"}
-         (st/coerce ::issue-494-spec {:a-string 1} strict-json-transformer)))
-  (is (= {:a-vector ["foo"]} (st/coerce ::issue-494-spec {:a-vector ["foo"]}))))
+  (is (= {:a-string "bar"}
+         (st/coerce ::issue-494-spec {:a-string "bar"} strict-json-transformer)))
+  (is (= {:an-int 0}
+         (st/coerce ::issue-494-spec {:an-int 0} strict-json-transformer)))
+  (is (= {:a-vector ["foo"]} (st/coerce ::issue-494-spec {:a-vector ["foo"]} strict-json-transformer))))
 
-(s/def ::an-int int?)
-(s/def ::a-string string?)
-(s/def ::issue-255-spec (s/or
-                         :an-int (s/keys :req-un [::an-int])
-                         :a-string (s/keys :req-un [::a-string])))
-(deftest issue-255
-  (testing "s/or with s/keys and req-un on issue 255 example")
-  (is (= {:an-int 1}
-         (st/coerce ::issue-255-spec {:an-int 1} strict-json-transformer))))
 
 (s/def ::keyword keyword?)
 (s/def ::int int?)
