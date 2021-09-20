@@ -971,7 +971,8 @@
        {:keyword :a :date #inst"2020-02-22T00:00:00.000-00:00"}
        (st/coerce ::issue-212-biiwide-spec
                   {:keyword "a" :date "2020-02-22"} strict-json-transformer)))
-  ;; last 2 examples, just because coercion works that way
+  ;; last 2 examples, not happy with having ::int uncoerced, but that is
+  ;; how coerce works
   (is (=
        {:keyword :a :int "1"}
        (st/coerce ::keyword-and-int

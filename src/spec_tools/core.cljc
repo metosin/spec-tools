@@ -290,21 +290,26 @@
     value))
 
 (defmethod walk :or [{:keys [::parse/items]} value accept options]
-  (reduce
-    (fn [v item]
-      (let [transformed (accept item v options)
-            valid? (some-> item :spec (s/valid? transformed))]
-        (if valid?
-          (reduced transformed)
-          transformed)))
-    value items))
+  (defn walk-or-helper
+    "for a particular `item` of the spec, this function coerces that `value` 
+     into that `item` and returns the coerced value if `valid?`"
+    [item]
+    (let [transformed (accept item value options)
+          valid? (some-> item :spec (s/valid? transformed))]
+      {:transformed transformed :valid? valid?}))
+  ;; iterate above function, return valid value or the last one or original value
+  (let [valid-items (for [item items]
+                      (walk-or-helper item))]
+    (or (-> (filter #(:valid? % ) valid-items) (first) :transformed)
+        (:transformed (last valid-items))
+        value)))
 
 (defmethod walk :and [{:keys [::parse/items]} value accept options]
   (reduce
-    (fn [v item]
-      (let [transformed (accept item v options)]
-        transformed))
-    value items))
+   (fn [v item]
+     (let [transformed (accept item v options)]
+       transformed))
+   value items))
 
 (defmethod walk :nilable [{:keys [::parse/item]} value accept options]
   (accept item value options))
