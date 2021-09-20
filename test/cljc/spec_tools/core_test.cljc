@@ -945,7 +945,7 @@
 (deftest reitit-issue-494
   (testing "s/or with s/keys and req-un on reitit's issue 494 example")
   (is (= {:a-string "1"}
-         (st/coerce::issue-494-spec {:a-string 1} strict-json-transformer)))
+         (st/coerce ::issue-494-spec {:a-string 1} strict-json-transformer)))
   (is (= {:a-vector ["foo"]} (st/coerce ::issue-494-spec {:a-vector ["foo"]}))))
 
 (s/def ::an-int int?)
@@ -956,7 +956,7 @@
 (deftest issue-255
   (testing "s/or with s/keys and req-un on issue 255 example")
   (is (= {:an-int 1}
-         (st/coerce::issue-255-spec {:an-int 1} strict-json-transformer))))
+         (st/coerce ::issue-255-spec {:an-int 1} strict-json-transformer))))
 
 (s/def ::keyword keyword?)
 (s/def ::int int?)
@@ -968,7 +968,7 @@
 (deftest issue-212
   (testing "s/or with s/keys and req-un on issue biiwide's 212 example")
   (is (=
-       {:keyword :a :date #inst #inst"2020-02-22T00:00:00.000-00:00"}
+       {:keyword :a :date #inst"2020-02-22T00:00:00.000-00:00"}
        (st/coerce ::issue-212-biiwide-spec
                   {:keyword "a" :date "2020-02-22"} st/strip-extra-keys-transformer)))
     (is (=
