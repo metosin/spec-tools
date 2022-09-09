@@ -2,7 +2,7 @@
 
 Tools for enabling adding meta-data to Specs and 
 
-To enable spec metadata and features like [Spec driven transformations](#spec-driven-transformations), Spec-tools introduces extendable Spec Records, `Spec`s. They wrap specs and act like specs or 1-arity functions. Specs are created with `spec-tools.core/spec` macro or with the underlying `spec-tools.core/create-spec` function.
+To enable spec metadata and features like [Spec driven transformations](10_spec_transformations.md), Spec-tools introduces extendable Spec Records, `Spec`s. They wrap specs and act like specs or 1-arity functions. Specs are created with `spec-tools.core/spec` macro or with the underlying `spec-tools.core/create-spec` function.
 
 The following Spec keys having a special meaning:
 
