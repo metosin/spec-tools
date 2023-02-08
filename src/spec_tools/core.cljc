@@ -519,18 +519,20 @@
 (defn create-spec
   "Creates a Spec instance from a map containing the following keys:
 
-           :spec  the wrapped spec predicate (default to `any?`)
-           :form  source code of the spec predicate, if :spec is a spec,
-                  :form is read with `s/form` out of it. For non-spec
-                  preds, spec-tools.form/resolve-form is called, if still
-                  not available, spec-creation will fail.
-           :type  optional type for the spec. if not set, will be auto-
-                  resolved via spec-tools.parse/parse-spec (optional)
-         :reason  reason to be added to problems with s/explain (optional)
-            :gen  generator function for the spec (optional)
-           :name  name of the spec (optional)
-    :description  description of the spec (optional)
-          :xx/yy  any qualified keys can be added (optional)"
+  ```
+          :spec  the wrapped spec predicate (default to `any?`)
+          :form  source code of the spec predicate, if :spec is a spec,
+                 :form is read with `s/form` out of it. For non-spec
+                 preds, spec-tools.form/resolve-form is called, if still
+                 not available, spec-creation will fail.
+          :type  optional type for the spec. if not set, will be auto-
+                 resolved via spec-tools.parse/parse-spec (optional)
+        :reason  reason to be added to problems with s/explain (optional)
+           :gen  generator function for the spec (optional)
+          :name  name of the spec (optional)
+   :description  description of the spec (optional)
+         :xx/yy  any qualified keys can be added (optional)
+  ```"
   [{:keys [spec type form] :as m}]
   (when (qualified-keyword? spec)
     (assert (get-spec spec) (str " Unable to resolve spec: " spec)))
