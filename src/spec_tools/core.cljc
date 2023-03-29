@@ -405,9 +405,10 @@
                       (keyword? x) (recur (s/get-spec x))
                       (spec? x) x
                       (s/spec? x) (create-spec {:spec x})
-                      (map? x) (if (qualified-keyword? (:spec x))
-                                 (recur (s/get-spec (:spec x)))
-                                 (create-spec (update x :spec (fnil identity any?))))))
+                      (map? x) (cond
+                                 (some (comp #{"spec-tools.parse"} namespace key) x) (map->Spec x)
+                                 (qualified-keyword? (:spec x)) (recur (s/get-spec (:spec x)))
+                                 :else (create-spec x))))
           transformed (if-let [transform (if (and transformer (not (:skip? options)))
                                            (-decoder transformer this value))]
                         (transform this value) value)]
