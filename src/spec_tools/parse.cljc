@@ -192,11 +192,20 @@
     {:type [:and types]
      ::items specs}))
 
+(defn- parse-merge [form options]
+  (let [type-priority #(if (= (:type %) :multi-spec) 1 0)
+        or-pred (comp #{:or} type-dispatch-value :type)
+        specs (->> (rest form)
+                   (map #(parse-spec % options))
+                   (sort-by type-priority))]
+    (if-some [or-spec (apply impl/deep-merge (filter or-pred specs))]
+      (if-some [other-specs (seq (remove or-pred specs))]
+        (update or-spec ::items (partial mapv #(apply impl/deep-merge % other-specs)))
+        or-spec)
+      (apply impl/deep-merge specs))))
+
 (defmethod parse-form 'clojure.spec.alpha/merge [_ form options]
-  (let [type-priority #(if (= (:type %) :multi-spec) 1 0)]
-    (apply impl/deep-merge (->> (rest form)
-                                (map #(parse-spec % options))
-                                (sort-by type-priority)))))
+  (parse-merge form options))
 
 (defmethod parse-form 'clojure.spec.alpha/every [_ form options]
   (let [{:keys [into]} (apply hash-map (drop 2 form))]
@@ -247,8 +256,4 @@
      ::item spec}))
 
 (defmethod parse-form 'spec-tools.core/merge [_ form options]
-  (let [type-priority #((:type %) {:map 1
-                                   :multi-spec 0})]
-    (apply impl/deep-merge (->> (rest form)
-                                (map #(parse-spec % options))
-                                (sort-by type-priority)))))
+  (parse-merge form options))
