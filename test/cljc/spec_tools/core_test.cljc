@@ -818,11 +818,15 @@
 
 (deftest issue-179
   (testing "st/coerce can work properly with s/or specs"
-    (let [chevy {:doors 4}]
+    (let [chevy {:doors 4 :a 1 :junk "junk"}]
       (is (= (st/coerce ::car chevy st/strip-extra-keys-transformer)
              {:doors 4}))
       (is (= (st/coerce ::vehicle chevy st/strip-extra-keys-transformer)
              {:doors 4}))
+      (is (= {:doors 4 :a 1}
+             (st/coerce (s/merge ::vehicle
+                                 (s/keys :opt-un [::a]))
+                        chevy st/strip-extra-keys-transformer)))
       (is (= (st/coerce ::new-vehicle {:rodas [1 "1" 3]} st/strip-extra-keys-transformer)
              {:rodas #{1 "1" 3}}))
       (is (= (st/coerce ::s {:keyword "a" :date "2020-02-22"} st/json-transformer)
