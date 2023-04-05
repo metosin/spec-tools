@@ -28,7 +28,7 @@ Posts:
 
 [![Clojars Project](http://clojars.org/metosin/spec-tools/latest-version.svg)](http://clojars.org/metosin/spec-tools)
 
-Requires Java 1.8, tested with Clojure `1.10.0` and ClojureScript `1.10.520`+.
+Requires Java 1.8, tested with Clojure `1.11.0` and ClojureScript `1.11.4`+.
 
 Status: **Alpha** (as spec is still alpha too).
 

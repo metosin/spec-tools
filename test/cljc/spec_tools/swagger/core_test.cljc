@@ -174,6 +174,68 @@
   (doseq [[spec swagger-spec] exceptations]
     (is (= swagger-spec (swagger/transform spec)))))
 
+(s/def ::ref-spec (st/spec
+                    {:spec          ::keys2
+                     :description   "description"
+                     :swagger/title "RefSpec"}))
+
+(s/def ::coll-ref-spec (st/spec
+                         {:spec (s/coll-of ::ref-spec)}))
+(def ref-expectations
+  (merge
+    exceptations
+    {::keys
+     {:$ref "#/definitions/spec-tools.swagger.core-test.keys"
+      ::swagger/definitions {"spec-tools.swagger.core-test.keys"
+                             {:type "object",
+                              :properties {"integer" {:type "integer"}},
+                              :required ["integer"]}}}
+
+     ::ref-spec
+     {:$ref "#/definitions/RefSpec"
+      ::swagger/definitions {"RefSpec" {:type "object"
+                                        :properties  {"integer" {:type "integer"}
+                                                      "spec" {:type "string"
+                                                              :description "description"
+                                                              :title "spec-tools.swagger.core-test/spec"
+                                                              :default "123"
+                                                              :example "swagger-example"}}
+                                        :required ["integer" "spec"]
+                                        :description "description"}}}
+
+     (s/keys :req [::ref-spec])
+     {:type "object"
+      :properties {"spec-tools.swagger.core-test/ref-spec" {:$ref "#/definitions/RefSpec"}}
+      :required ["spec-tools.swagger.core-test/ref-spec"]
+      ::swagger/definitions {"RefSpec" {:type "object"
+                                        :properties {"integer" {:type "integer"}
+                                                     "spec" {:type "string"
+                                                             :description "description"
+                                                             :title "spec-tools.swagger.core-test/spec"
+                                                             :default "123"
+                                                             :example "swagger-example"}}
+                                        :required ["integer" "spec"]
+                                        :description "description"}}}
+
+     ::coll-ref-spec
+     {:type "array"
+      :items {:$ref "#/definitions/RefSpec"}
+      ::swagger/definitions {"RefSpec" {:type "object"
+                                        :properties {"integer" {:type "integer"}
+                                                     "spec" {:type "string"
+                                                             :description "description"
+                                                             :title "spec-tools.swagger.core-test/spec"
+                                                             :default "123"
+                                                             :example "swagger-example"}}
+                                        :required ["integer" "spec"]
+                                        :description "description"}}
+      :title "spec-tools.swagger.core-test/coll-ref-spec"}}))
+
+(deftest test-expectations-with-refs
+  (doseq [[spec swagger-spec] ref-expectations]
+    (is (= swagger-spec (swagger/transform spec {:refs? true :type :schema})))
+    (is (= swagger-spec (swagger/transform spec {:refs? true :in :body}))) ) )
+
 (deftest parameter-test
   (testing "nilable body is not required"
     (is (= [{:in "body",
@@ -207,7 +269,8 @@
 
        (testing "all expectations pass the swagger spec validation"
          (doseq [[spec] exceptations]
-           (is (= nil (-> spec swagger/transform swagger-spec v/validate))))))))
+           (is (= nil (-> spec swagger/transform swagger-spec v/validate)))
+           (is (nil? (-> spec (swagger/transform {:refs? true}) swagger-spec v/validate))))))))
 
 (s/def ::id string?)
 (s/def ::name string?)
