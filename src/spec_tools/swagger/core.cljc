@@ -1,5 +1,6 @@
 (ns spec-tools.swagger.core
-  (:require [clojure.walk :as walk]
+  (:require [clojure.string :as string]
+            [clojure.walk :as walk]
             [spec-tools.json-schema :as json-schema]
             [spec-tools.visitor :as visitor]
             [spec-tools.impl :as impl]
@@ -89,16 +90,59 @@
 (defmethod accept-spec ::default [dispatch spec children options]
   (json-schema/accept-spec dispatch spec children options))
 
+(defmulti create-or-raise-refs (fn [{:keys [type]} _] type))
+
+(defmethod create-or-raise-refs "object" [swagger options]
+  (if (and (or (= :schema (:type options))
+               (= :body (:in options)))
+           (contains? swagger :title))
+    (let [title (string/replace (:title swagger) #"/" ".")
+          swagger' (create-or-raise-refs (dissoc swagger :title) options)]
+      {:$ref         (str "#/definitions/" title)
+       ::definitions (merge {title (dissoc swagger' ::definitions)} (::definitions swagger'))})
+    (let [definitions (apply merge (map ::definitions (vals (:properties swagger))))]
+      (if definitions
+        (-> swagger
+            (assoc ::definitions definitions)
+            (update :properties update-vals #(dissoc % ::definitions)))
+        swagger))))
+
+(defmethod create-or-raise-refs "array" [swagger _]
+  (let [definitions (get-in swagger [:items ::definitions])]
+    (if definitions
+      (-> swagger
+          (update ::definitions merge definitions)
+          (update :items dissoc ::definitions))
+      swagger)))
+
+(defmethod create-or-raise-refs :default [swagger _]
+  swagger)
+
+(defn- accept-spec-with-refs [dispatch spec children options]
+  (create-or-raise-refs
+    (accept-spec dispatch spec children options)
+    options))
+
 (defn transform
   "Generate Swagger schema matching the given clojure.spec spec.
 
   Since clojure.spec is more expressive than Swagger schemas, everything that
   satisfies the spec should satisfy the resulting schema, but the converse is
-  not true."
+  not true.
+
+  Available options:
+
+  | Key      | Description
+  |----------|-----------------------------------------------------------
+  | `:refs?` | Whether refs should be created for objects. Default: false
+
+  "
   ([spec]
    (transform spec nil))
   ([spec options]
-   (visitor/visit spec accept-spec options)))
+   (if (:refs? options)
+     (visitor/visit spec accept-spec-with-refs options)
+     (visitor/visit spec accept-spec options))))
 
 ;;
 ;; extract swagger2 parameters

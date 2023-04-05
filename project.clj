@@ -27,7 +27,7 @@
                              [lein-pprint "1.3.2"]]
                    :jvm-opts ^:replace ["-server"]
                    ;:global-vars {*warn-on-reflection* true}
-                   :dependencies [[org.clojure/clojure "1.10.0"]
+                   :dependencies [[org.clojure/clojure "1.11.1"]
                                   [org.clojure/clojurescript "1.10.520"]
                                   [criterium "0.4.5"]
                                   [prismatic/schema "1.1.12"]
