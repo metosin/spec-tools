@@ -252,7 +252,25 @@
                                            :type "string"}},
                       :required ["integer" "spec"],
                       :x-nullable true}}]
-           (swagger/extract-parameter :body (s/nilable ::keys2))))))
+           (swagger/extract-parameter :body (s/nilable ::keys2)))))
+
+  (testing "definitions are raised to the top of the parameter"
+    (is (=
+          [{:in "body"
+            :name "spec-tools.swagger.core-test/ref-spec"
+            :description ""
+            :required true
+            :schema {:$ref "#/definitions/RefSpec"
+                     ::swagger/definitions {"RefSpec" {:type "object"
+                                                       :properties {"integer" {:type "integer"}
+                                                                    "spec" {:type "string"
+                                                                            :description "description"
+                                                                            :title "spec-tools.swagger.core-test/spec"
+                                                                            :default "123"
+                                                                            :example "swagger-example"}}
+                                                       :required ["integer" "spec"]
+                                                       :description "description"}}}}]
+          (swagger/extract-parameter :body ::ref-spec {:refs? true})))))
 
 #?(:clj
    (deftest test-parameter-validation
