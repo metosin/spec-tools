@@ -148,28 +148,34 @@
 ;; extract swagger2 parameters
 ;;
 
-(defmulti extract-parameter (fn [in _] in))
+(defmulti extract-parameter (fn [in _ & _] in))
 
-(defmethod extract-parameter :body [_ spec]
-  (let [schema (transform spec {:in :body, :type :parameter})]
-    [{:in "body"
-      :name (-> spec st/spec-name impl/qualified-name (or "body"))
-      :description (-> spec st/spec-description (or ""))
-      :required (not (impl/nilable-spec? spec))
-      :schema schema}]))
+(defmethod extract-parameter :body
+  ([in spec]
+   (extract-parameter in spec nil))
+  ([_ spec options]
+   (let [schema (transform spec (merge options {:in :body, :type :parameter}))]
+     [{:in          "body"
+       :name        (-> spec st/spec-name impl/qualified-name (or "body"))
+       :description (-> spec st/spec-description (or ""))
+       :required    (not (impl/nilable-spec? spec))
+       :schema      schema}])))
 
-(defmethod extract-parameter :default [in spec]
-  (let [{:keys [properties required]} (transform spec {:in in, :type :parameter})]
-    (mapv
-      (fn [[k {:keys [type] :as schema}]]
-        (merge
-          {:in (name in)
-           :name k
-           :description (-> spec st/spec-description (or ""))
-           :type type
-           :required (contains? (set required) k)}
-          schema))
-      properties)))
+(defmethod extract-parameter :default
+  ([in spec]
+   (extract-parameter in spec nil))
+  ([in spec options]
+   (let [{:keys [properties required]} (transform spec (merge options {:in in, :type :parameter}))]
+     (mapv
+       (fn [[k {:keys [type] :as schema}]]
+         (merge
+           {:in          (name in)
+            :name        k
+            :description (-> spec st/spec-description (or ""))
+            :type        type
+            :required    (contains? (set required) k)}
+           schema))
+       properties))))
 
 ;;
 ;; expand the spec
