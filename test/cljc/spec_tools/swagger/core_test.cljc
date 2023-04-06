@@ -405,6 +405,26 @@
                :path (st/create-spec {:spec (s/keys :req [::id])})
                :body (st/create-spec {:spec ::address})}}))))
 
+  (testing "::parameters with refs"
+    (is (=
+          {:parameters [{:in "body",
+                         :name "spec-tools.swagger.core-test/ref-spec",
+                         :description "",
+                         :required true,
+                         :schema {:$ref "#/definitions/RefSpec"}}],
+           :definitions {"RefSpec" {:type "object",
+                                    :properties {"integer" {:type "integer"},
+                                                 "spec" {:type "string",
+                                                         :description "description",
+                                                         :title "spec-tools.swagger.core-test/spec",
+                                                         :default "123",
+                                                         :example "swagger-example"}},
+                                    :required ["integer" "spec"],
+                                    :description "description"}}}
+          (swagger/swagger-spec
+            {::swagger/parameters {:body ::ref-spec}}
+            {:refs? true}))))
+
   (testing "::responses"
     (is (= {:responses
             {200 {:schema
@@ -428,7 +448,32 @@
              {:responses {404 {:description "fail"}
                           500 {:description "fail"}}
               ::swagger/responses {200 {:schema ::user}
-                                   404 {:description "Ohnoes."}}})))))
+                                   404 {:description "Ohnoes."}}}))))
+
+  (testing "::responses with refs"
+    (is (=
+          {:responses
+           {200 {:schema
+                 {:$ref "#/definitions/User"},
+                 :description ""}},
+           :definitions {"User"
+                         {:type "object",
+                          :properties {"id" {:type "string"},
+                                       "name" {:type "string"},
+                                       "address" {:$ref "#/definitions/spec-tools.swagger.core-test.address"}},
+                          :required ["id" "name" "address"]}
+                         "spec-tools.swagger.core-test.address"
+                         {:type "object",
+                          :properties {"street" {:type "string"},
+                                       "city" {:enum [:tre :hki],
+                                               :type "string",
+                                               :x-nullable true}},
+                          :required ["street" "city"]}}}
+          (swagger/swagger-spec
+            {::swagger/responses {200 {:schema (st/create-spec
+                                                 {:spec ::user
+                                                  :swagger/title "User"})}}}
+            {:refs? true})))))
 
 #?(:clj
    (deftest test-schema-validation
@@ -453,7 +498,8 @@
                                              ::swagger/responses {200 {:schema ::user
                                                                        :description "Found it!"}
                                                                   404 {:description "Ohnoes."}}}}}}]
-       (is (nil? (-> data swagger/swagger-spec v/validate))))))
+       (is (nil? (-> data swagger/swagger-spec v/validate)))
+       (is (nil? (-> data (swagger/swagger-spec {:refs? true}) v/validate))))))
 
 (deftest backport-swagger-meta-unnamespaced
   (is (= (swagger/transform

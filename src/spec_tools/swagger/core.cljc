@@ -181,20 +181,27 @@
 ;; expand the spec
 ;;
 
+(defn- update-if [m k f & args]
+  (if (contains? m k)
+    (apply update m k f args)
+    m))
 (defmulti expand (fn [k _ _ _] k))
 
-(defmethod expand ::responses [_ v acc _]
-  {:responses
-   (into
-     (or (:responses acc) {})
-     (for [[status response] v]
-       [status (as-> response $
-                     (if (:schema $) (update $ :schema transform {:type :schema}) $)
-                     (update $ :description (fnil identity "")))]))})
+(defmethod expand ::responses [_ v acc options]
+  (let [responses (into
+                    (or (:responses acc) {})
+                    (for [[status response] v]
+                      [status (as-> response $
+                                    (if (:schema $) (update $ :schema transform (merge options {:type :schema})) $)
+                                    (update $ :description (fnil identity "")))]))]
+    (if (:refs? options)
+      {:responses   (update-vals responses #(update-if % :schema dissoc ::definitions))
+       :definitions (apply merge (map #(get-in % [:schema ::definitions]) (vals responses)))}
+      {:responses responses})))
 
-(defmethod expand ::parameters [_ v acc _]
+(defmethod expand ::parameters [_ v acc options]
   (let [old (or (:parameters acc) [])
-        new (mapcat (fn [[in spec]] (extract-parameter in spec)) v)
+        new (mapcat (fn [[in spec]] (extract-parameter in spec options)) v)
         merged (->> (into old new)
                     (reverse)
                     (reduce
@@ -207,22 +214,32 @@
                     (first)
                     (reverse)
                     (vec))]
-    {:parameters merged}))
+    (if (:refs? options)
+      {:parameters  (mapv #(update-if % :schema dissoc ::definitions) merged)
+       :definitions (apply merge (map #(get-in % [:schema ::definitions]) merged))}
+      {:parameters merged})))
 
 (defn expand-qualified-keywords [x options]
-  (let [accept? (set (keys (methods expand)))]
+  (let [accept? (set (keys (methods expand)))
+        merge-only-maps (fn [& colls] (if (every? map? colls) (apply merge colls) (last colls)))]
     (walk/postwalk
       (fn [x]
         (if (map? x)
           (reduce-kv
             (fn [acc k v]
               (if (accept? k)
-                (-> acc (dissoc k) (merge (expand k v acc options)))
+                (merge-with merge-only-maps (dissoc acc k) (expand k v acc options))
                 acc))
             x
             x)
           x))
       x)))
+
+(defn- raise-refs-to-top [x]
+  (cond-> x
+    (:paths x) (->
+                 (assoc :definitions (apply merge (map :definitions (mapcat vals (vals (:paths x))))))
+                 (update :paths update-vals (fn [path] (update-vals path #(dissoc % :definitions)))))))
 
 ;;
 ;; generate the swagger spec
@@ -232,8 +249,16 @@
   "Transforms data into a swagger2 spec. Input data must conform
   to the Swagger2 Spec (https://swagger.io/specification/v2/) with a
   exception that it can have any qualified keywords that are expanded
-  with the `spec-tools.swagger.core/expand` multimethod."
+  with the `spec-tools.swagger.core/expand` multimethod.
+
+  Available options:
+
+  | Key      | Description
+  |----------|-----------------------------------------------------------
+  | `:refs?` | Whether refs should be created for objects. Default: false
+  "
   ([x]
    (swagger-spec x nil))
   ([x options]
-   (expand-qualified-keywords x options)))
+   (cond-> (expand-qualified-keywords x options)
+     (:refs? options) (raise-refs-to-top))))
