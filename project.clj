@@ -1,5 +1,5 @@
-(defproject metosin/spec-tools "0.10.5"
-  :description "Clojure(Script) tools for clojure.spec"
+(defproject net.hughpowell/spec-tools "0.10.6"
+  :description "Clojure(Script) tools for clojure.spec - forked from github.com/metosin/spec-tools"
   :url "https://github.com/metosin/spec-tools"
   :license {:name "Eclipse Public License", :url "https://www.eclipse.org/legal/epl-2.0/"}
   :test-paths ["test/clj" "test/cljc"]
@@ -39,7 +39,7 @@
                                   ; If the library gets updated with fixes it would be desirable to switch back to it.
                                   ;[com.bhauman/spell-spec "0.1.1"]
                                   [expound "0.8.4"]
-																																		[metosin/muuntaja "0.6.7"]
+                                  [metosin/muuntaja "0.6.7"]
                                   [metosin/ring-swagger "0.26.2"]
                                   [metosin/scjsv "0.6.1"]]}
              :perf {:jvm-opts ^:replace ["-server"]}}
