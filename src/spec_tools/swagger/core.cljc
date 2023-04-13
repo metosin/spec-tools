@@ -90,6 +90,11 @@
 (defmethod accept-spec ::default [dispatch spec children options]
   (json-schema/accept-spec dispatch spec children options))
 
+(defn- update-if [m k f & args]
+  (if (contains? m k)
+    (apply update m k f args)
+    m))
+
 (defmulti create-or-raise-refs (fn [{:keys [type]} _] type))
 
 (defmethod create-or-raise-refs "object" [swagger options]
@@ -100,11 +105,14 @@
           swagger' (create-or-raise-refs (dissoc swagger :title) options)]
       {:$ref         (str "#/definitions/" title)
        ::definitions (merge {title (dissoc swagger' ::definitions)} (::definitions swagger'))})
-    (let [definitions (apply merge (map ::definitions (vals (:properties swagger))))]
+    (let [definitions (apply merge
+                             (::definitions (:additionalProperties swagger))
+                             (map ::definitions (vals (:properties swagger))))]
       (if definitions
         (-> swagger
             (assoc ::definitions definitions)
-            (update :properties update-vals #(dissoc % ::definitions)))
+            (update-if :properties update-vals #(dissoc % ::definitions))
+            (update-if :additionalProperties dissoc ::definitions))
         swagger))))
 
 (defmethod create-or-raise-refs "array" [swagger _]
@@ -181,10 +189,6 @@
 ;; expand the spec
 ;;
 
-(defn- update-if [m k f & args]
-  (if (contains? m k)
-    (apply update m k f args)
-    m))
 (defmulti expand (fn [k _ _ _] k))
 
 (defmethod expand ::responses [_ v acc options]

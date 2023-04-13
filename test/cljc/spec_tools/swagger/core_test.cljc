@@ -473,6 +473,23 @@
             {::swagger/responses {200 {:schema (st/create-spec
                                                  {:spec ::user
                                                   :swagger/title "User"})}}}
+            {:refs? true}))))
+
+  (testing "::responses with refs in additionalProperties"
+    (is (=
+          {:responses {200 {:schema {:$ref "#/definitions/Every Test"}, :description ""}},
+           :definitions {"Every Test" {:type "object",
+                                       :additionalProperties {:$ref "#/definitions/spec-tools.swagger.core-test.address"}},
+                         "spec-tools.swagger.core-test.address" {:type "object",
+                                                                 :properties {"street" {:type "string"},
+                                                                              "city" {:enum [:tre :hki],
+                                                                                      :type "string",
+                                                                                      :x-nullable true}},
+                                                                 :required ["street" "city"]}}}
+          (swagger/swagger-spec
+            {::swagger/responses {200 {:schema (st/create-spec
+                                                 {:spec (s/every-kv ::id ::address)
+                                                  :swagger/title "Every Test"})}}}
             {:refs? true})))))
 
 #?(:clj
