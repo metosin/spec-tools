@@ -239,11 +239,14 @@
           x))
       x)))
 
-(defn- raise-refs-to-top [x]
-  (cond-> x
-    (:paths x) (->
-                 (assoc :definitions (apply merge (map :definitions (mapcat vals (vals (:paths x))))))
-                 (update :paths update-vals (fn [path] (update-vals path #(dissoc % :definitions)))))))
+(defn- raise-refs-to-top [swagger-doc]
+  (let [swagger-doc'
+        (cond-> swagger-doc
+          (:paths swagger-doc) (->
+                                 (assoc :definitions (apply merge (map :definitions (mapcat vals (vals (:paths swagger-doc))))))
+                                 (update :paths update-vals (fn [path] (update-vals path #(dissoc % :definitions))))))]
+    (cond-> swagger-doc'
+      (nil? (:definitions swagger-doc')) (dissoc swagger-doc' :definitions))))
 
 ;;
 ;; generate the swagger spec
