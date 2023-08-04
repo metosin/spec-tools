@@ -31,18 +31,22 @@
 
 (defn- accept-merge [children]
   ;; Use x-anyOf and x-allOf instead of normal versions
-  {:type "object"
-   :properties (->> (concat children
-                            (mapcat :x-anyOf children)
-                            (mapcat :x-allOf children))
-                    (map :properties)
-                    (reduce merge {}))
-   ;; Don't include top schema from s/or.
-   :required (->> (concat (remove :x-anyOf children)
-                          (mapcat :x-allOf children))
-                  (map :required)
-                  (reduce into (sorted-set))
-                  (into []))})
+  (let [children' (map #(if (contains? % :$ref)
+                          (first (vals (::definitions %)))
+                          %)
+                       children)]
+    {:type "object"
+     :properties (->> (concat children'
+                              (mapcat :x-anyOf children')
+                              (mapcat :x-allOf children'))
+                      (map :properties)
+                      (reduce merge {}))
+     ;; Don't include top schema from s/or.
+     :required (->> (concat (remove :x-anyOf children')
+                            (mapcat :x-allOf children'))
+                    (map :required)
+                    (reduce into (sorted-set))
+                    (into []))}))
 
 (defmethod accept-spec 'clojure.spec.alpha/merge [_ _ children _]
   (accept-merge children))
