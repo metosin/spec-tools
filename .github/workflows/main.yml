@@ -13,9 +13,9 @@ jobs:
       matrix:
         test-type: [clj, cljs]
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: Cache Clojure dependencies
-        uses: actions/cache@v1
+        uses: actions/cache@v3
         with:
           path: ~/.m2
           key: lein-${{ github.job }}-${{ hashFiles('project.clj') }}
@@ -28,9 +28,9 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: Cache Clojure dependencies
-        uses: actions/cache@v1
+        uses: actions/cache@v3
         with:
           path: ~/.m2
           key: lein-${{ github.job }}-${{ hashFiles('project.clj') }}
@@ -40,4 +40,4 @@ jobs:
       - name: Run tests with coverage
         run: lein cloverage --codecov
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
