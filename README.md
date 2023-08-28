@@ -4,6 +4,8 @@
 
 Clojure/Script utilities on top of [clojure.spec](http://clojure.org/about/spec). Bundled in one project but features in separate namespaces.
 
+[Metosin Open Source Status: Inactive](https://github.com/metosin/open-source/blob/main/project-status.md#inactive)
+
 * [Spec Coercion](docs/01_coercion.md)
 * [Data Specs](docs/02_data_specs.md)
 * [Spec Visitors](docs/03_spec_visitor.md)
