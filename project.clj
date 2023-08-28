@@ -46,9 +46,10 @@
   :aliases {"all" ["with-profile" "dev"]
             "perf" ["with-profile" "default,dev,perf"]
             "test-clj" ["all" "do" ["test"] ["check"]]
-            "test-phantom" ["doo" "phantom" "test"]
-            "test-advanced" ["doo" "phantom" "advanced-test"]
+            "test-browser" ["doo" "chrome-headless" "test"]
+            "test-advanced" ["doo" "chrome-headless" "advanced-test"]
             "test-node" ["doo" "node" "node-test"]}
+  :doo {:paths {:karma "node_modules/karma-cli/bin/karma"}}
   ;; Below, :process-shim false is workaround for <https://github.com/bensu/doo/pull/141>
   :cljsbuild {:builds [{:id "test"
                         :source-paths ["src" "test/cljc" "test/cljs"]
