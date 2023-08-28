@@ -166,7 +166,12 @@
 ;; Generate the OpenAPI3 spec
 ;;
 
-(defn openapi-spec
+;; Top-level openapi spec generation was moved to reitit in
+;; https://github.com/metosin/reitit/pull/638
+;;
+;; Once reitit-0.7.0-alpha6 has been out for some time, this can be
+;; deleted since it should have no other users.
+(defn ^:deprecated openapi-spec
   "Transforms data into a OpenAPI3 spec. Input data must conform to the
   Swagger3 Spec (https://swagger.io/specification/) with a exception that it
   can have any qualified keywords which are expanded with the
