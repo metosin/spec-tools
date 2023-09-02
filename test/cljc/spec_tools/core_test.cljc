@@ -434,11 +434,11 @@
           value {"keys" {:c1 "1" ::c2 "kikka"}
                  "keys2" {:c1 true}
                  "ints" [1 "1" "invalid" "3"]}]
-      (is (= {:keys {:c1 1 ::c2 :kikka}
+      (is (= {:keys {:c1 "1" ::c2 "kikka"}
               :keys2 {:c1 true}
               :ints #{1 "invalid" 3}}
              (st/coerce spec value st/string-transformer)))
-      (is (= {:keys {:c1 "1" ::c2 :kikka}
+      (is (= {:keys {:c1 "1" ::c2 "kikka"}
               :keys2 {:c1 true}
               :ints #{1 "1" "invalid" "3"}}
              (st/coerce spec value st/json-transformer)))))
@@ -928,3 +928,56 @@
              {:epoch "Epoch converted"
               :nano 20
               :time-basis :UTC})))))
+
+(def strict-json-transformer
+  (st/type-transformer
+   st/strip-extra-keys-transformer   
+   st/json-transformer))
+
+(s/def ::a-string string?)
+(s/def ::a-map-with-string (s/keys :req-un [::a-string]))
+
+(s/def ::a-vector vector?)
+(s/def ::a-map-with-vector (s/keys :req-un [::a-vector]))
+
+(s/def ::an-int int?)
+(s/def ::a-map-with-int (s/keys :req-un [::an-int]))
+
+(s/def ::issue-494-spec (s/or :foo ::a-map-with-string
+                              :bar ::a-map-with-vector
+                              :baz ::a-map-with-int))
+
+(deftest reitit-issue-494
+  (testing "s/or with s/keys and req-un on reitit's issue 494 example")
+  (is (= {:a-string "bar"}
+         (st/coerce ::issue-494-spec {:a-string "bar"} strict-json-transformer)))
+  (is (= {:an-int 0}
+         (st/coerce ::issue-494-spec {:an-int 0} strict-json-transformer)))
+  (is (= {:a-vector ["foo"]} (st/coerce ::issue-494-spec {:a-vector ["foo"]} strict-json-transformer))))
+
+
+(s/def ::keyword keyword?)
+(s/def ::int int?)
+(s/def ::date inst?)
+
+(s/def ::keyword-and-int (s/keys :req-un [::keyword ::int]))
+(s/def ::keyword-and-date (s/keys :req-un [::keyword ::date]))
+(s/def ::issue-212-biiwide-spec (s/or :x ::keyword-and-date
+                                      :y ::keyword-and-int))
+
+(deftest issue-212
+  (testing "s/or with s/keys and req-un on issue biiwide's 212 example")
+  (is (=
+       {:keyword :a :date #inst"2020-02-22T00:00:00.000-00:00"}
+       (st/coerce ::issue-212-biiwide-spec
+                  {:keyword "a" :date "2020-02-22"} strict-json-transformer)))
+  ;; last 2 examples, not happy with having ::int uncoerced, but that is
+  ;; how coerce works
+  (is (=
+       {:keyword :a :int "1"}
+       (st/coerce ::keyword-and-int
+                  {:keyword "a" :int "1"} strict-json-transformer)))
+  (is (=
+       {:keyword :a :int "1"}
+       (st/coerce ::issue-212-biiwide-spec
+                  {:keyword "a" :int "1"} strict-json-transformer))))
