@@ -184,16 +184,18 @@
       (assoc schema :title (impl/qualified-name title))
       schema)))
 
+(def key-group-mapping 
+  {'or  :anyOf ;; there is no 'xor' key-group, so 'anyOf' is more appropriate than 'oneOf' 
+   'and :allOf})
+
 (defn- parse-required1 
   "Helper for generating correct schemas for :req/:req-un keys, 
   taking into account potential or/and key-goups."
   [name-fn x]
   (if (list? x) ;; found key-group
-    (let [k (condp = (first x)
-              'or  :anyOf ;; there is no 'xor' key-group, so 'anyOf' is more appropriate than 'oneOf' 
-              'and :allOf
-              (throw
-               (IllegalArgumentException. "unsupported key-group expression")))]
+    (let [k (or (key-group-mapping (first x))
+                (throw
+                 (IllegalArgumentException. "unsupported key-group expression")))]
       {k (mapv (partial parse-required1 name-fn) (next x))})
     {:required [(name-fn x)]}))
 
