@@ -77,6 +77,12 @@
 (defmethod visit-spec 'spec-tools.core/merge [spec accept options]
   (visit-merge spec accept options))
 
+(defmethod visit-spec 'clojure.spec.alpha/multi-spec [spec accept options]
+  (let [methods-specs (->> (impl/extract-form spec)
+                               (parse/get-multi-spec-sub-specs)
+                               (into {}))]
+    (accept 'clojure.spec.alpha/multi-spec spec (mapv #(visit (val %) accept options) methods-specs) options)))
+
 (defmethod visit-spec 'clojure.spec.alpha/every [spec accept options]
   (let [[_ inner-spec] (impl/extract-form spec)]
     (accept 'clojure.spec.alpha/every spec [(visit inner-spec accept options)] options)))
