@@ -228,6 +228,9 @@
 (defmethod accept-spec 'spec-tools.core/merge [_ spec children options]
   (accept-merge children spec options))
 
+(defmethod accept-spec 'clojure.spec.alpha/multi-spec [_ _ children _]
+  {:anyOf children})
+
 (defmethod accept-spec 'clojure.spec.alpha/every [_ spec children options]
   (let [form (impl/extract-form spec)
         {:keys [type]} (parse/parse-spec form)]

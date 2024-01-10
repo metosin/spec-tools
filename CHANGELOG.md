@@ -1,3 +1,7 @@
+# Unreleased
+
+* Support transforming schema to JSON Schema. PR [#281](https://github.com/metosin/spec-tools/pull/281)
+
 # 0.10.6 (2023-08-28)
 
 * Deprecate `spec-tools.openapi/openapi-spec`
