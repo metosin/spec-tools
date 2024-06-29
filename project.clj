@@ -5,9 +5,9 @@
   :test-paths ["test/clj" "test/cljc"]
 
   :deploy-repositories [["releases" {:url "https://repo.clojars.org/"
-                                     :username "metosinci"
-                                     :password :env
-                                     :sign-releases false}]]
+                                     :sign-releases false
+                                     :username :env/CLOJARS_USER
+                                     :password :env/CLOJARS_DEPLOY_TOKEN}]]
 
   :codox {:output-path "doc"
           :source-uri "https://github.com/metosin/spec-tools/{version}/{filepath}#L{line}"

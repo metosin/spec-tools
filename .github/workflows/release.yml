@@ -24,7 +24,7 @@ jobs:
     - name: Build jar
       run: lein jar
     - name: Deploy to Clojars
-      run: lein deploy
+      run: lein deploy releases
       env:
         CLOJARS_USER: metosinci
         CLOJARS_DEPLOY_TOKEN: "${{ secrets.CLOJARS_DEPLOY_TOKEN }}"
