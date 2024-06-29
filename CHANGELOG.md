@@ -1,6 +1,6 @@
 # Unreleased
 
-* Support transforming schema to JSON Schema. PR [#281](https://github.com/metosin/spec-tools/pull/281)
+* Support transforming multi-spec to JSON Schema. PR [#281](https://github.com/metosin/spec-tools/pull/281)
 * FIX :reason doesn't compose as expected [#171](https://github.com/metosin/spec-tools/issues/171)
 * Update Dependencies
 
