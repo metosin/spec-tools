@@ -1,4 +1,4 @@
-# Unreleased
+# 0.10.7 (2024-06-29)
 
 * Support transforming multi-spec to JSON Schema. PR [#281](https://github.com/metosin/spec-tools/pull/281)
 * FIX :reason doesn't compose as expected [#171](https://github.com/metosin/spec-tools/issues/171)
