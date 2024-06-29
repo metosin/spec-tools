@@ -13,9 +13,8 @@
                        [cljs.reader]
                        [cljs.spec.gen.alpha :as gen]]))
   (:import
-    #?@(:clj
-        [(clojure.lang AFn IFn Var)
-         (java.io Writer)])))
+   #?@(:clj [(clojure.lang IFn)
+             (java.io Writer)])))
 
 ;;
 ;; helpers
@@ -47,12 +46,12 @@
   if no spec was found."
   [name-or-spec]
   (or
-    (and (spec? name-or-spec) name-or-spec)
-    (get-spec name-or-spec)
-    (throw
-      (ex-info
-        (str "can't coerce to spec: " name-or-spec)
-        {:name-or-spec name-or-spec}))))
+   (and (spec? name-or-spec) name-or-spec)
+   (get-spec name-or-spec)
+   (throw
+    (ex-info
+     (str "can't coerce to spec: " name-or-spec)
+     {:name-or-spec name-or-spec}))))
 
 (defn ^:skip-wiki serialize
   "Writes specs into a string that can be read by the reader.
@@ -144,36 +143,36 @@
 (def json-transformer
   "Transformer that transforms data between JSON and EDN."
   (type-transformer
-    {:name :json
-     :decoders stt/json-type-decoders
-     :encoders stt/json-type-encoders
-     :default-encoder stt/any->any}))
+   {:name :json
+    :decoders stt/json-type-decoders
+    :encoders stt/json-type-encoders
+    :default-encoder stt/any->any}))
 
 (def string-transformer
   "Transformer that transforms data between Strings and EDN."
   (type-transformer
-    {:name :string
-     :decoders stt/string-type-decoders
-     :encoders stt/string-type-encoders
-     :default-encoder stt/any->any}))
+   {:name :string
+    :decoders stt/string-type-decoders
+    :encoders stt/string-type-encoders
+    :default-encoder stt/any->any}))
 
 (def strip-extra-keys-transformer
   "Transformer that drop extra keys from `s/keys` specs."
   (type-transformer
-    {:name ::strip-extra-keys
-     :decoders stt/strip-extra-keys-type-decoders}))
+   {:name ::strip-extra-keys
+    :decoders stt/strip-extra-keys-type-decoders}))
 
 (def strip-extra-values-transformer
   "Transformer that drop extra values from `s/tuple` specs."
   (type-transformer
-    {:name ::strip-extra-values
-     :decoders stt/strip-extra-values-type-decoders}))
+   {:name ::strip-extra-values
+    :decoders stt/strip-extra-values-type-decoders}))
 
 (def fail-on-extra-keys-transformer
   "Transformer that fails on extra keys in `s/keys` specs."
   (type-transformer
-    {:name ::fail-on-extra-keys
-     :decoders stt/fail-on-extra-keys-type-decoders}))
+   {:name ::fail-on-extra-keys
+    :decoders stt/fail-on-extra-keys-type-decoders}))
 
 ;;
 ;; Transforming
@@ -291,20 +290,20 @@
 
 (defmethod walk :or [{:keys [::parse/items]} value accept options]
   (reduce
-    (fn [v item]
-      (let [transformed (accept item v options)
-            valid? (some-> item :spec (s/valid? transformed))]
-        (if valid?
-          (reduced transformed)
-          transformed)))
-    value items))
+   (fn [v item]
+     (let [transformed (accept item v options)
+           valid? (some-> item :spec (s/valid? transformed))]
+       (if valid?
+         (reduced transformed)
+         transformed)))
+   value items))
 
 (defmethod walk :and [{:keys [::parse/items]} value accept options]
   (reduce
-    (fn [v item]
-      (let [transformed (accept item v options)]
-        transformed))
-    value items))
+   (fn [v item]
+     (let [transformed (accept item v options)]
+       transformed))
+   value items))
 
 (defmethod walk :nilable [{:keys [::parse/item]} value accept options]
   (accept item value options))
@@ -334,23 +333,23 @@
 (defmethod walk :map [{:keys [::parse/key->spec]} value accept options]
   (if (map? value)
     (reduce-kv
-      (fn [acc k v]
-        (let [spec (if (qualified-keyword? k) (s/get-spec k) (s/get-spec (get key->spec k)))
-              value (if spec (accept spec v options) v)]
-          (assoc acc k value)))
-      value
-      value)
+     (fn [acc k v]
+       (let [spec (if (qualified-keyword? k) (s/get-spec k) (s/get-spec (get key->spec k)))
+             value (if spec (accept spec v options) v)]
+         (assoc acc k value)))
+     value
+     value)
     value))
 
 (defmethod walk :map-of [{:keys [::parse/key ::parse/value]} data accept options]
   (if (map? data)
     (reduce-kv
-      (fn [acc k v]
-        (let [k' (accept key k options)
-              v' (accept value v options)]
-          (assoc acc k' v')))
-      (empty data)
-      data)
+     (fn [acc k v]
+       (let [k' (accept key k options)
+             v' (accept value v options)]
+         (assoc acc k' v')))
+     (empty data)
+     data)
     data))
 
 (defmethod walk :multi-spec [{:keys [::parse/key ::parse/dispatch]} data accept options]
@@ -367,16 +366,16 @@
 (defn- extra-spec-map [data]
   (->> (dissoc data :form :spec)
        (reduce
-         (fn [acc [k v]]
-           (if (= "spec-tools.parse" (namespace k)) acc (assoc acc k v)))
-         {})))
+        (fn [acc [k v]]
+          (if (= "spec-tools.parse" (namespace k)) acc (assoc acc k v)))
+        {})))
 
 (defn- fail-on-invoke [spec]
   (throw
-    (ex-info
-      (str
-        "Can't invoke spec with a non-function predicate: " spec)
-      {:spec spec})))
+   (ex-info
+    (str
+     "Can't invoke spec with a non-function predicate: " spec)
+    {:spec spec})))
 
 (defn- leaf? [spec]
   (:leaf? (into-spec spec)))
@@ -460,8 +459,8 @@
           spec-reason (:reason this)
           with-reason (fn [problem]
                         (cond-> problem
-                                (and spec-reason (not (:reason problem)))
-                                (assoc :reason spec-reason)))]
+                          (and spec-reason (not (:reason problem)))
+                          (assoc :reason spec-reason)))]
       (if problems
         (map with-reason problems))))
 
@@ -469,8 +468,8 @@
     (if-let [gen (:gen this)]
       (gen)
       (or
-        (gen/gen-for-pred spec)
-        (s/gen* (or (s/spec? spec) (s/specize* spec)) overrides path rmap))))
+       (gen/gen-for-pred spec)
+       (s/gen* (or (s/spec? spec) (s/specize* spec)) overrides path rmap))))
 
   (with-gen* [this gfn]
     (assoc this :gen gfn))
@@ -488,9 +487,9 @@
      [^Spec t ^Writer w]
      (.write w (str "#Spec"
                     (clojure.core/merge
-                      (select-keys t [:form])
-                      (if (:type t) (select-keys t [:type]))
-                      (extra-spec-map t))))))
+                     (select-keys t [:form])
+                     (if (:type t) (select-keys t [:type]))
+                     (extra-spec-map t))))))
 
 (defn spec? [x]
   (if (instance? Spec x) x))
@@ -550,7 +549,7 @@
         type (if (contains? m :type) type (:type info))
         name (-> spec meta ::s/name)
         record (map->Spec
-                 (clojure.core/merge m info {:spec spec :form form :type type :leaf? (parse/leaf-type? type)}))]
+                (clojure.core/merge m info {:spec spec :form form :type type :leaf? (parse/leaf-type? type)}))]
     (cond-> record name (with-meta {::s/name name}))))
 
 #?(:clj
@@ -575,10 +574,10 @@
              form# '~(impl/resolve-form &env pred)]
          (assert (map? info#) (str "spec info should be a map, was: " info#))
          (create-spec
-           (clojure.core/merge
-             info#
-             {:form form#
-              :spec ~pred}))))))
+          (clojure.core/merge
+           info#
+           {:form form#
+            :spec ~pred}))))))
 
 (defn- into-spec [x]
   (cond
@@ -613,11 +612,11 @@
                (gen* [_ overrides path rmap]
                  (s/gen* merge-spec overrides path rmap)))]
     (create-spec
-      (clojure.core/merge
-        {:spec spec
-         :form spec-form
-         :type :map}
-        (apply merge-with set/union form-keys)))))
+     (clojure.core/merge
+      {:spec spec
+       :form spec-form
+       :type :map}
+      (apply merge-with set/union form-keys)))))
 
 #?(:clj
    (defmacro merge [& forms]
