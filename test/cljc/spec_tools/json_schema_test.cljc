@@ -44,6 +44,11 @@
   (s/keys :req-un [:event.payload.result/action]
           :opt-un [:event.payload.result/payload]))
 
+(s/def ::multi (s/multi-spec event-payload :action))
+
+(defn =any-of [& bodies]
+  (->> bodies (map :anyOf) (map set) (apply =)))
+
 (deftest simple-spec-test
   (testing "primitive predicates"
     ;; You're intented to call jsc/to-json with a registered spec, but to avoid
@@ -116,11 +121,13 @@
             :properties {"spec-tools.json-schema-test/integer" {:type "integer"}
                          "spec-tools.json-schema-test/string" {:type "string"}}
             :required ["spec-tools.json-schema-test/integer" "spec-tools.json-schema-test/string"]}))
-    (is (= (jsc/transform (s/multi-spec event-payload :action))
-           {:anyOf [{:type "object" :properties {"action" {:enum [:result]} "payload" {:type "null"}} :required ["action"]}
-                    {:type "object"
-                     :properties {"action" {:enum [:add]} "payload" {:type "integer" :format "int64"}}
-                     :required ["action" "payload"]}]}))
+    (is (=any-of (jsc/transform ::multi)
+                 {:anyOf [{:type "object"
+                           :properties {"action" {:enum [:result]} "payload" {:type "null"}}
+                           :required ["action"]}
+                          {:type "object"
+                           :properties {"action" {:enum [:add]} "payload" {:type "integer" :format "int64"}}
+                           :required ["action" "payload"]}]}))
     (is (= (jsc/transform (s/every integer?)) {:type "array" :items {:type "integer"}}))
     (is (= (jsc/transform (s/every-kv string? integer?))
            {:type "object" :additionalProperties {:type "integer"}}))
