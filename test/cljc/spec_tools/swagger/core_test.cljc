@@ -174,6 +174,68 @@
   (doseq [[spec swagger-spec] exceptations]
     (is (= swagger-spec (swagger/transform spec)))))
 
+(s/def ::ref-spec (st/spec
+                    {:spec          ::keys2
+                     :description   "description"
+                     :swagger/title "RefSpec"}))
+
+(s/def ::coll-ref-spec (st/spec
+                         {:spec (s/coll-of ::ref-spec)}))
+(def ref-expectations
+  (merge
+    exceptations
+    {::keys
+     {:$ref "#/definitions/spec-tools.swagger.core-test.keys"
+      ::swagger/definitions {"spec-tools.swagger.core-test.keys"
+                             {:type "object",
+                              :properties {"integer" {:type "integer"}},
+                              :required ["integer"]}}}
+
+     ::ref-spec
+     {:$ref "#/definitions/RefSpec"
+      ::swagger/definitions {"RefSpec" {:type "object"
+                                        :properties  {"integer" {:type "integer"}
+                                                      "spec" {:type "string"
+                                                              :description "description"
+                                                              :title "spec-tools.swagger.core-test/spec"
+                                                              :default "123"
+                                                              :example "swagger-example"}}
+                                        :required ["integer" "spec"]
+                                        :description "description"}}}
+
+     (s/keys :req [::ref-spec])
+     {:type "object"
+      :properties {"spec-tools.swagger.core-test/ref-spec" {:$ref "#/definitions/RefSpec"}}
+      :required ["spec-tools.swagger.core-test/ref-spec"]
+      ::swagger/definitions {"RefSpec" {:type "object"
+                                        :properties {"integer" {:type "integer"}
+                                                     "spec" {:type "string"
+                                                             :description "description"
+                                                             :title "spec-tools.swagger.core-test/spec"
+                                                             :default "123"
+                                                             :example "swagger-example"}}
+                                        :required ["integer" "spec"]
+                                        :description "description"}}}
+
+     ::coll-ref-spec
+     {:type "array"
+      :items {:$ref "#/definitions/RefSpec"}
+      ::swagger/definitions {"RefSpec" {:type "object"
+                                        :properties {"integer" {:type "integer"}
+                                                     "spec" {:type "string"
+                                                             :description "description"
+                                                             :title "spec-tools.swagger.core-test/spec"
+                                                             :default "123"
+                                                             :example "swagger-example"}}
+                                        :required ["integer" "spec"]
+                                        :description "description"}}
+      :title "spec-tools.swagger.core-test/coll-ref-spec"}}))
+
+(deftest test-expectations-with-refs
+  (doseq [[spec swagger-spec] ref-expectations]
+    (is (= swagger-spec (swagger/transform spec {:refs? true :type :schema})))
+    (is (= swagger-spec (swagger/transform spec {:refs? true :in :body}))) ) )
+
 (deftest parameter-test
   (testing "nilable body is not required"
     (is (= [{:in "body",
@@ -190,7 +252,25 @@
                                            :type "string"}},
                       :required ["integer" "spec"],
                       :x-nullable true}}]
-           (swagger/extract-parameter :body (s/nilable ::keys2))))))
+           (swagger/extract-parameter :body (s/nilable ::keys2)))))
+
+  (testing "definitions are raised to the top of the parameter"
+    (is (=
+          [{:in "body"
+            :name "spec-tools.swagger.core-test/ref-spec"
+            :description ""
+            :required true
+            :schema {:$ref "#/definitions/RefSpec"
+                     ::swagger/definitions {"RefSpec" {:type "object"
+                                                       :properties {"integer" {:type "integer"}
+                                                                    "spec" {:type "string"
+                                                                            :description "description"
+                                                                            :title "spec-tools.swagger.core-test/spec"
+                                                                            :default "123"
+                                                                            :example "swagger-example"}}
+                                                       :required ["integer" "spec"]
+                                                       :description "description"}}}}]
+          (swagger/extract-parameter :body ::ref-spec {:refs? true})))))
 
 #?(:clj
    (deftest test-parameter-validation
@@ -207,7 +287,8 @@
 
        (testing "all expectations pass the swagger spec validation"
          (doseq [[spec] exceptations]
-           (is (= nil (-> spec swagger/transform swagger-spec v/validate))))))))
+           (is (= nil (-> spec swagger/transform swagger-spec v/validate)))
+           (is (nil? (-> spec (swagger/transform {:refs? true}) swagger-spec v/validate))))))))
 
 (s/def ::id string?)
 (s/def ::name string?)
@@ -324,6 +405,26 @@
                :path (st/create-spec {:spec (s/keys :req [::id])})
                :body (st/create-spec {:spec ::address})}}))))
 
+  (testing "::parameters with refs"
+    (is (=
+          {:parameters [{:in "body",
+                         :name "spec-tools.swagger.core-test/ref-spec",
+                         :description "",
+                         :required true,
+                         :schema {:$ref "#/definitions/RefSpec"}}],
+           :definitions {"RefSpec" {:type "object",
+                                    :properties {"integer" {:type "integer"},
+                                                 "spec" {:type "string",
+                                                         :description "description",
+                                                         :title "spec-tools.swagger.core-test/spec",
+                                                         :default "123",
+                                                         :example "swagger-example"}},
+                                    :required ["integer" "spec"],
+                                    :description "description"}}}
+          (swagger/swagger-spec
+            {::swagger/parameters {:body ::ref-spec}}
+            {:refs? true}))))
+
   (testing "::responses"
     (is (= {:responses
             {200 {:schema
@@ -347,7 +448,49 @@
              {:responses {404 {:description "fail"}
                           500 {:description "fail"}}
               ::swagger/responses {200 {:schema ::user}
-                                   404 {:description "Ohnoes."}}})))))
+                                   404 {:description "Ohnoes."}}}))))
+
+  (testing "::responses with refs"
+    (is (=
+          {:responses
+           {200 {:schema
+                 {:$ref "#/definitions/User"},
+                 :description ""}},
+           :definitions {"User"
+                         {:type "object",
+                          :properties {"id" {:type "string"},
+                                       "name" {:type "string"},
+                                       "address" {:$ref "#/definitions/spec-tools.swagger.core-test.address"}},
+                          :required ["id" "name" "address"]}
+                         "spec-tools.swagger.core-test.address"
+                         {:type "object",
+                          :properties {"street" {:type "string"},
+                                       "city" {:enum [:tre :hki],
+                                               :type "string",
+                                               :x-nullable true}},
+                          :required ["street" "city"]}}}
+          (swagger/swagger-spec
+            {::swagger/responses {200 {:schema (st/create-spec
+                                                 {:spec ::user
+                                                  :swagger/title "User"})}}}
+            {:refs? true}))))
+
+  (testing "::responses with refs in additionalProperties"
+    (is (=
+          {:responses {200 {:schema {:$ref "#/definitions/Every Test"}, :description ""}},
+           :definitions {"Every Test" {:type "object",
+                                       :additionalProperties {:$ref "#/definitions/spec-tools.swagger.core-test.address"}},
+                         "spec-tools.swagger.core-test.address" {:type "object",
+                                                                 :properties {"street" {:type "string"},
+                                                                              "city" {:enum [:tre :hki],
+                                                                                      :type "string",
+                                                                                      :x-nullable true}},
+                                                                 :required ["street" "city"]}}}
+          (swagger/swagger-spec
+            {::swagger/responses {200 {:schema (st/create-spec
+                                                 {:spec (s/every-kv ::id ::address)
+                                                  :swagger/title "Every Test"})}}}
+            {:refs? true})))))
 
 #?(:clj
    (deftest test-schema-validation
@@ -372,7 +515,8 @@
                                              ::swagger/responses {200 {:schema ::user
                                                                        :description "Found it!"}
                                                                   404 {:description "Ohnoes."}}}}}}]
-       (is (nil? (-> data swagger/swagger-spec v/validate))))))
+       (is (nil? (-> data swagger/swagger-spec v/validate)))
+       (is (nil? (-> data (swagger/swagger-spec {:refs? true}) v/validate))))))
 
 (deftest backport-swagger-meta-unnamespaced
   (is (= (swagger/transform
