@@ -186,14 +186,14 @@
 
 (def person-spec
   (ds/spec
-    ::person
-    {::id integer?
-     :age ::age
-     :name string?
-     :likes {string? boolean?}
-     (ds/req :languages) #{keyword?}
-     (ds/opt :address) {:street string?
-                        :zip string?}}))
+   ::person
+   {::id integer?
+    :age ::age
+    :name string?
+    :likes {string? boolean?}
+    (ds/req :languages) #{keyword?}
+    (ds/opt :address) {:street string?
+                       :zip string?}}))
 
 (deftest readme-test
   (is (= {:type "object"
@@ -216,11 +216,11 @@
           :description "it's an int"
           :default 42}
          (jsc/transform
-           (st/spec
-             {:spec integer?
-              :name "integer"
-              :description "it's an int"
-              :json-schema/default 42})))))
+          (st/spec
+           {:spec integer?
+            :name "integer"
+            :description "it's an int"
+            :json-schema/default 42})))))
 
 (deftest deeply-nested-test
   (is (= {:type "array"
@@ -230,9 +230,9 @@
                           :items {:type "array"
                                   :items {:type "string"}}}}}
          (jsc/transform
-           (ds/spec
-             ::nested
-             [[[[string?]]]])))))
+          (ds/spec
+           ::nested
+           [[[[string?]]]])))))
 
 (s/def ::user any?)
 (s/def ::name string?)
@@ -259,8 +259,8 @@
                    :properties {"foo" {:type "string"}}
                    :required ["foo"]}]}
          (jsc/transform
-           (s/or :bar (s/keys :req-un [::bar])
-                 :foo (s/keys :req-un [::foo]))))
+          (s/or :bar (s/keys :req-un [::bar])
+                :foo (s/keys :req-un [::foo]))))
       "s/or generates anyOf")
 
   (is (= {:type "object"
@@ -269,9 +269,9 @@
                        "bar" {:type "string"}}
           :required ["a"]}
          (jsc/transform
-           (s/merge (s/keys :req-un [::a])
-                    (s/or :foo (s/keys :req-un [::foo])
-                          :bar (s/keys :req-un [::bar])))))
+          (s/merge (s/keys :req-un [::a])
+                   (s/or :foo (s/keys :req-un [::foo])
+                         :bar (s/keys :req-un [::bar])))))
       "anyOf properties are merged into properties")
 
   (is (= {:type "object"
@@ -280,28 +280,28 @@
                        "bar" {:type "string"}}
           :required ["a" "bar" "foo"]}
          (jsc/transform
-           (s/merge (s/keys :req-un [::a])
-                    (s/and (s/keys :req-un [::bar])
-                           (s/keys :req-un [::foo])))))
+          (s/merge (s/keys :req-un [::a])
+                   (s/and (s/keys :req-un [::bar])
+                          (s/keys :req-un [::foo])))))
       "allOf properties are merged into properties and required"))
 
 (deftest backport-swagger-meta-unnamespaced
   (is (= (jsc/transform
-           (st/spec {:spec string?
-                     :json-schema {:type "string"
-                                   :format "password"
-                                   :random-value "42"}}))
+          (st/spec {:spec string?
+                    :json-schema {:type "string"
+                                  :format "password"
+                                  :random-value "42"}}))
          {:type "string" :format "password" :random-value "42"}))
 
   (is (= (jsc/transform
-           (st/spec {:spec string?
-                     :json-schema {:type "object"}
-                     :json-schema/format "password"}))
+          (st/spec {:spec string?
+                    :json-schema {:type "object"}
+                    :json-schema/format "password"}))
          {:type "object"}))
 
   (is (= (jsc/transform
-           (st/spec {:spec string?
-                     :json-schema/type "string"
-                     :json-schema/format "password"
-                     :json-schema/random-value "42"}))
+          (st/spec {:spec string?
+                    :json-schema/type "string"
+                    :json-schema/format "password"
+                    :json-schema/random-value "42"}))
          {:type "string" :format "password" :random-value "42"})))

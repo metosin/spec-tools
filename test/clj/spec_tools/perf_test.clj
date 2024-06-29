@@ -47,7 +47,7 @@
   (let [call #(s/valid? ::age 12)]
     (assert (call))
     (cc/quick-bench
-      (call)))
+     (call)))
 
   ; 1480ns
   ; 77ns (alpha12)
@@ -56,14 +56,14 @@
   (let [call #(s/valid? ::x-age 12)]
     (assert (call))
     (cc/quick-bench
-      (call)))
+     (call)))
 
   ; 430ns
   (title "schema: s/Int")
   (let [call #(schema/check age 12)]
     (assert (nil? (call)))
     (cc/quick-bench
-      (call)))
+     (call)))
 
   ; 31ns
   (title "schema: s/Int (compiled)")
@@ -71,7 +71,7 @@
         call #(checker 12)]
     (assert (nil? (call)))
     (cc/quick-bench
-      (call))))
+     (call))))
 
 (defn conform-test []
 
@@ -84,7 +84,7 @@
   (let [call #(s/conform ::age 12)]
     (assert (= (call) 12))
     (cc/quick-bench
-      (call)))
+     (call)))
 
   ; 1430ns
   ;   95ns (alpha12)
@@ -93,14 +93,14 @@
   (let [call #(st/conform ::x-age 12)]
     (assert (= (call) 12))
     (cc/quick-bench
-      (call)))
+     (call)))
 
   ; 425ns
   (title "schema: s/Int")
   (let [call #((coerce/coercer age (constantly nil)) 12)]
     (assert (= (call) 12))
     (cc/quick-bench
-      (call)))
+     (call)))
 
   ; 25ns
   (title "schema: s/Int (compiled)")
@@ -108,7 +108,7 @@
         call #(coercer 12)]
     (assert (= (call) 12))
     (cc/quick-bench
-      (call))))
+     (call))))
 
 (defn conform-test2 []
 
@@ -124,7 +124,7 @@
     (let [call #(st/conform sizes-spec ["L" "M"] st/string-transformer)]
       (assert (= (call) #{:L :M}))
       (cc/quick-bench
-        (call)))
+       (call)))
 
     ; 3700ns
     ; 990ns (alpha12)
@@ -133,7 +133,7 @@
     (let [call #(st/conform sizes-spec #{:L :M} st/string-transformer)]
       (assert (= (call) #{:L :M}))
       (cc/quick-bench
-        (call)))
+       (call)))
 
     ; 1100ns
     (title "schema: conform keyword enum")
@@ -141,7 +141,7 @@
           call #(coercer ["L" "M"])]
       (assert (= (call) #{:L :M}))
       (cc/quick-bench
-        (call)))
+       (call)))
 
     ; 780ns
     (title "schema: conform keyword enum - no-op")
@@ -149,7 +149,7 @@
           call #(coercer #{:L :M})]
       (assert (= (call) #{:L :M}))
       (cc/quick-bench
-        (call)))))
+       (call)))))
 
 (s/def ::order-id spec/integer?)
 (s/def ::product-id spec/integer?)
@@ -178,8 +178,8 @@
   (s/keys :req-un [::company-id ::customer-type]))
 (s/def ::requester (s/multi-spec requester-type ::customer-type))
 (s/def ::order (s/merge
-                 ::requester
-                 (s/keys :req-un [::order-id ::orderlines ::receiver])))
+                ::requester
+                (s/keys :req-un [::order-id ::orderlines ::receiver])))
 (s/def ::order-with-line (s/and ::order #(> (::orderlines 1))))
 
 (def sample-order-valid
@@ -209,7 +209,7 @@
 (def sample-multi-order-corporate
   (merge sample-order-valid
          {:customer-type "corporate"
-          :company-id    "12345"}))
+          :company-id "12345"}))
 
 (defn multi-spec-coercer-test []
 
@@ -218,21 +218,21 @@
   ;87.668605 µs
   (title "Multi coercer")
   (let [coercer #(st/coerce ::order % st/string-transformer)
-        call    #(coercer sample-multi-order-corporate)
+        call #(coercer sample-multi-order-corporate)
         expected (merge sample-order-valid
                         {:customer-type :corporate
-                         :company-id    12345})]
-   (assert (= (call) expected))
-   (cc/quick-bench
+                         :company-id 12345})]
+    (assert (= (call) expected))
+    (cc/quick-bench
      (call))))
 
 (s/form
-  (s/cat ::first keyword?
-         :integer-lists (s/+
-                          (s/coll-of
-                            (s/keys :req-un [::order-id
-                                             ::orderlines
-                                             ::receiver])))))
+ (s/cat ::first keyword?
+        :integer-lists (s/+
+                        (s/coll-of
+                         (s/keys :req-un [::order-id
+                                          ::orderlines
+                                          ::receiver])))))
 
 (schema/defschema Order
   {:order-id Long
@@ -255,7 +255,7 @@
   (let [call #(st/conform ::order sample-order st/string-transformer)]
     (assert (= (call) sample-order-valid))
     (cc/quick-bench
-      (call)))
+     (call)))
 
   ; 2.8µs (alpha12)
   ; 2.7µs (alpha14)
@@ -263,7 +263,7 @@
   (let [call #(st/conform ::order sample-order-valid st/string-transformer)]
     (assert (= (call) sample-order-valid))
     (cc/quick-bench
-      (call)))
+     (call)))
 
   ; 9.1µs
   (title "schema: conform")
@@ -271,7 +271,7 @@
         call #(coercer sample-order)]
     (assert (= (call) sample-order-valid))
     (cc/quick-bench
-      (call)))
+     (call)))
 
   ; 9.3µs
   (title "schema: conform - no-op")
@@ -279,11 +279,11 @@
         call #(coercer sample-order-valid)]
     (assert (= (call) sample-order-valid))
     (cc/quick-bench
-      (call))))
+     (call))))
 
 (comment
-  (valid-test)
-  (conform-test)
-  (conform-test2)
-  (conform-test3)
-  (multi-spec-coercer-test))
+ (valid-test)
+ (conform-test)
+ (conform-test2)
+ (conform-test3)
+ (multi-spec-coercer-test))

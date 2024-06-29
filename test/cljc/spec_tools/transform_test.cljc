@@ -75,7 +75,7 @@
 (deftest number->string
   (is (string? (stt/number->string _ 42.42)))
   (is (string? (stt/number->string _ 42)))
-  (is (string? #?(:clj (stt/number->string _ (BigDecimal. 23123))
+  (is (string? #?(:clj  (stt/number->string _ (BigDecimal. 23123))
                   :cljs (stt/number->string _ js/Math.PI)))))
 
 #?(:clj (deftest number->decimal

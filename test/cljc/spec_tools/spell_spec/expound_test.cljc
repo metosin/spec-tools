@@ -7,7 +7,6 @@
             [clojure.string :as string]
             [spec-tools.spell-spec.alpha :as spell :refer [warn-keys strict-keys warn-strict-keys]]
             [expound.alpha :as exp]
-            [expound.ansi :as ansi]
             [spec-tools.spell-spec.expound]))
 
 (defn fetch-warning-output [thunk]
@@ -94,6 +93,7 @@
   )
 
 ;; checking color
+#_(require '[expound.ansi :as ansi])
 #_(ansi/with-color
     (exp/expound (s/map-of keyword? any?) {"hello" 1 :there 1}))
 

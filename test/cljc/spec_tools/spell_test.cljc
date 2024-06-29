@@ -18,48 +18,48 @@
   (testing "explain-data"
     (testing "simple specs"
       (is (not (s/explain-data
-                 (s/keys :opt-un [::config])
-                 invalid-options)))
+                (s/keys :opt-un [::config])
+                invalid-options)))
       (is (s/explain-data
-            (spell/closed (s/keys :opt-un [::config]))
-            invalid-options))
+           (spell/closed (s/keys :opt-un [::config]))
+           invalid-options))
       (is (s/explain-data
-            (spell/closed (s/keys :opt-un [::config]))
-            invalid-config))
+           (spell/closed (s/keys :opt-un [::config]))
+           invalid-config))
       (is (not (s/explain-data
-                 (spell/closed (s/keys :opt-un [::config]))
-                 valid))))
+                (spell/closed (s/keys :opt-un [::config]))
+                valid))))
     (testing "composite specs"
       (is (not (s/explain-data
-                 (spell/closed
-                   (s/merge
-                     (s/keys :opt-un [::config])
-                     (s/keys :opt-un [::name])))
-                 valid)))
+                (spell/closed
+                 (s/merge
+                  (s/keys :opt-un [::config])
+                  (s/keys :opt-un [::name])))
+                valid)))
       (is (s/explain-data
-            (spell/closed
-              (s/merge
-                (s/keys :opt-un [::config])
-                (s/keys :opt-un [::name])))
-            {:namez "kikka"})))
+           (spell/closed
+            (s/merge
+             (s/keys :opt-un [::config])
+             (s/keys :opt-un [::name])))
+           {:namez "kikka"})))
     (testing "explain-str"
       (is (str/includes?
-            (spell/explain-str
-              (spell/closed (s/keys :opt-un [::config]))
-              invalid-options)
-            "Misspelled map key")))
+           (spell/explain-str
+            (spell/closed (s/keys :opt-un [::config]))
+            invalid-options)
+           "Misspelled map key")))
     (testing "explain"
       (is (str/includes?
-            (with-out-str
-              (spell/explain
-                (spell/closed (s/keys :opt-un [::config]))
-                invalid-options))
-            "Misspelled map key")))
+           (with-out-str
+             (spell/explain
+              (spell/closed (s/keys :opt-un [::config]))
+              invalid-options))
+           "Misspelled map key")))
     (testing "errors"
       (is (thrown-with-msg?
-            #?(:clj Exception, :cljs js/Error)
-            #"Can't read keys from spec"
-            (spell/closed int?))))
+           #?(:clj Exception, :cljs js/Error)
+           #"Can't read keys from spec"
+           (spell/closed int?))))
     (testing "parsing"
       (is (= {:type :map,
               :spec-tools.parse/key->spec {:config ::config},
@@ -71,15 +71,15 @@
               :spec-tools.parse/keys #{:config :name},
               :spec-tools.parse/keys-opt #{:config :name}}
              (parse/parse-spec
-               (spell/closed
-                 (s/merge
-                   (s/keys :opt-un [::config])
-                   (s/keys :opt-un [::name])))))))
+              (spell/closed
+               (s/merge
+                (s/keys :opt-un [::config])
+                (s/keys :opt-un [::name])))))))
     (testing "data-specs"
       (let [spec (ds/spec
-                   {:spec {:config {:name string? :use-history boolean?}}
-                    :name ::spec
-                    :keys-spec spell/closed-keys})]
+                  {:spec {:config {:name string? :use-history boolean?}}
+                   :name ::spec
+                   :keys-spec spell/closed-keys})]
         (is (s/explain-data spec invalid-options))
         (is (s/explain-data spec invalid-config))
         (is (not (s/explain-data spec valid)))))))

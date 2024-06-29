@@ -2,13 +2,13 @@
   (:refer-clojure :exclude [resolve])
   #?(:cljs (:require-macros [spec-tools.impl :refer [resolve]]))
   (:require
-    #?(:cljs [cljs.analyzer.api])
-    [clojure.spec.alpha :as s]
-    [spec-tools.form :as form]
-    [clojure.walk :as walk])
+   #?(:cljs [cljs.analyzer.api])
+   [clojure.spec.alpha :as s]
+   [spec-tools.form :as form]
+   [clojure.walk :as walk])
   (:import
-    #?@(:clj
-        [(clojure.lang Var)])))
+   #?@(:clj
+       [(clojure.lang Var)])))
 
 #?(:clj
    (defn in-cljs? [env]
@@ -70,16 +70,16 @@
 
 (defn with-real-keys [{:keys [req-un opt-un] :as data}]
   (cond-> data
-          req-un (update :req-un (partial mapv un-key))
-          opt-un (update :opt-un (partial mapv un-key))))
+    req-un (update :req-un (partial mapv un-key))
+    opt-un (update :opt-un (partial mapv un-key))))
 
 (defn parse-keys [form]
   (let [m (some->> form (rest) (apply hash-map))]
     (cond-> m
-            (:req m) (update :req #(->> % flatten (keep polish) (into [])))
-            (:req-un m) (update :req-un #(->> % flatten (keep polish) (into [])))
-            (:opt-un m) (update :opt-un #(->> % (keep polish) (into [])))
-            true (-> with-key->spec with-real-keys))))
+      (:req m) (update :req #(->> % flatten (keep polish) (into [])))
+      (:req-un m) (update :req-un #(->> % flatten (keep polish) (into [])))
+      (:opt-un m) (update :opt-un #(->> % (keep polish) (into [])))
+      true (-> with-key->spec with-real-keys))))
 
 (defn extract-keys [form]
   (let [{:keys [req opt req-un opt-un]} (some->> form (rest) (apply hash-map))]
@@ -91,18 +91,18 @@
            res (if cljs? (partial cljs-resolve env) clojure.core/resolve)]
        (->> pred
             (walk/postwalk
-              (fn [x]
-                (if (symbol? x)
-                  (let [y (res x)
-                        -var-get (fn [v] (if cljs? @v (var-get v)))
-                        sym-or-x (fn [v] (or (->sym v) x))]
-                    (cond
-                      (var? y) (if (s/get-spec (-var-get y))
-                                 (-var-get y)
-                                 (sym-or-x y))
-                      (some? y) (sym-or-x y)
-                      :else x))
-                  x)))
+             (fn [x]
+               (if (symbol? x)
+                 (let [y (res x)
+                       -var-get (fn [v] (if cljs? @v (var-get v)))
+                       sym-or-x (fn [v] (or (->sym v) x))]
+                   (cond
+                     (var? y) (if (s/get-spec (-var-get y))
+                                (-var-get y)
+                                (sym-or-x y))
+                     (some? y) (sym-or-x y)
+                     :else x))
+                 x)))
             (unfn cljs?)))))
 
 (defn extract-pred-and-info [x]
@@ -138,12 +138,12 @@
 (defn nilable-spec? [spec]
   (let [form (and spec (s/form spec))]
     (boolean
-      (if (seq? form)
-        (some-> form
-                seq
-                first
-                #{'clojure.spec.alpha/nilable
-                  'cljs.spec.alpha/nilable})))))
+     (if (seq? form)
+       (some-> form
+               seq
+               first
+               #{'clojure.spec.alpha/nilable
+                 'cljs.spec.alpha/nilable})))))
 
 (defn unwrap
   "Unwrap [x] to x. Asserts that coll has exactly one element."
@@ -164,11 +164,11 @@
 
 (defn unlift-keys [data ns-name]
   (reduce
-    (fn [acc [k v]]
-      (if (= ns-name (namespace k))
-        (assoc acc (keyword (name k)) v)
-        acc))
-    {} data))
+   (fn [acc [k v]]
+     (if (= ns-name (namespace k))
+       (assoc acc (keyword (name k)) v)
+       acc))
+   {} data))
 
 ;;
 ;; FIXME: using ^:skip-wiki functions from clojure.spec. might break.
@@ -185,29 +185,29 @@
   (let [form (form/resolve-form pred)
         cpred (if (set? type) set? vector?)]
     (clojure.spec.alpha/every-impl
-      form
-      pred
-      {:into type
-       ::s/conform-all true
-       ::s/describe `(s/coll-of ~form :into ~type),
-       ::s/cpred cpred,
-       ::s/kind-form (quote nil)}
-      nil)))
+     form
+     pred
+     {:into type
+      ::s/conform-all true
+      ::s/describe `(s/coll-of ~form :into ~type),
+      ::s/cpred cpred,
+      ::s/kind-form (quote nil)}
+     nil)))
 
 (defn map-of-spec [kpred vpred]
   (let [forms (map form/resolve-form [kpred vpred])
         tuple (s/tuple-impl forms [kpred vpred])]
     (clojure.spec.alpha/every-impl
-      `(s/tuple ~@forms)
-      tuple
-      {:into {}
-       :conform-keys true
-       ::s/kfn (fn [_ v] (nth v 0))
-       ::s/conform-all true
-       ::s/describe `(s/map-of ~@forms :conform-keys true),
-       ::s/cpred map?,
-       ::s/kind-form (quote nil)}
-      nil)))
+     `(s/tuple ~@forms)
+     tuple
+     {:into {}
+      :conform-keys true
+      ::s/kfn (fn [_ v] (nth v 0))
+      ::s/conform-all true
+      ::s/describe `(s/map-of ~@forms :conform-keys true),
+      ::s/cpred map?,
+      ::s/kind-form (quote nil)}
+     nil)))
 
 (defn keys-spec [{:keys [req opt req-un opt-un]}]
   (let [req-specs (flatten (map polish (concat req req-un)))
@@ -215,30 +215,30 @@
         req-keys (flatten (concat (map polish req) (map polish-un req-un)))
         opt-keys (flatten (concat (map polish opt) (map polish-un opt-un)))
         pred-exprs (concat
-                     [#(map? %)]
-                     (map (fn [x] #(contains? % x)) req-keys))
+                    [#(map? %)]
+                    (map (fn [x] #(contains? % x)) req-keys))
         pred-forms (concat
-                     [`(fn [~'%] (map? ~'%))]
-                     (map (fn [k] `(fn [~'%] (contains? ~'% ~k))) req-keys))
+                    [`(fn [~'%] (map? ~'%))]
+                    (map (fn [k] `(fn [~'%] (contains? ~'% ~k))) req-keys))
         keys-pred (fn [x]
                     (reduce
-                      (fn [_ p]
-                        (clojure.core/or (p x) (reduced false)))
-                      true
-                      pred-exprs))]
+                     (fn [_ p]
+                       (clojure.core/or (p x) (reduced false)))
+                     true
+                     pred-exprs))]
 
     (s/map-spec-impl
-      {:req-un req-un
-       :opt-un opt-un
-       :pred-exprs pred-exprs
-       :keys-pred keys-pred
-       :opt-keys opt-keys
-       :req-specs req-specs
-       :req req
-       :req-keys req-keys
-       :opt-specs opt-specs
-       :pred-forms pred-forms
-       :opt opt})))
+     {:req-un req-un
+      :opt-un opt-un
+      :pred-exprs pred-exprs
+      :keys-pred keys-pred
+      :opt-keys opt-keys
+      :req-specs req-specs
+      :req req
+      :req-keys req-keys
+      :opt-specs opt-specs
+      :pred-forms pred-forms
+      :opt opt})))
 
 (defn nilable-spec [pred]
   (let [form (form/resolve-form pred)]

@@ -1,22 +1,22 @@
 (ns spec-tools.swagger.core-test
   (:require
-    [clojure.test :refer [deftest testing is are]]
-    [spec-tools.swagger.core :as swagger]
-    [clojure.spec.alpha :as s]
-    [spec-tools.spec :as spec]
-    #?(:clj [ring.swagger.validator :as v])
-    [spec-tools.core :as st]))
+   [clojure.test :refer [deftest testing is are]]
+   [spec-tools.swagger.core :as swagger]
+   [clojure.spec.alpha :as s]
+   [spec-tools.spec :as spec]
+   #?(:clj [ring.swagger.validator :as v])
+   [spec-tools.core :as st]))
 
 (s/def ::integer integer?)
 (s/def ::string string?)
 (s/def ::set #{1 2 3})
 (s/def ::keys (s/keys :req-un [::integer]))
 (s/def ::spec (st/spec
-                {:spec string?
-                 :description "description"
-                 :json-schema/default "123"
-                 :json-schema/example "json-schema-example"
-                 :swagger/example "swagger-example"}))
+               {:spec string?
+                :description "description"
+                :json-schema/default "123"
+                :json-schema/example "json-schema-example"
+                :swagger/example "swagger-example"}))
 (s/def ::keys2 (s/keys :req-un [::integer ::spec]))
 
 (def exceptations
@@ -258,19 +258,19 @@
                                                         :x-nullable true}},
                                    :required ["street" "city"]}}]}
            (swagger/swagger-spec
-             {:parameters [{:in "query"
-                            :name "name"
-                            :description "this will be overridden"
-                            :required false}
-                           {:in "query"
-                            :name "name2"
-                            :description "this survives the merge"
-                            :type "string"
-                            :required true}]
-              ::swagger/parameters
-              {:query (s/keys :opt-un [::name ::street ::city])
-               :path (s/keys :req [::id])
-               :body ::address}})))
+            {:parameters [{:in "query"
+                           :name "name"
+                           :description "this will be overridden"
+                           :required false}
+                          {:in "query"
+                           :name "name2"
+                           :description "this survives the merge"
+                           :type "string"
+                           :required true}]
+             ::swagger/parameters
+             {:query (s/keys :opt-un [::name ::street ::city])
+              :path (s/keys :req [::id])
+              :body ::address}})))
     (is (= {:parameters [{:in "query"
                           :name "name2"
                           :description "this survives the merge"
@@ -310,19 +310,19 @@
                                                         :x-nullable true}},
                                    :required ["street" "city"]}}]}
            (swagger/swagger-spec
-             {:parameters [{:in "query"
-                            :name "name"
-                            :description "this will be overridden"
-                            :required false}
-                           {:in "query"
-                            :name "name2"
-                            :description "this survives the merge"
-                            :type "string"
-                            :required true}]
-              ::swagger/parameters
-              {:query (st/create-spec {:spec (s/keys :opt-un [::name ::street ::city])})
-               :path (st/create-spec {:spec (s/keys :req [::id])})
-               :body (st/create-spec {:spec ::address})}}))))
+            {:parameters [{:in "query"
+                           :name "name"
+                           :description "this will be overridden"
+                           :required false}
+                          {:in "query"
+                           :name "name2"
+                           :description "this survives the merge"
+                           :type "string"
+                           :required true}]
+             ::swagger/parameters
+             {:query (st/create-spec {:spec (s/keys :opt-un [::name ::street ::city])})
+              :path (st/create-spec {:spec (s/keys :req [::id])})
+              :body (st/create-spec {:spec ::address})}}))))
 
   (testing "::responses"
     (is (= {:responses
@@ -344,10 +344,10 @@
              404 {:description "Ohnoes."}
              500 {:description "fail"}}}
            (swagger/swagger-spec
-             {:responses {404 {:description "fail"}
-                          500 {:description "fail"}}
-              ::swagger/responses {200 {:schema ::user}
-                                   404 {:description "Ohnoes."}}})))))
+            {:responses {404 {:description "fail"}
+                         500 {:description "fail"}}
+             ::swagger/responses {200 {:schema ::user}
+                                  404 {:description "Ohnoes."}}})))))
 
 #?(:clj
    (deftest test-schema-validation
@@ -376,21 +376,21 @@
 
 (deftest backport-swagger-meta-unnamespaced
   (is (= (swagger/transform
-           (st/spec {:spec string?
-                     :swagger {:type "string"
-                               :format "password"
-                               :random-value "42"}}))
+          (st/spec {:spec string?
+                    :swagger {:type "string"
+                              :format "password"
+                              :random-value "42"}}))
          {:type "string" :format "password" :random-value "42"}))
 
   (is (= (swagger/transform
-           (st/spec {:spec string?
-                     :swagger {:type "object"}
-                     :swagger/format "password"}))
+          (st/spec {:spec string?
+                    :swagger {:type "object"}
+                    :swagger/format "password"}))
          {:type "object"}))
 
   (is (= (swagger/transform
-           (st/spec {:spec string?
-                     :swagger/type "string"
-                     :swagger/format "password"
-                     :swagger/random-value "42"}))
+          (st/spec {:spec string?
+                    :swagger/type "string"
+                    :swagger/format "password"
+                    :swagger/random-value "42"}))
          {:type "string" :format "password" :random-value "42"})))

@@ -5,7 +5,7 @@
                        [goog.date.Date]
                        [goog.Uri]])
             [clojure.set :as set]
-            [clojure.edn :as edn]
+            #?(:clj [clojure.edn :as edn])
             [spec-tools.parse :as parse]
             [spec-tools.impl :as impl])
   #?(:clj
@@ -206,25 +206,25 @@
 
 (def json-type-decoders
   (merge
-    {:keyword string->keyword
-     :uuid (keyword-or-string-> string->uuid)
-     :date (keyword-or-string-> string->date)
-     :symbol (keyword-or-string-> string->symbol)
-     :long (keyword-> string->long)
-     :double (keyword-> string->double)
-     :boolean (keyword-> string->boolean)
-     :string keyword->string}
-    #?(:clj
-       {:uri string->uri
-        :bigdec (number-or-string-> string->decimal)
-        :ratio string->ratio})))
+   {:keyword string->keyword
+    :uuid (keyword-or-string-> string->uuid)
+    :date (keyword-or-string-> string->date)
+    :symbol (keyword-or-string-> string->symbol)
+    :long (keyword-> string->long)
+    :double (keyword-> string->double)
+    :boolean (keyword-> string->boolean)
+    :string keyword->string}
+   #?(:clj
+      {:uri string->uri
+       :bigdec (number-or-string-> string->decimal)
+       :ratio string->ratio})))
 
 (def string-type-decoders
   (merge
-    json-type-decoders
-    {:long (keyword-or-string-> string->long)
-     :double (keyword-or-string-> string->double)
-     :boolean (keyword-or-string-> string->boolean)}))
+   json-type-decoders
+   {:long (keyword-or-string-> string->long)
+    :double (keyword-or-string-> string->double)
+    :boolean (keyword-or-string-> string->boolean)}))
 
 (def strip-extra-keys-type-decoders
   {:map strip-extra-keys})
@@ -253,6 +253,6 @@
 
 (def string-type-encoders
   (merge
-    json-type-encoders
-    {:long any->string
-     :double any->string}))
+   json-type-encoders
+   {:long any->string
+    :double any->string}))

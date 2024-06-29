@@ -40,14 +40,14 @@
 
 (def person-spec
   (ds/spec
-    ::person
-    {::id integer?
-     :age ::age
-     :name string?
-     :likes {string? boolean?}
-     (ds/req :languages) #{keyword?}
-     (ds/opt :address) {:street string?
-                        :zip string?}}))
+   ::person
+   {::id integer?
+    :age ::age
+    :name string?
+    :likes {string? boolean?}
+    (ds/req :languages) #{keyword?}
+    (ds/opt :address) {:street string?
+                       :zip string?}}))
 
 (deftest readme-visitor-test
   (let [expected #{:spec-tools.visitor-test/id
@@ -66,10 +66,10 @@
              (-> specs vals set))))
 
     (comment
-      (testing "convert-specs! transforms all specs into Spec records"
-        (visitor/convert-specs! person-spec)
-        (is (true?
-              (->> expected
-                   (map s/get-spec)
-                   (remove keyword?)
-                   (every? st/spec?))))))))
+     (testing "convert-specs! transforms all specs into Spec records"
+       (visitor/convert-specs! person-spec)
+       (is (true?
+            (->> expected
+                 (map s/get-spec)
+                 (remove keyword?)
+                 (every? st/spec?))))))))

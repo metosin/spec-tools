@@ -192,13 +192,13 @@
         required-un (map name req-un)
         all-required (not-empty (concat required required-un))]
     (maybe-with-title
-      (merge
-        {:type "object"
-         :properties (zipmap (concat names names-un) children)}
-        (when all-required
-          {:required (vec all-required)}))
-      spec
-      options)))
+     (merge
+      {:type "object"
+       :properties (zipmap (concat names names-un) children)}
+      (when all-required
+        {:required (vec all-required)}))
+     spec
+     options)))
 
 (defmethod accept-spec 'clojure.spec.alpha/or [_ _ children _]
   {:anyOf children})
@@ -208,19 +208,19 @@
 
 (defn- accept-merge [children spec options]
   (maybe-with-title
-    {:type "object"
-     :properties (->> (concat children
-                              (mapcat :anyOf children)
-                              (mapcat :allOf children))
-                      (map :properties)
-                      (reduce merge {}))
-     :required (->> (concat children
-                            (mapcat :allOf children))
-                    (map :required)
-                    (reduce into (sorted-set))
-                    (into []))}
-    spec
-    options))
+   {:type "object"
+    :properties (->> (concat children
+                             (mapcat :anyOf children)
+                             (mapcat :allOf children))
+                     (map :properties)
+                     (reduce merge {}))
+    :required (->> (concat children
+                           (mapcat :allOf children))
+                   (map :required)
+                   (reduce into (sorted-set))
+                   (into []))}
+   spec
+   options))
 
 (defmethod accept-spec 'clojure.spec.alpha/merge [_ spec children options]
   (accept-merge children spec options))
@@ -262,16 +262,16 @@
 
 (defmethod accept-spec 'clojure.spec.alpha/alt [_ spec children options]
   (maybe-with-title
-    {:anyOf children}
-    spec
-    options))
+   {:anyOf children}
+   spec
+   options))
 
 (defmethod accept-spec 'clojure.spec.alpha/cat [_ spec children options]
   (maybe-with-title
-    {:type "array"
-     :items {:anyOf children}}
-    spec
-    options))
+   {:type "array"
+    :items {:anyOf children}}
+   spec
+   options))
 
 ; &
 
@@ -296,7 +296,7 @@
         json-schema-meta (impl/unlift-keys data "json-schema")
         extra-info (-> (select-keys data [:description])
                        (cond-> (and name (not synthetic?))
-                               (assoc :title (impl/qualified-name name))))]
+                         (assoc :title (impl/qualified-name name))))]
     (or (:json-schema data)
         (merge (impl/unwrap children) extra-info json-schema-meta))))
 
