@@ -1,10 +1,10 @@
 (ns spec-tools.spell-spec.expound
   (:require
-    [clojure.string :as string]
-    [expound.alpha :as exp]
-    [expound.ansi :as ansi]
-    [expound.printer :as printer]
-    [expound.problems :as problems]))
+   [clojure.string :as string]
+   [expound.alpha :as exp]
+   [expound.ansi :as ansi]
+   [expound.printer :as printer]
+   [expound.problems :as problems]))
 
 (defn format-correction-list [options]
   (str (when (> (count options) 1) " one of")
@@ -15,10 +15,10 @@
 
 (defn exp-formated [header _type spec-name val path problems opts]
   (printer/format
-    "%s\n\n%s\n\n%s"
-    (#'exp/header-label header)
-    (printer/indent (#'exp/*value-str-fn* spec-name val path (problems/value-in val path)))
-    (exp/expected-str _type spec-name val path problems opts)))
+   "%s\n\n%s\n\n%s"
+   (#'exp/header-label header)
+   (printer/indent (#'exp/*value-str-fn* spec-name val path (problems/value-in val path)))
+   (exp/expected-str _type spec-name val path problems opts)))
 
 (defmethod exp/problem-group-str :spec-tools.spell-spec.alpha/misspelled-key [_type spec-name val path problems opts]
   (exp-formated "Misspelled map key" _type spec-name val path problems opts))

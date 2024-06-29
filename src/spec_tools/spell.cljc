@@ -37,10 +37,10 @@
                  :misspelled {:spec (ssa/not-misspelled keys)
                               :form `(ssa/not-misspelled ~keys)})]
       (pre-check
-        (ssa/warning-spec
-          (impl/map-of-spec
-            (ssa/map-explain ssa/enhance-problem (st/create-spec data)) any?))
-        spec))
+       (ssa/warning-spec
+        (impl/map-of-spec
+         (ssa/map-explain ssa/enhance-problem (st/create-spec data)) any?))
+       spec))
     (throw (ex-info (str "Can't read keys from spec: " spec) {:spec spec, :mode mode}))))
 
 ;;
@@ -57,12 +57,12 @@
   (if-let [explain-data (s/explain-data spec data)]
     (binding [ansi/*enable-color* true]
       (#'expound/printer-str
-        {:print-specs? false
-         :show-valid-values? false}
-        (if explain-data
-          (assoc explain-data
-            ::s/value data)
-          nil)))))
+       {:print-specs? false
+        :show-valid-values? false}
+       (if explain-data
+         (assoc explain-data
+                ::s/value data)
+         nil)))))
 
 (defn explain [spec data]
   (some-> (explain-str spec data) (println)))

@@ -91,32 +91,32 @@
   (if-let [[k' v'] (and (= 1 (count data))
                         (let [[k v] (first data)]
                           (and
-                            (not
-                              (clojure.core/or (keyword? k)
-                                               (wrapped-key? k)))
-                            [k v])))]
+                           (not
+                            (clojure.core/or (keyword? k)
+                                             (wrapped-key? k)))
+                           [k v])))]
     (st/create-spec {:spec (impl/map-of-spec (spec n k') (spec {:name n, :spec v'}))})
     ;; keyword keys
     (let [m (reduce-kv
-              (fn [acc k v]
-                (let [k (if (and keys-default (keyword? k)) (keys-default k) k)
-                      kv (unwrap-key k)
-                      rk (keyword
-                           (str (if (req? k) "req" "opt")
-                                (if-not (qualified-keyword? kv) "-un")))
-                      [v wrap] (if (maybe? v)
-                                 [(:v v) (comp #(st/create-spec {:spec %}) impl/nilable-spec)]
-                                 [v identity])
-                      [k' n'] (if (qualified-keyword? kv)
-                                [kv (if (not= kv v) kv)]
-                                (let [k' (-nested-key n (unwrap-key kv))]
-                                  [k' k']))
-                      v' (if n' (wrap (spec (-> opts (assoc :name n') (assoc :spec v)))))]
-                  (-> acc
-                      (update rk (fnil conj []) k')
-                      (cond-> v' (update ::defs (fnil conj []) [k' v'])))))
-              {}
-              data)
+             (fn [acc k v]
+               (let [k (if (and keys-default (keyword? k)) (keys-default k) k)
+                     kv (unwrap-key k)
+                     rk (keyword
+                         (str (if (req? k) "req" "opt")
+                              (if-not (qualified-keyword? kv) "-un")))
+                     [v wrap] (if (maybe? v)
+                                [(:v v) (comp #(st/create-spec {:spec %}) impl/nilable-spec)]
+                                [v identity])
+                     [k' n'] (if (qualified-keyword? kv)
+                               [kv (if (not= kv v) kv)]
+                               (let [k' (-nested-key n (unwrap-key kv))]
+                                 [k' k']))
+                     v' (if n' (wrap (spec (-> opts (assoc :name n') (assoc :spec v)))))]
+                 (-> acc
+                     (update rk (fnil conj []) k')
+                     (cond-> v' (update ::defs (fnil conj []) [k' v'])))))
+             {}
+             data)
           defs (::defs m)
           data (apply hash-map (apply concat (dissoc m ::defs)))]
       (doseq [[k s] defs]
@@ -127,26 +127,26 @@
 (defn- -coll-spec [data {n :name kind :kind}]
   (when-not (= 1 (count data))
     (throw
-      (ex-info
-        (str "data-spec collection " kind
-             " should be homogeneous, " (count data)
-             " values found")
-        {:name n
-         :kind kind
-         :values data})))
+     (ex-info
+      (str "data-spec collection " kind
+           " should be homogeneous, " (count data)
+           " values found")
+      {:name n
+       :kind kind
+       :values data})))
   (let [spec (spec n (first data))]
     (st/create-spec {:spec (impl/coll-of-spec spec kind)})))
 
 (defn- -or-spec [n v]
   (when-not (and
-              (map? v)
-              (every? keyword? (keys v)))
+             (map? v)
+             (every? keyword? (keys v)))
     (throw
-      (ex-info
-        (str "data-spec or must be a map of keyword keys -> specs, "
-             v " found")
-        {:name n
-         :value v})))
+     (ex-info
+      (str "data-spec or must be a map of keyword keys -> specs, "
+           v " found")
+      {:name n
+       :value v})))
   (impl/or-spec (-> (for [[k v] v]
                       [k (spec (-nested-key n k) v)])
                     (into {}))))

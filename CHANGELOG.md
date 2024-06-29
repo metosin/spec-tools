@@ -1,6 +1,12 @@
 # Unreleased
 
-* Support transforming schema to JSON Schema. PR [#281](https://github.com/metosin/spec-tools/pull/281)
+* Support transforming multi-spec to JSON Schema. PR [#281](https://github.com/metosin/spec-tools/pull/281)
+* FIX :reason doesn't compose as expected [#171](https://github.com/metosin/spec-tools/issues/171)
+* Update Dependencies
+
+```clojure
+[org.clojure/spec.alpha "0.5.238"] is available but we use "0.3.218"
+```
 
 # 0.10.6 (2023-08-28)
 

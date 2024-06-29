@@ -110,8 +110,8 @@
             :type :map-of}
            (parse/parse-spec (s/coll-of (s/tuple int? keyword?) :into {})))))
   (testing "s/multi-spec"
-    (is (= {:type            :multi-spec
-            ::parse/key      ::h
+    (is (= {:type :multi-spec
+            ::parse/key ::h
             ::parse/dispatch {:type-a ::ha
                               :type-b ::hb}}
            (parse/parse-spec ::multi))))
@@ -126,13 +126,13 @@
   (testing "get-keys"
     (is (= #{:a :b :c :d :e :f :g ::h ::i}
            (parse/get-keys
-             (parse/parse-spec
-               (s/or
-                 :1 (s/or :1 (s/keys :opt-un [::a])
-                          :2 (s/and
-                               (s/keys :opt-un [::b])
-                               (s/keys :opt-un [::c])
-                               (s/merge
-                                 (s/keys :opt-un [::d])
-                                 (s/keys :opt-un [::e]))))
-                 :2 (s/keys :opt-un [::f] :req-un [::g] :req [::h] :opt [::i]))))))))
+            (parse/parse-spec
+             (s/or
+              :1 (s/or :1 (s/keys :opt-un [::a])
+                       :2 (s/and
+                           (s/keys :opt-un [::b])
+                           (s/keys :opt-un [::c])
+                           (s/merge
+                            (s/keys :opt-un [::d])
+                            (s/keys :opt-un [::e]))))
+              :2 (s/keys :opt-un [::f] :req-un [::g] :req [::h] :opt [::i]))))))))

@@ -23,14 +23,14 @@
                                       :zip string?})}
           person-spec (ds/spec ::person person)
           person-keys-spec (st/spec
-                             (s/keys
-                               :req [::id ::age]
-                               :req-un [:spec-tools.data-spec-test$person/boss
-                                        :spec-tools.data-spec-test$person/name
-                                        :spec-tools.data-spec-test$person/languages
-                                        :spec-tools.data-spec-test$person/orders
-                                        :spec-tools.data-spec-test$person/address]
-                               :opt-un [:spec-tools.data-spec-test$person/description]))]
+                            (s/keys
+                             :req [::id ::age]
+                             :req-un [:spec-tools.data-spec-test$person/boss
+                                      :spec-tools.data-spec-test$person/name
+                                      :spec-tools.data-spec-test$person/languages
+                                      :spec-tools.data-spec-test$person/orders
+                                      :spec-tools.data-spec-test$person/address]
+                             :opt-un [:spec-tools.data-spec-test$person/description]))]
 
       (testing "normal keys-spec-spec is generated"
         (is (= (s/form (dissoc person-keys-spec :name))
@@ -84,9 +84,9 @@
 
   (testing "heterogenous lists"
     (is (thrown-with-msg?
-          #?(:clj Exception, :cljs js/Error)
-          #"should be homogeneous"
-          (ds/spec {:spec [int? int?]}))))
+         #?(:clj Exception, :cljs js/Error)
+         #"should be homogeneous"
+         (ds/spec {:spec [int? int?]}))))
 
   (testing "or spec"
     (let [strings-or-keywords (ds/or {::ui-target {:id string?}
@@ -94,22 +94,22 @@
       (is (thrown? ExceptionInfo
                    (#'spec-tools.data-spec/-or-spec ::foo :bar)))
       (is (s/valid?
-            (ds/spec ::str-kw-vector strings-or-keywords)
-            {:id "1"}))
+           (ds/spec ::str-kw-vector strings-or-keywords)
+           {:id "1"}))
       (is (s/valid?
-            (ds/spec ::str-kw-vector strings-or-keywords)
-            [:foo :bar]))
+           (ds/spec ::str-kw-vector strings-or-keywords)
+           [:foo :bar]))
       (is (s/valid?
-            (ds/spec ::str-kw-vector [strings-or-keywords])
-            [{:id "1"}]))
+           (ds/spec ::str-kw-vector [strings-or-keywords])
+           [{:id "1"}]))
       (is (s/valid?
-            (ds/spec ::str-kw-map {:test strings-or-keywords})
-            {:test {:id "1"}}))
+           (ds/spec ::str-kw-map {:test strings-or-keywords})
+           {:test {:id "1"}}))
       (testing "non-qualified keywords are ok too"
         (is (= {:values [[:strings ["1" "2"]] [:ints [3]]]}
                (s/conform
-                 (ds/spec ::values {:values [(ds/or {:ints [int?], :strings [string?]})]})
-                 {:values [["1" "2"] [3]]}))))))
+                (ds/spec ::values {:values [(ds/or {:ints [int?], :strings [string?]})]})
+                {:values [["1" "2"] [3]]}))))))
 
   (testing "encoding with or spec"
     (testing "when value matches first form of the or"
@@ -125,65 +125,65 @@
 
   (testing "top-level vector"
     (is (true?
-          (s/valid?
-            (ds/spec ::vector [{:olipa {:kerran string?}}])
-            [{:olipa {:kerran "avaruus"}}
-             {:olipa {:kerran "elämä"}}])))
+         (s/valid?
+          (ds/spec ::vector [{:olipa {:kerran string?}}])
+          [{:olipa {:kerran "avaruus"}}
+           {:olipa {:kerran "elämä"}}])))
     (is (false?
-          (s/valid?
-            (ds/spec ::vector [{:olipa {:kerran string?}}])
-            [{:olipa {:kerran :muumuu}}]))))
+         (s/valid?
+          (ds/spec ::vector [{:olipa {:kerran string?}}])
+          [{:olipa {:kerran :muumuu}}]))))
 
   (testing "top-level set"
     (is (true?
-          (s/valid?
-            (ds/spec ::vector #{{:olipa {:kerran string?}}})
-            #{{:olipa {:kerran "avaruus"}}
-              {:olipa {:kerran "elämä"}}})))
+         (s/valid?
+          (ds/spec ::vector #{{:olipa {:kerran string?}}})
+          #{{:olipa {:kerran "avaruus"}}
+            {:olipa {:kerran "elämä"}}})))
     (is (false?
-          (s/valid?
-            (ds/spec ::vector #{{:olipa {:kerran string?}}})
-            #{{:olipa {:kerran :muumuu}}}))))
+         (s/valid?
+          (ds/spec ::vector #{{:olipa {:kerran string?}}})
+          #{{:olipa {:kerran :muumuu}}}))))
 
   (testing "mega-nested"
     (is (true?
-          (s/valid?
-            (ds/spec ::vector [[[[[[[[[[string?]]]]]]]]]])
-            [[[[[[[[[["kikka" "kakka" "kukka"]]]]]]]]]])))
+         (s/valid?
+          (ds/spec ::vector [[[[[[[[[[string?]]]]]]]]]])
+          [[[[[[[[[["kikka" "kakka" "kukka"]]]]]]]]]])))
     (is (false?
-          (s/valid?
-            (ds/spec ::vector [[[[[[[[[[string?]]]]]]]]]])
-            [[[[[[[[[123]]]]]]]]]))))
+         (s/valid?
+          (ds/spec ::vector [[[[[[[[[[string?]]]]]]]]]])
+          [[[[[[[[[123]]]]]]]]]))))
 
   (testing "predicate keys"
     (is
-      (true?
-        (s/valid?
-          (ds/spec ::pred-keys {string? {keyword? [integer?]}})
-          {"winning numbers" {:are [1 12 46 45]}
-           "empty?" {:is []}})))
+     (true?
+      (s/valid?
+       (ds/spec ::pred-keys {string? {keyword? [integer?]}})
+       {"winning numbers" {:are [1 12 46 45]}
+        "empty?" {:is []}})))
     (is
-      (false?
-        (s/valid?
-          (ds/spec ::pred-keys {string? {keyword? [integer?]}})
-          {"invalid spec" "is this"}))))
+     (false?
+      (s/valid?
+       (ds/spec ::pred-keys {string? {keyword? [integer?]}})
+       {"invalid spec" "is this"}))))
 
   (testing "set keys"
     (let [spec (ds/spec ::pred-keys {(s/spec #{:one :two}) string?})]
       (is
-        (= true
-           (s/valid? spec {:one "beer"})
-           (s/valid? spec {:two "beers"})))
+       (= true
+          (s/valid? spec {:one "beer"})
+          (s/valid? spec {:two "beers"})))
       (is
-        (= false
-           (s/valid? spec {:three "beers"})))))
+       (= false
+          (s/valid? spec {:three "beers"})))))
 
   (testing "map-of key transformer"
     (is (= {:thanks :alex}
            (st/conform
-             (ds/spec ::kikka {keyword? keyword?})
-             {"thanks" "alex"}
-             st/string-transformer)))))
+            (ds/spec ::kikka {keyword? keyword?})
+            {"thanks" "alex"}
+            st/string-transformer)))))
 
 (deftest top-level-maybe-test
   (let [spec (ds/spec ::maybe (ds/maybe {:n int?}))]
@@ -201,9 +201,9 @@
              (s/valid? spec1 {::i 1})
              (s/valid? spec2 {::i 1})))
       (is (= `(spec-tools.core/spec
-                {:spec (clojure.spec.alpha/keys :req [::i])
-                 :type :map
-                 :leaf? false})
+               {:spec (clojure.spec.alpha/keys :req [::i])
+                :type :map
+                :leaf? false})
              (s/form (dissoc spec1 :name))
              (s/form (dissoc spec2 :name))))))
 
@@ -220,15 +220,15 @@
                 :c any?}]
       (testing "by default, plain keyword keys are required"
         (let [spec (ds/spec
-                     {:name ::kikka
-                      :spec data})]
+                    {:name ::kikka
+                     :spec data})]
           (is (s/valid? spec {:a 1, :b 1, :c 1}))
           (is (not (s/valid? spec {:a 1})))))
       (testing "plain keyword keys can be made optional by default"
         (let [spec (ds/spec
-                     {:name ::kikka
-                      :spec data
-                      :keys-default ds/opt})]
+                    {:name ::kikka
+                     :spec data
+                     :keys-default ds/opt})]
           (is (s/valid? spec {:a 1, :b 1, :c 1}))
           (is (s/valid? spec {:a 1}))))))
   ;; TODO
@@ -239,19 +239,19 @@
 
 (deftest encode-decode-test
   (let [spec (ds/spec
-               {:name ::order
-                :spec {:id int?
-                       :address {:street string?
-                                 :country keyword?}
-                       :tags #{keyword?}
-                       :symbol symbol?
-                       :price double?
-                       :uuid uuid?
-                       :shipping inst?
-                       :secret (st/spec
-                                 {:spec string?
-                                  :encode/string #(apply str (reverse %2))
-                                  :decode/string #(apply str (reverse %2))})}})
+              {:name ::order
+               :spec {:id int?
+                      :address {:street string?
+                                :country keyword?}
+                      :tags #{keyword?}
+                      :symbol symbol?
+                      :price double?
+                      :uuid uuid?
+                      :shipping inst?
+                      :secret (st/spec
+                               {:spec string?
+                                :encode/string #(apply str (reverse %2))
+                                :decode/string #(apply str (reverse %2))})}})
         value {:id 1
                :address {:street "Pellavatehtaankatu 10b"
                          :country :fi}
@@ -277,8 +277,8 @@
       (is (= value (st/decode spec value-string st/string-transformer))))
     (testing "roundtrip"
       (is (= value-string (as-> value-string $
-                                (st/decode spec $ st/string-transformer)
-                                (st/encode spec $ st/string-transformer)))))))
+                            (st/decode spec $ st/string-transformer)
+                            (st/encode spec $ st/string-transformer)))))))
 
 (deftest spec-name-test
 
