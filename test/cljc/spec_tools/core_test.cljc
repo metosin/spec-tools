@@ -928,3 +928,18 @@
              {:epoch "Epoch converted"
               :nano 20
               :time-basis :UTC})))))
+
+(s/def ::k1 (st/spec {:spec string? :reason "k1"}))
+(s/def ::k2 (st/spec {:spec string? :reason "k2"}))
+(s/def ::spec (s/keys :req-un [::k1 ::k2]))
+(s/def ::spec-with-reason (st/spec {:spec (s/keys :req-un [::k1 ::k2]), :reason "missingKey"}))
+
+(deftest issue-267
+  (is (= "k1" (-> (st/explain-data ::spec-with-reason {:k2 "2" :k1 1})
+                  ::s/problems
+                  (first)
+                  :reason)))
+  (is (= "missingKey" (-> (st/explain-data ::spec-with-reason {:k2 "2"})
+                          ::s/problems
+                          (first)
+                          :reason))))
