@@ -133,3 +133,38 @@ All generated specs are wrapped into Specs Records so transformations works out 
 ;  :description "Liisa is a valid boss"
 ;  :address nil}
 ```
+
+In clojure, you can also go from the other way around, providing a
+`spec` created by `ds/spec` to an `ds/unspec` function which will
+recover the original data definitions.
+
+```clj
+(def person-spec
+  (ds/spec
+    {:name ::person
+     :spec person}))
+
+(ds/unspec person-spec)
+;; {::id integer?
+;;  ::age #'clojure.core/pos-int?
+;;  :boss boolean?
+;;  :name string?
+;;  (ds/opt :description) string?
+;;  :languages #{keyword?}
+;;  :aliases [(ds/or {:maps {:alias string?}
+;;                      :strings string?})]
+;;  :orders [{:id int?
+;;            :description string?}]
+;;  :address (ds/maybe
+;;            {:street string?
+;;             :zip string?})}
+
+
+```
+
+The main differences here is related to `ds/req` and full-qualified
+keywords, as we recover the values associated with these vars, the
+function `pos-int?` will be returned instead of `::age`. The `ds/req`
+function will not be returned because `data spec` understand the lack
+of the `ds/opt` always required, therefore we have an equivalent
+answer.
