@@ -818,15 +818,25 @@
 
 (deftest issue-179
   (testing "st/coerce can work properly with s/or specs"
-    (let [chevy {:doors 4}]
+    (let [chevy {:doors 4}
+          bike {:wheels 2}]
       (is (= (st/coerce ::car chevy st/strip-extra-keys-transformer)
              {:doors 4}))
+      (is (= (st/coerce ::bike bike st/strip-extra-keys-transformer)
+             {:wheels 2}))
       (is (= (st/coerce ::vehicle chevy st/strip-extra-keys-transformer)
              {:doors 4}))
+
+      ;; TODO: fails!
+      (is (= (st/coerce ::vehicle bike st/strip-extra-keys-transformer)
+             {:wheels 2}))
+
       (is (= (st/coerce ::new-vehicle {:rodas [1 "1" 3]} st/strip-extra-keys-transformer)
              {:rodas #{1 "1" 3}}))
       (is (= (st/coerce ::s {:keyword "a" :date "2020-02-22"} st/json-transformer)
-             {:keyword :a :date #inst "2020-02-22T00:00:00.000-00:00"})))))
+             {:keyword :a :date #inst "2020-02-22T00:00:00.000-00:00"}))
+      (is (= (st/coerce ::s {:keyword "b" :int 3} st/json-transformer)
+             {:keyword :b :int 3})))))
 
 (s/def ::foo string?)
 (s/def ::bar string?)
