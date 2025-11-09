@@ -9,5 +9,6 @@
 /doc
 /gh-pages
 /target
-pom.xml
 pom.xml.asc
+.cache
+node_modules

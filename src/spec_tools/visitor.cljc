@@ -77,6 +77,12 @@
 (defmethod visit-spec 'spec-tools.core/merge [spec accept options]
   (visit-merge spec accept options))
 
+(defmethod visit-spec 'clojure.spec.alpha/multi-spec [spec accept options]
+  (let [methods-specs (->> (impl/extract-form spec)
+                               (parse/get-multi-spec-sub-specs)
+                               (into {}))]
+    (accept 'clojure.spec.alpha/multi-spec spec (mapv #(visit (val %) accept options) methods-specs) options)))
+
 (defmethod visit-spec 'clojure.spec.alpha/every [spec accept options]
   (let [[_ inner-spec] (impl/extract-form spec)]
     (accept 'clojure.spec.alpha/every spec [(visit inner-spec accept options)] options)))
@@ -84,8 +90,8 @@
 (defmethod visit-spec 'clojure.spec.alpha/every-kv [spec accept options]
   (let [[_ inner-spec1 inner-spec2] (impl/extract-form spec)]
     (accept 'clojure.spec.alpha/every-kv spec (mapv
-                                                #(visit % accept options)
-                                                [inner-spec1 inner-spec2]) options)))
+                                               #(visit % accept options)
+                                               [inner-spec1 inner-spec2]) options)))
 
 (defmethod visit-spec 'clojure.spec.alpha/coll-of [spec accept options]
   (let [form (impl/extract-form spec)
@@ -161,18 +167,18 @@
 
 ;; TODO: uses ^:skip-wiki functions from clojure.spec
 (comment
-  (defn convert-specs!
-    "Collects all registered subspecs from a spec and
-    transforms their registry values into Spec Records.
-    Does not convert clojure.spec.alpha regex ops."
-    [spec]
-    (let [specs (visit spec (spec-collector))
-          report (atom #{})]
-      (doseq [[k v] specs]
-        (if (keyword? v)
-          (swap! report into (convert-specs! v))
-          (when-not (or (s/regex? v) (st/spec? v))
-            (let [s (st/create-spec {:spec v})]
-              (impl/register-spec! k s)
-              (swap! report conj k)))))
-      @report)))
+ (defn convert-specs!
+   "Collects all registered subspecs from a spec and
+   transforms their registry values into Spec Records.
+   Does not convert clojure.spec.alpha regex ops."
+   [spec]
+   (let [specs (visit spec (spec-collector))
+         report (atom #{})]
+     (doseq [[k v] specs]
+       (if (keyword? v)
+         (swap! report into (convert-specs! v))
+         (when-not (or (s/regex? v) (st/spec? v))
+           (let [s (st/create-spec {:spec v})]
+             (impl/register-spec! k s)
+             (swap! report conj k)))))
+     @report)))

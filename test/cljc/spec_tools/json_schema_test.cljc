@@ -27,6 +27,28 @@
 (s/def ::keys-no-req (s/keys :opt [::e]
                              :opt-un [::e]))
 
+(defmulti event-payload :action)
+
+(s/def :event.payload.add/action #{:add})
+(s/def :event.payload.add/payload int?)
+
+(defmethod event-payload :add
+  [_]
+  (s/keys :req-un [:event.payload.add/action :event.payload.add/payload]))
+
+(s/def :event.payload.result/action #{:result})
+(s/def :event.payload.result/payload nil?)
+
+(defmethod event-payload :result
+  [_]
+  (s/keys :req-un [:event.payload.result/action]
+          :opt-un [:event.payload.result/payload]))
+
+(s/def ::multi (s/multi-spec event-payload :action))
+
+(defn =any-of [& bodies]
+  (->> bodies (map :anyOf) (map set) (apply =)))
+
 (deftest simple-spec-test
   (testing "primitive predicates"
     ;; You're intented to call jsc/to-json with a registered spec, but to avoid
@@ -99,6 +121,13 @@
             :properties {"spec-tools.json-schema-test/integer" {:type "integer"}
                          "spec-tools.json-schema-test/string" {:type "string"}}
             :required ["spec-tools.json-schema-test/integer" "spec-tools.json-schema-test/string"]}))
+    (is (=any-of (jsc/transform ::multi)
+                 {:anyOf [{:type "object"
+                           :properties {"action" {:enum [:result]} "payload" {:type "null"}}
+                           :required ["action"]}
+                          {:type "object"
+                           :properties {"action" {:enum [:add]} "payload" {:type "integer" :format "int64"}}
+                           :required ["action" "payload"]}]}))
     (is (= (jsc/transform (s/every integer?)) {:type "array" :items {:type "integer"}}))
     (is (= (jsc/transform (s/every-kv string? integer?))
            {:type "object" :additionalProperties {:type "integer"}}))
@@ -164,14 +193,14 @@
 
 (def person-spec
   (ds/spec
-    ::person
-    {::id integer?
-     :age ::age
-     :name string?
-     :likes {string? boolean?}
-     (ds/req :languages) #{keyword?}
-     (ds/opt :address) {:street string?
-                        :zip string?}}))
+   ::person
+   {::id integer?
+    :age ::age
+    :name string?
+    :likes {string? boolean?}
+    (ds/req :languages) #{keyword?}
+    (ds/opt :address) {:street string?
+                       :zip string?}}))
 
 (deftest readme-test
   (is (= {:type "object"
@@ -194,11 +223,11 @@
           :description "it's an int"
           :default 42}
          (jsc/transform
-           (st/spec
-             {:spec integer?
-              :name "integer"
-              :description "it's an int"
-              :json-schema/default 42})))))
+          (st/spec
+           {:spec integer?
+            :name "integer"
+            :description "it's an int"
+            :json-schema/default 42})))))
 
 (deftest deeply-nested-test
   (is (= {:type "array"
@@ -208,9 +237,9 @@
                           :items {:type "array"
                                   :items {:type "string"}}}}}
          (jsc/transform
-           (ds/spec
-             ::nested
-             [[[[string?]]]])))))
+          (ds/spec
+           ::nested
+           [[[[string?]]]])))))
 
 (s/def ::user any?)
 (s/def ::name string?)
@@ -237,8 +266,8 @@
                    :properties {"foo" {:type "string"}}
                    :required ["foo"]}]}
          (jsc/transform
-           (s/or :bar (s/keys :req-un [::bar])
-                 :foo (s/keys :req-un [::foo]))))
+          (s/or :bar (s/keys :req-un [::bar])
+                :foo (s/keys :req-un [::foo]))))
       "s/or generates anyOf")
 
   (is (= {:type "object"
@@ -247,9 +276,9 @@
                        "bar" {:type "string"}}
           :required ["a"]}
          (jsc/transform
-           (s/merge (s/keys :req-un [::a])
-                    (s/or :foo (s/keys :req-un [::foo])
-                          :bar (s/keys :req-un [::bar])))))
+          (s/merge (s/keys :req-un [::a])
+                   (s/or :foo (s/keys :req-un [::foo])
+                         :bar (s/keys :req-un [::bar])))))
       "anyOf properties are merged into properties")
 
   (is (= {:type "object"
@@ -258,28 +287,28 @@
                        "bar" {:type "string"}}
           :required ["a" "bar" "foo"]}
          (jsc/transform
-           (s/merge (s/keys :req-un [::a])
-                    (s/and (s/keys :req-un [::bar])
-                           (s/keys :req-un [::foo])))))
+          (s/merge (s/keys :req-un [::a])
+                   (s/and (s/keys :req-un [::bar])
+                          (s/keys :req-un [::foo])))))
       "allOf properties are merged into properties and required"))
 
 (deftest backport-swagger-meta-unnamespaced
   (is (= (jsc/transform
-           (st/spec {:spec string?
-                     :json-schema {:type "string"
-                                   :format "password"
-                                   :random-value "42"}}))
+          (st/spec {:spec string?
+                    :json-schema {:type "string"
+                                  :format "password"
+                                  :random-value "42"}}))
          {:type "string" :format "password" :random-value "42"}))
 
   (is (= (jsc/transform
-           (st/spec {:spec string?
-                     :json-schema {:type "object"}
-                     :json-schema/format "password"}))
+          (st/spec {:spec string?
+                    :json-schema {:type "object"}
+                    :json-schema/format "password"}))
          {:type "object"}))
 
   (is (= (jsc/transform
-           (st/spec {:spec string?
-                     :json-schema/type "string"
-                     :json-schema/format "password"
-                     :json-schema/random-value "42"}))
+          (st/spec {:spec string?
+                    :json-schema/type "string"
+                    :json-schema/format "password"
+                    :json-schema/random-value "42"}))
          {:type "string" :format "password" :random-value "42"})))

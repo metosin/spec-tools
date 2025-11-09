@@ -16,10 +16,10 @@
 (s/def ::p5 string?)
 (s/def ::p6 string?)
 (s/def ::keys (s/keys
-                :req [(or ::p1 (and ::p2 ::p3))]
-                :opt [::p4]
-                :req-un [::p5]
-                :opt-un [::p6]))
+               :req [(or ::p1 (and ::p2 ::p3))]
+               :opt [::p4]
+               :req-un [::p5]
+               :opt-un [::p6]))
 
 (s/def ::p7 string?)
 (s/def ::p8 string?)
@@ -81,10 +81,10 @@
 (s/def ::p32 string?)
 (s/def ::p33 string?)
 (s/def ::keys* (s/keys*
-                 :req [(or ::p28 (and ::p29 ::p30))]
-                 :opt [::p31]
-                 :req-un [::p32]
-                 :opt-un [::p33]))
+                :req [(or ::p28 (and ::p29 ::p30))]
+                :opt [::p31]
+                :req-un [::p32]
+                :opt-un [::p33]))
 
 (s/def ::p34 string?)
 (s/def ::nilable (s/nilable ::p34))
@@ -95,24 +95,24 @@
 
 (s/def ::all
   (s/tuple
-    ::pred
-    ::keys
-    ::or
-    ::and
-    ::merge
-    ::every
-    ::every-kv
-    ::coll-of
-    ::map-of
-    ::*
-    ::+
-    ::?
-    ::alt
-    ::cat
-    ::&
-    ::tuple
-    ::keys*
-    ::nilable))
+   ::pred
+   ::keys
+   ::or
+   ::and
+   ::merge
+   ::every
+   ::every-kv
+   ::coll-of
+   ::map-of
+   ::*
+   ::+
+   ::?
+   ::alt
+   ::cat
+   ::&
+   ::tuple
+   ::keys*
+   ::nilable))
 
 ;;
 ;; tests
@@ -121,8 +121,8 @@
 (deftest nested-regexp-test
   (is (= #{::p1 ::p2 ::p3}
          (->> (visitor/visit
-                (s/* (s/cat :prop ::p1 :val (s/alt :s ::p2 :b ::p3)))
-                (visitor/spec-collector))
+               (s/* (s/cat :prop ::p1 :val (s/alt :s ::p2 :b ::p3)))
+               (visitor/spec-collector))
               (keys)
               (set)))))
 

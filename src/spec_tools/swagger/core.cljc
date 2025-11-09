@@ -117,15 +117,15 @@
 (defmethod extract-parameter :default [in spec]
   (let [{:keys [properties required]} (transform spec {:in in, :type :parameter})]
     (mapv
-      (fn [[k {:keys [type] :as schema}]]
-        (merge
-          {:in (name in)
-           :name k
-           :description (-> spec st/spec-description (or ""))
-           :type type
-           :required (contains? (set required) k)}
-          schema))
-      properties)))
+     (fn [[k {:keys [type] :as schema}]]
+       (merge
+        {:in (name in)
+         :name k
+         :description (-> spec st/spec-description (or ""))
+         :type type
+         :required (contains? (set required) k)}
+        schema))
+     properties)))
 
 ;;
 ;; expand the spec
@@ -136,11 +136,11 @@
 (defmethod expand ::responses [_ v acc _]
   {:responses
    (into
-     (or (:responses acc) {})
-     (for [[status response] v]
-       [status (as-> response $
-                     (if (:schema $) (update $ :schema transform {:type :schema}) $)
-                     (update $ :description (fnil identity "")))]))})
+    (or (:responses acc) {})
+    (for [[status response] v]
+      [status (as-> response $
+                (if (:schema $) (update $ :schema transform {:type :schema}) $)
+                (update $ :description (fnil identity "")))]))})
 
 (defmethod expand ::parameters [_ v acc _]
   (let [old (or (:parameters acc) [])
@@ -148,12 +148,12 @@
         merged (->> (into old new)
                     (reverse)
                     (reduce
-                      (fn [[ps cache :as acc] p]
-                        (let [c (select-keys p [:in :name])]
-                          (if-not (cache c)
-                            [(conj ps p) (conj cache c)]
-                            acc)))
-                      [[] #{}])
+                     (fn [[ps cache :as acc] p]
+                       (let [c (select-keys p [:in :name])]
+                         (if-not (cache c)
+                           [(conj ps p) (conj cache c)]
+                           acc)))
+                     [[] #{}])
                     (first)
                     (reverse)
                     (vec))]
@@ -162,17 +162,17 @@
 (defn expand-qualified-keywords [x options]
   (let [accept? (set (keys (methods expand)))]
     (walk/postwalk
-      (fn [x]
-        (if (map? x)
-          (reduce-kv
-            (fn [acc k v]
-              (if (accept? k)
-                (-> acc (dissoc k) (merge (expand k v acc options)))
-                acc))
-            x
-            x)
-          x))
-      x)))
+     (fn [x]
+       (if (map? x)
+         (reduce-kv
+          (fn [acc k v]
+            (if (accept? k)
+              (-> acc (dissoc k) (merge (expand k v acc options)))
+              acc))
+          x
+          x)
+         x))
+     x)))
 
 ;;
 ;; generate the swagger spec

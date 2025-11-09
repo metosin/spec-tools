@@ -20,23 +20,23 @@
           :b [1 2 3 4]
           :c {:a 2, :b 1}}
          (impl/deep-merge
-           {:a 1
-            :b [1 2]
-            :c {:a 1}}
-           {:a [1 2]
-            :c {:a 2, :b 1}}
-           {:a 2
-            :b [3 4]}))))
+          {:a 1
+           :b [1 2]
+           :c {:a 1}}
+          {:a [1 2]
+           :c {:a 2, :b 1}}
+          {:a 2
+           :b [3 4]}))))
 
 (deftest unlift-keys-test
   (is (= {:olut 0.5
           :sielu true}
          (impl/unlift-keys
-           {:iso/olut 0.5
-            :iso/sielu true
-            :olipa "kerran"
-            :kikka/kukka "kakka"}
-           "iso"))))
+          {:iso/olut 0.5
+           :iso/sielu true
+           :olipa "kerran"
+           :kikka/kukka "kakka"}
+          "iso"))))
 
 (def ignoring-spec #(dissoc % ::s/spec))
 
@@ -75,9 +75,9 @@
     (is (= (s/form spec)
            (s/form impl)))
     (is (= `(s/map-of
-              (st/spec {:spec string? :type :string :leaf? true})
-              (st/spec {:spec string? :type :string :leaf? true})
-              :conform-keys true)
+             (st/spec {:spec string? :type :string :leaf? true})
+             (st/spec {:spec string? :type :string :leaf? true})
+             :conform-keys true)
            (s/form (impl/map-of-spec spec/string? spec/string?))))
     (is (= nil
            (s/explain-data spec {"key" "value"})

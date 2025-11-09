@@ -11,9 +11,9 @@
    [spec-tools.spell-spec.alpha :as spell :refer [warn-keys strict-keys warn-strict-keys]]))
 
 (defn fetch-warning-output [thunk]
-  #?(:clj (binding [*err* (java.io.StringWriter.)]
-            (thunk)
-            (str *err*))
+  #?(:clj  (binding [*err* (java.io.StringWriter.)]
+             (thunk)
+             (str *err*))
      :cljs (with-out-str (thunk))))
 
 (deftest check-misspell-test
@@ -99,7 +99,7 @@
       (when-let [{:keys [:expound.spec.problem/type ::spell/misspelled-key ::spell/likely-misspelling-of]} (first problems)]
         (is (= ::spell/misspelled-key type))
         (is (= misspelled-key :helloo))
-        (is (= '(:hello)  likely-misspelling-of)))
+        (is (= '(:hello) likely-misspelling-of)))
       (when-let [{:keys [:expound.spec.problem/type ::spell/unknown-key]} (second problems)]
         (is (= ::spell/unknown-key type))
         (is (= unknown-key :barabara))))))
