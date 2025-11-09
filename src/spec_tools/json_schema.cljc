@@ -195,7 +195,7 @@
   (if (list? x) ;; found key-group
     (let [k (or (key-group-mapping (first x))
                 (throw
-                 (IllegalArgumentException. "unsupported key-group expression")))]
+                  (ex-info "unsupported key-group expression" {:expression (first x)})))]
       {k (mapv (partial parse-required1 name-fn) (next x))})
     {:required [(name-fn x)]}))
 
@@ -225,7 +225,9 @@
         {:type "object"
          :properties (zipmap (concat names names-un) children)}
         (when all-required
-          {:allOf (vec all-required)}))
+          (if (every? :required all-required)
+            {:required (into [] (mapcat :required) all-required)}
+            {:allOf    (vec all-required)})))
       spec
       options)))
 
