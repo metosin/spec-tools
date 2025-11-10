@@ -208,7 +208,6 @@
   {:anyOf [{:required ["foo"]} 
            {:allOf [{:required ["bar"]} 
                     {:required ["baz"]}]}]}
-
   )
 
 (defmethod accept-spec 'clojure.spec.alpha/keys [_ spec children options]
@@ -221,15 +220,15 @@
         required-un  (map parse-req-un* (:req-un m))
         all-required (not-empty (concat required required-un))]
     (maybe-with-title
-      (merge
-        {:type "object"
-         :properties (zipmap (concat names names-un) children)}
-        (when all-required
-          (if (every? :required all-required)
-            {:required (into [] (mapcat :required) all-required)}
-            {:allOf    (vec all-required)})))
-      spec
-      options)))
+     (merge
+       {:type "object"
+        :properties (zipmap (concat names names-un) children)}
+       (when all-required
+         (if (every? :required all-required)
+           {:required (into [] (mapcat :required) all-required)}
+           {:allOf    (vec all-required)})))
+     spec
+     options)))
 
 (defmethod accept-spec 'clojure.spec.alpha/or [_ _ children _]
   {:anyOf children})
