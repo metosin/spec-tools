@@ -221,12 +221,12 @@
         all-required (not-empty (concat required required-un))]
     (maybe-with-title
      (merge
-       {:type "object"
-        :properties (zipmap (concat names names-un) children)}
-       (when all-required
-         (if (every? :required all-required)
-           {:required (into [] (mapcat :required) all-required)}
-           {:allOf    (vec all-required)})))
+      {:type "object"
+       :properties (zipmap (concat names names-un) children)}
+      (when all-required
+        (if (every? :required all-required)
+          {:required (into [] (mapcat :required) all-required)}
+          {:allOf    (vec all-required)})))
      spec
      options)))
 
