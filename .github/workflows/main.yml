@@ -22,6 +22,10 @@ jobs:
           restore-keys: |
             lein-${{ github.job }}
             lein-
+      - name: Setup Clojure
+        uses: DeLaGuardo/setup-clojure@13.1
+        with:
+          lein: 2.9.5
       - name: Run tests
         run: ./scripts/test.sh "${{matrix.test-type}}"
 
@@ -37,6 +41,10 @@ jobs:
           restore-keys: |
             lein-${{ github.job }}
             lein-
+      - name: Setup Clojure
+        uses: DeLaGuardo/setup-clojure@13.1
+        with:
+          lein: 2.9.5
       - name: Run tests with coverage
         run: lein cloverage --codecov
       - name: Upload coverage to Codecov
