@@ -92,12 +92,11 @@
                          "e" {:type "string"}}
             :allOf      [{:required ["spec-tools.json-schema-test/a"]}
                          {:anyOf [{:required ["spec-tools.json-schema-test/b"]}
-                                  {:allOf [{:required ["spec-tools.json-schema-test/c"]}
-                                           {:required ["spec-tools.json-schema-test/d"]}]}]}
+                                  {:allOf [{:required ["spec-tools.json-schema-test/c"
+                                                       "spec-tools.json-schema-test/d"]}]}]}
                          {:required ["a"]}
                          {:anyOf [{:required ["b"]}
-                                  {:allOf [{:required ["c"]}
-                                           {:required ["d"]}]}]}]}))
+                                  {:allOf [{:required ["c" "d"]}]}]}]}))
     (is (= (jsc/transform ::keys-no-req)
            {:type "object"
             :title "spec-tools.json-schema-test/keys-no-req"

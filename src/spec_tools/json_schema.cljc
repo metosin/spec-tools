@@ -195,8 +195,11 @@
   (if (list? x) ;; found key-group
     (let [k (or (key-group-mapping (first x))
                 (throw
-                  (ex-info "unsupported key-group expression" {:expression (first x)})))]
-      {k (mapv (partial parse-required1 name-fn) (next x))})
+                  (ex-info "unsupported key-group expression" {:expression (first x)})))
+          v (mapv (partial parse-required1 name-fn) (next x))]
+      {k (if (every? :required v)
+           [{:required (into [] (mapcat :required) v)}]
+           v)})
     {:required [(name-fn x)]}))
 
 (def parse-req*    (partial parse-required1 impl/qualified-name))
@@ -226,6 +229,7 @@
        :properties (zipmap (concat names names-un) children)}
       (when all-required
         (if (every? :required all-required)
+          ;; avoid changing the simple case & break existing tests
           {:required (into [] (mapcat :required) all-required)}
           {:allOf    (vec all-required)})))
      spec
