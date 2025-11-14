@@ -184,12 +184,12 @@
       (assoc schema :title (impl/qualified-name title))
       schema)))
 
-(def key-group-mapping 
-  {'or  :anyOf ;; there is no 'xor' key-group, so 'anyOf' is more appropriate than 'oneOf' 
+(def key-group-mapping
+  {'or  :anyOf ;; there is no 'xor' key-group, so 'anyOf' is more appropriate than 'oneOf'
    'and :allOf})
 
-(defn- parse-required1 
-  "Helper for generating correct schemas for :req/:req-un keys, 
+(defn- parse-required1
+  "Helper for generating correct schemas for :req/:req-un keys,
   taking into account potential or/and key-goups."
   [name-fn x]
   (if (list? x) ;; found key-group
@@ -205,15 +205,6 @@
 
 (def parse-req*    (partial parse-required1 impl/qualified-name))
 (def parse-req-un* (partial parse-required1 name))
-
-(comment 
-
-  (parse-req-un* '(or :foo (and :bar :baz)))
-  ;; =>
-  {:anyOf [{:required ["foo"]} 
-           {:allOf [{:required ["bar"]} 
-                    {:required ["baz"]}]}]}
-  )
 
 (defmethod accept-spec 'clojure.spec.alpha/keys [_ spec children options]
   (let [form (impl/extract-form spec)
