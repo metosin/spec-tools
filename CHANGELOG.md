@@ -1,3 +1,7 @@
+# 0.10.8 (2025-11-24)
+
+* Add support for or/and key-groups in s/keys when generating JSON-Schema [#279](https://github.com/metosin/spec-tools/pull/279)
+
 # 0.10.7 (2024-06-29)
 
 * Support transforming multi-spec to JSON Schema. PR [#281](https://github.com/metosin/spec-tools/pull/281)
@@ -71,7 +75,7 @@ user=> (st/encode inst? (java.util.Date.) st/json-transformer)
 
 # 0.9.3 (2019-06-07)
 
-* Updated dependency on jackson-databind to fix a vulnerability. [#189](https://github.com/metosin/spec-tools/pull/189) 
+* Updated dependency on jackson-databind to fix a vulnerability. [#189](https://github.com/metosin/spec-tools/pull/189)
 
 # 0.9.2 (2019-05-10)
 
@@ -119,19 +123,19 @@ user=> (st/encode inst? (java.util.Date.) st/json-transformer)
 
 (println (spell/explain-str ::options invalid))
 ; -- Misspelled map key -------------
-; 
+;
 ;     {:config {:name ..., :countr ..., :use-hisory ...}}
 ;                                       ^^^^^^^^^^^
-; 
+;
 ; should probably be: :use-history
-; 
+;
 ; -- Unknown map key ----------------
-; 
+;
 ;     {:config {:name ..., :use-hisory ..., :countr ...}}
 ;                                           ^^^^^^^
-; 
+;
 ; should be one of: :name, :use-history
-; 
+;
 ; -------------------------
 ; Detected 2 errors
 ```
@@ -266,7 +270,7 @@ user=> (st/encode inst? (java.util.Date.) st/json-transformer)
     * `:keys/opt` => `::parse/keys-opt`
   * new parser keys `::parse/items`, `::parse/item`, `::parse/key` and `::parse/value`
   * `s/and` and `s/or` are parsed into composite types:
-  
+
 ```clj
 (testing "s/or"
   (is (= {::parse/items [{:spec int?, :type :long} {:spec keyword?, :type :keyword}]
@@ -277,7 +281,7 @@ user=> (st/encode inst? (java.util.Date.) st/json-transformer)
           :type [:and [:long :keyword]]}
          (parse/parse-spec (s/and int? keyword?)))))
 ```
- 
+
 # 0.7.2 (2018-09-26)
 
 * Update deps:
