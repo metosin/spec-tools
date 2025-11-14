@@ -22,6 +22,11 @@ jobs:
           restore-keys: |
             lein-${{ github.job }}
             lein-
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@13.1
         with:
@@ -41,6 +46,11 @@ jobs:
           restore-keys: |
             lein-${{ github.job }}
             lein-
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@13.1
         with:
