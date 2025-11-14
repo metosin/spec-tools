@@ -92,11 +92,11 @@
                          "e" {:type "string"}}
             :allOf      [{:required ["spec-tools.json-schema-test/a"]}
                          {:anyOf [{:required ["spec-tools.json-schema-test/b"]}
-                                  {:allOf [{:required ["spec-tools.json-schema-test/c"
-                                                       "spec-tools.json-schema-test/d"]}]}]}
+                                  {:required ["spec-tools.json-schema-test/c"
+                                              "spec-tools.json-schema-test/d"]}]}
                          {:required ["a"]}
                          {:anyOf [{:required ["b"]}
-                                  {:allOf [{:required ["c" "d"]}]}]}]}))
+                                  {:required ["c" "d"]}]}]}))
     (is (= (jsc/transform ::keys-no-req)
            {:type "object"
             :title "spec-tools.json-schema-test/keys-no-req"
@@ -155,6 +155,63 @@
   (testing "failing clojure.specs"
     (is (not= (jsc/transform (s/coll-of (s/tuple string? any?) :into {}))
               {:type "object", :additionalProperties {:type "string"}}))))
+
+(deftest parse-req-test
+  (is (= {:required ["foo"]}
+         (jsc/parse-req-un* :foo)))
+  (is (= {:required ["foo.bar/baz"]}
+         (jsc/parse-req* :foo.bar/baz)))
+  (is (= {:anyOf [{:required ["foo"]}
+                  {:required ["bar" "baz"]}]}
+         (jsc/parse-req-un* '(or :foo (and :bar :baz)))))
+  (is (= {:required ["foo"]}
+         (jsc/parse-req-un* '(or :foo))))
+  (is (= {:required ["foo"]}
+         (jsc/parse-req-un* '(and :foo))))
+  (is (= {:anyOf [{:required ["foo" "bar"]}
+                  {:allOf [{:required ["baz"]}
+                           {:anyOf [{:required ["quux"]}
+                                    {:required ["ding"]}]}
+                           {:required ["bim"]}]}
+                  {:required ["bam"]}]}
+         (jsc/parse-req-un* '(or (and :foo :bar)
+                                 (and :baz (or :quux :ding) :bim)
+                                 :bam)))))
+
+(s/def ::keys2 (s/keys :req [::zipcode ::id ::age]))
+(s/def ::keys2-or (s/keys :req [::zipcode (or ::id ::age)]))
+(s/def ::keys2-or-and (s/keys :req [(or ::id (and ::age ::zipcode))]))
+(s/def ::keys2-and (s/keys :req [::zipcode (and ::id ::age)])) ; should be equivalent to ::keys2
+(s/def ::keys2-and-or (s/keys :req [(and ::zipcode (or ::id ::age))])) ; should be equivalent to ::keys2-or
+
+(deftest keys-test
+  (is (= {:type "object"
+          :properties {"spec-tools.json-schema-test/zipcode" {:type "string"}
+                       "spec-tools.json-schema-test/id" {:type "integer"}
+                       "spec-tools.json-schema-test/age" {:type "integer"}}
+          :required ["spec-tools.json-schema-test/zipcode"
+                     "spec-tools.json-schema-test/id"
+                     "spec-tools.json-schema-test/age"]}
+         (dissoc (jsc/transform ::keys2) :title)
+         (dissoc (jsc/transform ::keys2-and) :title)))
+  (is (= {:type "object"
+          :properties {"spec-tools.json-schema-test/zipcode" {:type "string"}
+                       "spec-tools.json-schema-test/id" {:type "integer"}
+                       "spec-tools.json-schema-test/age" {:type "integer"}}
+          :allOf [{:required ["spec-tools.json-schema-test/zipcode"]}
+                  {:anyOf
+                   [{:required ["spec-tools.json-schema-test/id"]}
+                    {:required ["spec-tools.json-schema-test/age"]}]}]}
+         (dissoc (jsc/transform ::keys2-or) :title)
+         (dissoc (jsc/transform ::keys2-and-or) :title)))
+  (is (= {:type "object"
+          :properties {"spec-tools.json-schema-test/zipcode" {:type "string"}
+                       "spec-tools.json-schema-test/id" {:type "integer"}
+                       "spec-tools.json-schema-test/age" {:type "integer"}}
+          :anyOf [{:required ["spec-tools.json-schema-test/id"]}
+                  {:required ["spec-tools.json-schema-test/age"
+                              "spec-tools.json-schema-test/zipcode"]}]}
+         (dissoc (jsc/transform ::keys2-or-and) :title))))
 
 (s/def ::id string?)
 (s/def ::age string?)

@@ -184,12 +184,19 @@
       (assoc schema :title (impl/qualified-name title))
       schema)))
 
-(def key-group-mapping 
-  {'or  :anyOf ;; there is no 'xor' key-group, so 'anyOf' is more appropriate than 'oneOf' 
+(def key-group-mapping
+  {'or  :anyOf ;; there is no 'xor' key-group, so 'anyOf' is more appropriate than 'oneOf'
    'and :allOf})
 
-(defn- parse-required1 
-  "Helper for generating correct schemas for :req/:req-un keys, 
+(defn- simplify-allOf-anyOf [expr]
+  (let [[k v] (first expr)]
+    (cond
+      (= 1 (count v)) (first v)
+      (and (= k :allOf) (every? :required v)) {:required (into [] (mapcat :required) v)}
+      :else expr)))
+
+(defn- parse-required1
+  "Helper for generating correct schemas for :req/:req-un keys,
   taking into account potential or/and key-goups."
   [name-fn x]
   (if (list? x) ;; found key-group
@@ -197,23 +204,11 @@
                 (throw
                   (ex-info "unsupported key-group expression" {:expression (first x)})))
           v (mapv (partial parse-required1 name-fn) (next x))]
-      {k (if (and (= k :allOf)
-                  (every? :required v))
-           [{:required (into [] (mapcat :required) v)}]
-           v)})
+      (simplify-allOf-anyOf {k v}))
     {:required [(name-fn x)]}))
 
 (def parse-req*    (partial parse-required1 impl/qualified-name))
 (def parse-req-un* (partial parse-required1 name))
-
-(comment 
-
-  (parse-req-un* '(or :foo (and :bar :baz)))
-  ;; =>
-  {:anyOf [{:required ["foo"]} 
-           {:allOf [{:required ["bar"]} 
-                    {:required ["baz"]}]}]}
-  )
 
 (defmethod accept-spec 'clojure.spec.alpha/keys [_ spec children options]
   (let [form (impl/extract-form spec)
@@ -229,10 +224,7 @@
       {:type "object"
        :properties (zipmap (concat names names-un) children)}
       (when all-required
-        (if (every? :required all-required)
-          ;; avoid changing the simple case & break existing tests
-          {:required (into [] (mapcat :required) all-required)}
-          {:allOf    (vec all-required)})))
+        (simplify-allOf-anyOf {:allOf (vec all-required)})))
      spec
      options)))
 
