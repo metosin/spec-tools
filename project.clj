@@ -27,23 +27,24 @@
                              [lein-pprint "1.3.2"]]
                    :jvm-opts ^:replace ["-server"]
                    ;:global-vars {*warn-on-reflection* true}
-                   :dependencies [[org.clojure/clojure "1.11.3"]
-                                  [org.clojure/clojurescript "1.11.132"]
+                   :dependencies [[org.clojure/clojure "1.12.3"]
+                                  [org.clojure/clojurescript "1.12.42"]
                                   [criterium "0.4.6"]
                                   [prismatic/schema "1.4.1"]
                                   [org.clojure/test.check "1.1.1"]
                                   [org.clojure/tools.namespace "1.5.0"]
-                                  [com.gfredericks/test.chuck "0.2.14"]
+                                  [com.gfredericks/test.chuck "0.2.15"]
                                   ; com.bhauman/spell-spec library doesn't get any updates, so it has to be copied here
                                   ; under spec-tools.spell-spec namespace in order to fix its bugs.
                                   ; If the library gets updated with fixes it would be desirable to switch back to it.
                                   ;[com.bhauman/spell-spec "0.1.1"]
                                   [expound "0.9.0"]
-																																		[metosin/muuntaja "0.6.10"]
+                                  [metosin/muuntaja "0.6.11"]
                                   [metosin/ring-swagger "1.0.0"]
-                                  [metosin/jsonista "0.3.8"]
+                                  [metosin/jsonista "0.3.13"]
                                   [metosin/scjsv "0.6.2"]]}
              :perf {:jvm-opts ^:replace ["-server"]}}
+  :plugins [[lein-ancient "1.0.0-RC3"]]
   :aliases {"all" ["with-profile" "dev"]
             "perf" ["with-profile" "default,dev,perf"]
             "test-clj" ["all" "do" ["test"] ["check"]]
