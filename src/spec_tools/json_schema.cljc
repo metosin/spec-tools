@@ -188,6 +188,12 @@
   {'or  :anyOf ;; there is no 'xor' key-group, so 'anyOf' is more appropriate than 'oneOf'
    'and :allOf})
 
+(defn- simplify-allOf-anyOf [expr]
+  (let [[k v] (first expr)]
+    (cond
+      (and (= k :allOf) (every? :required v)) {:required (into [] (mapcat :required) v)}
+      :else expr)))
+
 (defn- parse-required1
   "Helper for generating correct schemas for :req/:req-un keys,
   taking into account potential or/and key-goups."
@@ -197,10 +203,7 @@
                 (throw
                   (ex-info "unsupported key-group expression" {:expression (first x)})))
           v (mapv (partial parse-required1 name-fn) (next x))]
-      (if (and (= k :allOf)
-               (every? :required v))
-        {:required (into [] (mapcat :required) v)}
-        {k v}))
+      (simplify-allOf-anyOf {k v}))
     {:required [(name-fn x)]}))
 
 (def parse-req*    (partial parse-required1 impl/qualified-name))
@@ -220,10 +223,7 @@
       {:type "object"
        :properties (zipmap (concat names names-un) children)}
       (when all-required
-        (if (every? :required all-required)
-          ;; avoid changing the simple case & break existing tests
-          {:required (into [] (mapcat :required) all-required)}
-          {:allOf    (vec all-required)})))
+        (simplify-allOf-anyOf {:allOf (vec all-required)})))
      spec
      options)))
 
