@@ -92,11 +92,11 @@
                          "e" {:type "string"}}
             :allOf      [{:required ["spec-tools.json-schema-test/a"]}
                          {:anyOf [{:required ["spec-tools.json-schema-test/b"]}
-                                  {:allOf [{:required ["spec-tools.json-schema-test/c"
-                                                       "spec-tools.json-schema-test/d"]}]}]}
+                                  {:required ["spec-tools.json-schema-test/c"
+                                              "spec-tools.json-schema-test/d"]}]}
                          {:required ["a"]}
                          {:anyOf [{:required ["b"]}
-                                  {:allOf [{:required ["c" "d"]}]}]}]}))
+                                  {:required ["c" "d"]}]}]}))
     (is (= (jsc/transform ::keys-no-req)
            {:type "object"
             :title "spec-tools.json-schema-test/keys-no-req"
@@ -179,18 +179,17 @@
                        "spec-tools.json-schema-test/age" {:type "integer"}}
           :allOf [{:anyOf
                    [{:required ["spec-tools.json-schema-test/id"]}
-                    {:allOf [{:required ["spec-tools.json-schema-test/age"
-                                         "spec-tools.json-schema-test/zipcode"]}]}]}]}
+                    {:required ["spec-tools.json-schema-test/age"
+                                "spec-tools.json-schema-test/zipcode"]}]}]}
          (jsc/transform ::keys-or-and)))
   (is (= {:title "spec-tools.json-schema-test/keys-and"
           :type "object"
           :properties {"spec-tools.json-schema-test/zipcode" {:type "string"}
                        "spec-tools.json-schema-test/id" {:type "integer"}
                        "spec-tools.json-schema-test/age" {:type "integer"}}
-          :allOf [{:required ["spec-tools.json-schema-test/zipcode"]}
-                  {:allOf
-                   [{:required ["spec-tools.json-schema-test/id"
-                                "spec-tools.json-schema-test/age"]}]}]}
+          :required ["spec-tools.json-schema-test/zipcode"
+                     "spec-tools.json-schema-test/id"
+                     "spec-tools.json-schema-test/age"]}
          (jsc/transform ::keys-and)))
   (is (= {:title "spec-tools.json-schema-test/keys-and-or"
           :type "object"

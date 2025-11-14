@@ -197,10 +197,10 @@
                 (throw
                   (ex-info "unsupported key-group expression" {:expression (first x)})))
           v (mapv (partial parse-required1 name-fn) (next x))]
-      {k (if (and (= k :allOf)
-                  (every? :required v))
-           [{:required (into [] (mapcat :required) v)}]
-           v)})
+      (if (and (= k :allOf)
+               (every? :required v))
+        {:required (into [] (mapcat :required) v)}
+        {k v}))
     {:required [(name-fn x)]}))
 
 (def parse-req*    (partial parse-required1 impl/qualified-name))
