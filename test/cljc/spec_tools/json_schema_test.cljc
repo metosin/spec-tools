@@ -156,6 +156,53 @@
     (is (not= (jsc/transform (s/coll-of (s/tuple string? any?) :into {}))
               {:type "object", :additionalProperties {:type "string"}}))))
 
+(s/def ::keys-or (s/keys :req [::zipcode (or ::id ::age)]))
+(s/def ::keys-or-and (s/keys :req [(or ::id (and ::age ::zipcode))]))
+(s/def ::keys-and (s/keys :req [::zipcode (and ::id ::age)]))
+(s/def ::keys-and-or (s/keys :req [(and ::id (or ::age ::zipcode))]))
+
+(deftest keys-test
+  (is (= {:title "spec-tools.json-schema-test/keys-or"
+          :type "object"
+          :properties {"spec-tools.json-schema-test/zipcode" {:type "string"}
+                       "spec-tools.json-schema-test/id" {:type "integer"}
+                       "spec-tools.json-schema-test/age" {:type "integer"}}
+          :allOf [{:required ["spec-tools.json-schema-test/zipcode"]}
+                  {:anyOf
+                   [{:required ["spec-tools.json-schema-test/id"]}
+                    {:required ["spec-tools.json-schema-test/age"]}]}]}
+         (jsc/transform ::keys-or)))
+  (is (= {:title "spec-tools.json-schema-test/keys-or-and"
+          :type "object"
+          :properties {"spec-tools.json-schema-test/zipcode" {:type "string"}
+                       "spec-tools.json-schema-test/id" {:type "integer"}
+                       "spec-tools.json-schema-test/age" {:type "integer"}}
+          :allOf [{:anyOf
+                   [{:required ["spec-tools.json-schema-test/id"]}
+                    {:allOf [{:required ["spec-tools.json-schema-test/age"
+                                         "spec-tools.json-schema-test/zipcode"]}]}]}]}
+         (jsc/transform ::keys-or-and)))
+  (is (= {:title "spec-tools.json-schema-test/keys-and"
+          :type "object"
+          :properties {"spec-tools.json-schema-test/zipcode" {:type "string"}
+                       "spec-tools.json-schema-test/id" {:type "integer"}
+                       "spec-tools.json-schema-test/age" {:type "integer"}}
+          :allOf [{:required ["spec-tools.json-schema-test/zipcode"]}
+                  {:allOf
+                   [{:required ["spec-tools.json-schema-test/id"
+                                "spec-tools.json-schema-test/age"]}]}]}
+         (jsc/transform ::keys-and)))
+  (is (= {:title "spec-tools.json-schema-test/keys-and-or"
+          :type "object"
+          :properties {"spec-tools.json-schema-test/zipcode" {:type "string"}
+                       "spec-tools.json-schema-test/id" {:type "integer"}
+                       "spec-tools.json-schema-test/age" {:type "integer"}}
+          :allOf [{:allOf
+                   [{:required ["spec-tools.json-schema-test/id"]}
+                    {:anyOf [{:required ["spec-tools.json-schema-test/age"]}
+                             {:required ["spec-tools.json-schema-test/zipcode"]}]}]}]}
+         (jsc/transform ::keys-and-or))))
+
 (s/def ::id string?)
 (s/def ::age string?)
 (s/def ::zipcode string?)
