@@ -184,19 +184,55 @@
       (assoc schema :title (impl/qualified-name title))
       schema)))
 
+(def key-group-mapping 
+  {'or  :anyOf ;; there is no 'xor' key-group, so 'anyOf' is more appropriate than 'oneOf' 
+   'and :allOf})
+
+(defn- parse-required1 
+  "Helper for generating correct schemas for :req/:req-un keys, 
+  taking into account potential or/and key-goups."
+  [name-fn x]
+  (if (list? x) ;; found key-group
+    (let [k (or (key-group-mapping (first x))
+                (throw
+                  (ex-info "unsupported key-group expression" {:expression (first x)})))
+          v (mapv (partial parse-required1 name-fn) (next x))]
+      {k (if (and (= k :allOf)
+                  (every? :required v))
+           [{:required (into [] (mapcat :required) v)}]
+           v)})
+    {:required [(name-fn x)]}))
+
+(def parse-req*    (partial parse-required1 impl/qualified-name))
+(def parse-req-un* (partial parse-required1 name))
+
+(comment 
+
+  (parse-req-un* '(or :foo (and :bar :baz)))
+  ;; =>
+  {:anyOf [{:required ["foo"]} 
+           {:allOf [{:required ["bar"]} 
+                    {:required ["baz"]}]}]}
+  )
+
 (defmethod accept-spec 'clojure.spec.alpha/keys [_ spec children options]
-  (let [{:keys [req req-un opt opt-un]} (impl/parse-keys (impl/extract-form spec))
+  (let [form (impl/extract-form spec)
+        {:keys [req req-un opt opt-un]} (impl/parse-keys form)
         names-un (map name (concat req-un opt-un))
         names (map impl/qualified-name (concat req opt))
-        required (map impl/qualified-name req)
-        required-un (map name req-un)
+        m (some->> form (rest) (apply hash-map))
+        required     (map parse-req*    (:req m))
+        required-un  (map parse-req-un* (:req-un m))
         all-required (not-empty (concat required required-un))]
     (maybe-with-title
      (merge
       {:type "object"
        :properties (zipmap (concat names names-un) children)}
       (when all-required
-        {:required (vec all-required)}))
+        (if (every? :required all-required)
+          ;; avoid changing the simple case & break existing tests
+          {:required (into [] (mapcat :required) all-required)}
+          {:allOf    (vec all-required)})))
      spec
      options)))
 
