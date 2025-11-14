@@ -191,6 +191,7 @@
 (defn- simplify-allOf-anyOf [expr]
   (let [[k v] (first expr)]
     (cond
+      (= 1 (count v)) (first v)
       (and (= k :allOf) (every? :required v)) {:required (into [] (mapcat :required) v)}
       :else expr)))
 
