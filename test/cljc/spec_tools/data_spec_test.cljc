@@ -2,12 +2,15 @@
   (:require [clojure.test :refer [deftest testing is]]
             [clojure.spec.alpha :as s]
             [spec-tools.data-spec :as ds]
+            #?(:clj [clojure.test.check.generators :as gen])
+            #?(:clj [com.gfredericks.test.chuck.clojure-test :refer [checking]])
             [spec-tools.core :as st]
             [spec-tools.spec :as spec])
   #?(:clj
      (:import clojure.lang.ExceptionInfo)))
 
 (s/def ::age (s/and spec/integer? #(> % 10)))
+
 
 (deftest data-spec-tests
   (testing "nested data-spec"
@@ -302,3 +305,79 @@
     (testing "nested maps have a name"
       (let [spec (st/get-spec :spec-tools.data-spec-test$named3/map)]
         (is (and spec (:name spec)))))))
+
+#?(:clj
+   (deftest unspecing
+     (testing "simpler possible specs"
+       (is (= int? (ds/unspec (ds/spec {:name ::t1 :spec int?}))))
+       (is (= string? (ds/unspec (ds/spec {:name ::t1 :spec string?}))))
+       (is (= float? (ds/unspec (ds/spec {:name ::t1 :spec float?}))))
+       (is (= boolean? (ds/unspec (ds/spec {:name ::t1 :spec boolean?}))))
+       (is (= keyword? (ds/unspec (ds/spec {:name ::t1 :spec keyword?})))))
+
+     (testing "simple map using data-spec"
+       (let [ds1 {:street          string?
+                  :number          int?
+                  :value           float?
+                  :is_main?        boolean?
+                  :clj-programmer? keyword?}]
+         (is (= ds1 (ds/unspec (ds/spec {:name ::ds1 :spec ds1}))))
+
+         (testing "we can handle nillable keywords"
+           (let [ds2 (merge ds1 {:address (ds/maybe {:street string?
+                                                     :number int?})
+                                 :city    string?})]
+             (is (= ds2 (ds/unspec (ds/spec {:name ::ds2 :spec ds2}))))))
+
+         (testing "also vector field, that also should be homogeneous."
+           (let [ds3 (merge ds1 {:orders [{:id          int?
+                                           :description string?}]})]
+             (is (= ds3 (ds/unspec (ds/spec {:name ::ds3 :spec ds3}))))))
+
+         (testing "support for a set"
+           (let [ds4 (assoc ds1 :languages #{keyword?})
+                 ds5 (assoc ds1 :languages #{string?})
+                 ds6 (assoc ds1 :languages #{int?})
+                 ds7 (assoc ds1 :languages #{boolean?})]
+             (is (= ds4 (ds/unspec (ds/spec {:name ::ds4 :spec ds4}))))
+             (is (= ds5 (ds/unspec (ds/spec {:name ::ds5 :spec ds5}))))
+             (is (= ds6 (ds/unspec (ds/spec {:name ::ds6 :spec ds6}))))
+             (is (= ds7 (ds/unspec (ds/spec {:name ::ds7 :spec ds7}))))))
+
+         (testing "support for or operator"
+           (let [ds8 (merge ds1 {:aliases [(or {:maps    {:alias string?}
+                                                :strings string?})]})
+                 ds9 (merge ds1 {:testing [(or {:ints int?
+                                                :bol  boolean?
+                                                :val  float?
+                                                :key  keyword?})]})]
+             (is (= ds8 (ds/unspec (ds/spec {:name ::ds8 :spec ds8}))))
+             (is (= ds9 (ds/unspec (ds/spec {:name ::ds9 :spec ds9}))))))))))
+
+#?(:clj
+   (def unspec-gen (let [-kw?      (gen/return keyword?)
+                         -str?     (gen/return string?)
+                         -bol?     (gen/return boolean?)
+                         -flt?     (gen/return float?)
+                         -int?     (gen/return integer?)
+                         -compound [-kw? -str? -bol? -flt? -int?]
+                         -vec?     (gen/vector (gen/one-of -compound) 1)
+                         -set?     (gen/set (gen/one-of -compound) {:num-elements 1})
+                         -map?     (fn [inner-gen] (gen/not-empty (gen/map gen/keyword inner-gen)))
+                         -map-opt? (fn [inner-gen] (gen/not-empty (gen/map (gen/bind gen/keyword
+                                                                                    (fn [k]
+                                                                                      (gen/return (ds/opt k))))
+                                                                          inner-gen)))]
+                     (gen/recursive-gen (fn [inner-gen]
+                                          (gen/frequency
+                                           [[3 (-map? inner-gen)]
+                                            [3 (-map-opt? inner-gen)]
+                                            [2 (gen/fmap (fn [v] (ds/or v)) (-map? inner-gen))]
+                                            [2 (gen/fmap (fn [v] (ds/maybe v)) (-map? inner-gen))]]))
+                                        (gen/one-of (concat -compound [-vec? -set?]))))))
+
+#?(:clj
+   (deftest property-spec->unspec->spec
+     (checking "able to perform a complete round-trip going from data-spec -> spec -> data-spec again" 200
+               [data-spec unspec-gen]
+               (is (ds/unspec (ds/spec {:name ::property-based :spec data-spec}))))))
