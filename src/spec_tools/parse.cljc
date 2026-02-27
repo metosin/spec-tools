@@ -246,6 +246,9 @@
     {:type :nilable
      ::item spec}))
 
+(defmethod parse-form 'clojure.spec.alpha/nonconforming [_ form options]
+  (parse-spec-with-spec-ref (second form) options))
+
 (defmethod parse-form 'spec-tools.core/merge [_ form options]
   (let [type-priority #((:type %) {:map 1
                                    :multi-spec 0})]
