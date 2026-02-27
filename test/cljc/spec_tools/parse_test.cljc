@@ -51,6 +51,9 @@
     (is (= {::parse/items [{:spec int?, :type :long} {:spec keyword?, :type :keyword}]
             :type [:and [:long :keyword]]}
            (parse/parse-spec (s/and int? keyword?)))))
+  (testing "s/nonconforming"
+    (is (= {:spec int?, :type :long}
+           (parse/parse-spec (s/nonconforming int?)))))
   (testing "s/keys"
     (is (= {:type :map
             ::parse/keys #{:a :b :c :d :e ::a ::b ::c ::d ::e}
